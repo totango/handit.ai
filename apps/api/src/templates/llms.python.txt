@@ -1,0 +1,155 @@
+🛠️ Integration Guide for Handit.ai Monitoring (Python)
+
+This project integrates with **Handit.ai** to **track and monitor all function executions** (sync and async) for AI agents and tools. The goal is to **automatically wrap internal function calls** to capture inputs, outputs, errors, and context in production.
+
+---
+
+## ⚙️ Initialization
+
+Handit.ai is initialized via a `HanditTracker` instance, typically made available as `tracker`. Configuration should be centralized to avoid duplication.
+
+> ✅ **Use a centralized `handit_service.py` file to initialize and export the `tracker` instance.**
+
+```python
+# handit_service.py
+from handit import HanditTracker
+
+tracker = HanditTracker()
+tracker.config(api_key="your-api-key")
+```
+
+Other modules can import it as:
+```python
+from handit_service import tracker
+```
+
+---
+
+## ✅ Tracking Setup
+
+### 🔷 AGENT TRACING (**Required**)
+
+Your **main agent function or method must always be wrapped** using the `@tracker.start_agent_tracing(...)` decorator.
+
+> 🎯 You must pass the agent slug using the `key` parameter, matching `handit.config.json`.
+
+#### Async agent function:
+```python
+@tracker.start_agent_tracing(key="invoice-assistant")
+async def process(self, input_data):
+    ...
+```
+
+#### Sync agent function:
+```python
+@tracker.start_agent_tracing(key="invoice-assistant")
+def process(self, input_data):
+    ...
+```
+
+🔑 Example `handit.config.json` entry:
+```json
+{
+  "agent": {
+    "name": "Invoice Assistant",
+    "slug": "invoice-assistant",
+    "description": "Processes and classifies invoice data"
+  }
+}
+```
+
+> ⚠️ **Wrapping the agent’s main function is mandatory.** This is the root of all trace context.
+
+---
+
+### 🔹 NODE TRACING (**Required per node**)
+
+Every model/tool function must be wrapped to track executions.
+
+#### 🟢 Sync functions:
+```python
+result = tracker.trace_agent_node_func_sync(my_function, *args, key="slug-from-handit")
+```
+
+#### 🔵 Async functions:
+```python
+result = await tracker.trace_agent_node_func(my_async_function, *args, key="slug-from-handit")
+```
+
+📦 What gets tracked:
+- Inputs and outputs
+- Execution context (agent/session info)
+- Errors and stack traces
+
+---
+
+## 📁 `handit.config.json` Reference
+
+Defines the structure for your agent and nodes.
+
+### ✅ Agent section:
+```json
+{
+  "agent": {
+    "name": "My AI Agent",
+    "slug": "my-ai-agent",
+    "description": "Main orchestration logic"
+  }
+}
+```
+
+Use `"my-ai-agent"` as the `key` in `@tracker.start_agent_tracing(...)`.
+
+---
+
+### ✅ Node definitions:
+```json
+{
+  "nodes": [
+    {
+      "name": "Vector Search",
+      "slug": "vector-search",
+      "type": "model",
+      "problem_type": "retrieval",
+      "description": "Searches similar documents",
+      "next_nodes": ["llm-generator"]
+    }
+  ]
+}
+```
+
+Use `"vector-search"` as the `key` when wrapping the node:
+
+```python
+result = await tracker.trace_agent_node_func(fetch_documents, input_data, key="vector-search")
+```
+
+---
+
+## ❗️ Best Practices
+
+🚫 Do NOT wrap:
+- Function definitions
+- Library or built-in functions
+- Functions already wrapped
+- Setup/config logic
+
+✅ DO wrap:
+- All nodes in the agent pipeline (models/tools)
+- All agent entrypoints (exactly once)
+- Functions you control and want to track
+- Functions where inputs and outputs matter
+
+---
+
+## 🧩 Summary
+
+1. ✅ Initialize `HanditTracker` once in `handit_service.py`.
+2. ✅ Wrap the agent’s main function with `@tracker.start_agent_tracing(key=...)`.
+3. ✅ Wrap node executions with:
+   - `tracker.trace_agent_node_func_sync(...)` (sync)
+   - `await tracker.trace_agent_node_func(...)` (async)
+4. ✅ Use slugs from `handit.config.json`.
+5. ✅ Route inputs through and return outputs as-is.
+
+With this setup, **Handit.ai will capture full execution traces**, enabling powerful monitoring and debugging in production.

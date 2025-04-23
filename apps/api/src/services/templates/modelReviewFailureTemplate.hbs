@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Handit.AI Alert</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 60px 30px;
+        background: #ffffff url('cid:bg-image') no-repeat top center;
+        background-size: cover;
+        box-sizing: border-box;
+        border-radius: 16px;
+      }
+
+      .logo {
+        display: block;
+        margin-left: auto;
+        margin-bottom: 40px;
+        width: 180px;
+        height: auto;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #00272f;
+        margin-bottom: 24px;
+      }
+
+      p {
+        font-size: 15px;
+        color: #00272f;
+        margin: 12px 0;
+        line-height: 1.6;
+      }
+
+      .label {
+        font-weight: 600;
+        color: #02f7aa;
+      }
+
+      .button {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 24px;
+        background-color: #02f7aa;
+        color: #00272f !important;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: #00272f;
+        margin-top: 40px;
+      }
+
+      .footer a {
+        color: #00272f;
+        text-decoration: none;
+      }
+
+      @media screen and (max-width: 600px) {
+        .container {
+          padding: 40px 20px;
+        }
+
+        .logo {
+          width: 100px;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img class="logo" src="cid:logo-image" alt="Handit.ai Logo" />
+      
+      <h1>Automated Evaluation Alert</h1>
+      <p>We've identified a potential issue during the latest automated evaluation. Please review the details below:</p>
+
+      <p><span class="label">Agent:</span> {{agent_name}}</p>
+      <p><span class="label">Node:</span> {{node_name}}</p>
+      <p><span class="label">Summary:</span><br />{{{reviewer_summary}}}</p>
+
+      <a href="{{tracing_url}}" class="button">Review in Dashboard</a>
+
+      <div class="footer">
+        &copy; {{year}} Handit.ai — Monitoring and optimizing AI systems in real time.<br />
+        <a href="mailto:contact@handit.ai">contact@handit.ai</a>
+      </div>
+    </div>
+  </body>
+</html>

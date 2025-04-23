@@ -1,0 +1,112 @@
+🛠️ Integration Guide for Handit.ai Monitoring
+
+This project integrates with **Handit.ai** to **track and monitor all function executions** (sync and async) for AI agents and tools. The goal is to **automatically wrap internal function calls** to capture inputs, outputs, errors, and context in production.
+
+---
+
+⚙️ Initialization
+
+Handit.ai must be initialized using the `config()` method at the **entry point** of your service. Once initialized, the library will work globally, leveraging Node.js shared modules.
+
+```ts
+// Entry file (e.g., index.js)
+import { config } from '@handit.ai/node';
+
+config({ apiKey: "your-api-key" });
+```
+
+Other files should only import the specific Handit methods they need:
+
+```ts
+import { traceAgentNode, startAgentTracing } from '@handit.ai/node';
+```
+
+---
+
+✅ Tracing Setup
+
+🔷 AGENT TRACING (**Required**)
+
+Your agent's **main orchestration function must always be wrapped** using `startAgentTracing(...)`.
+
+```ts
+const tracedAgent = startAgentTracing(agentFunction);
+```
+
+- `agentFunction` should be the root logic that coordinates the full agent flow.
+- The agent’s `slug` must be defined in `handit.config.json`.
+
+> ⚠️ **Wrapping the agent function is mandatory.** This is the entry point for capturing trace sessions.
+
+---
+
+🔹 NODE TRACING (**Required per node**)
+
+Each individual model/tool must be wrapped using `traceAgentNode(...)`.
+
+```ts
+const tracedNode = traceAgentNode({
+  agentNodeId: "slug-from-handit",
+  callback: yourFunction
+});
+
+const result = await tracedNode(inputData);
+```
+
+> ⚠️ Every node must:
+> - Be wrapped with `traceAgentNode()`
+> - Provide a `callback` function
+> - Use a slug defined in `handit.config.json`
+
+🧠 This will automatically track:
+- Input/output data
+- Execution duration and metadata
+- Errors and stack traces
+
+---
+
+📁 `handit.config.json` Reference
+
+This config powers the integration by defining agents and their associated nodes.
+
+### Example structure:
+```json
+{
+  "agent": {
+    "name": "Sales Agent",
+    "slug": "sales-agent",
+    "description": "Top-level agent orchestrating all sales logic"
+  },
+  "nodes": [
+    {
+      "name": "Vector Search",
+      "slug": "vector-search",
+      "type": "tool",
+      "description": "RAG search for documents",
+      "next_nodes": ["intent-classifier"]
+    },
+    {
+      "name": "Intent Classifier",
+      "slug": "intent-classifier",
+      "type": "model",
+      "problem_type": "classification",
+      "next_nodes": ["message-generator"]
+    }
+  ]
+}
+```
+
+---
+
+✅ Final Checklist
+
+1. ✅ Call `config({ apiKey })` in your entry file.
+2. ✅ Wrap the **main agent function** with `startAgentTracing(...)` (**mandatory**).
+3. ✅ Wrap **every tool/model function** with `traceAgentNode(...)` and provide a `callback`.
+4. ✅ Ensure all slugs used match those defined in `handit.config.json`.
+5. ✅ Route inputs through the wrapped function.
+6. ✅ Return outputs *directly* from the wrapped function.
+
+---
+
+With this setup, **Handit.ai will capture full execution traces**, allowing you to monitor, debug, and optimize your AI system with ease.

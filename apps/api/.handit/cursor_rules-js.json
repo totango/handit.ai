@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "javascript": {
+      "indentation": "spaces",
+      "spaces_per_indent": 2,
+      "max_line_length": 80,
+      "quotes": "single",
+      "semicolons": true,
+      "imports": {
+        "order": ["builtin", "external", "internal", "parent", "sibling"],
+        "group_by_type": true
+      },
+      "naming": {
+        "classes": "PascalCase",
+        "functions": "camelCase",
+        "variables": "camelCase",
+        "constants": "UPPER_SNAKE_CASE"
+      }
+    }
+  }
+} 

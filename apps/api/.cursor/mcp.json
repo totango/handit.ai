@@ -1,0 +1,157 @@
+{
+  "agent": {
+    "name": "Extract and normalize",
+    "slug": "classifyExop",
+    "description": "An agent that processes any type of file XBuild handles"
+  },
+  "nodes": [
+    {
+      "name": "File Classifier",
+      "slug": null,
+      "description": "",
+      "type": "model",
+      "next_nodes": [
+        {
+          "slug": "toolmeasurementn",
+          "input_name": "in-1",
+          "output_name": "out-1"
+        },
+        {
+          "slug": "tooltool4zm",
+          "input_name": "in-1",
+          "output_name": "out-1"
+        },
+        {
+          "slug": "tooltool5r1",
+          "input_name": "in-1",
+          "output_name": "out-1"
+        }
+      ]
+    },
+    {
+      "name": "Scope AI document extractor",
+      "slug": "tooltool4zm",
+      "description": "",
+      "type": "tool",
+      "next_nodes": [
+        {
+          "slug": "toolscopeNormajo",
+          "input_name": "in-1",
+          "output_name": "output"
+        },
+        {
+          "slug": null,
+          "input_name": "input",
+          "output_name": "output"
+        },
+        {
+          "slug": null,
+          "input_name": "in-2",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "Scope text processor",
+      "slug": "tooltool5r1",
+      "description": "",
+      "type": "tool",
+      "next_nodes": [
+        {
+          "slug": "toolscopeNormajo",
+          "input_name": "in-1",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "generate simplified structures",
+      "slug": null,
+      "description": "",
+      "type": "model",
+      "next_nodes": [
+        {
+          "slug": "toolwriteNormabn",
+          "input_name": "in-1",
+          "output_name": "output"
+        },
+        {
+          "slug": null,
+          "input_name": "in-2",
+          "output_name": "output"
+        },
+        {
+          "slug": null,
+          "input_name": "input",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "scope areas to structures ",
+      "slug": null,
+      "description": "",
+      "type": "model",
+      "next_nodes": [
+        {
+          "slug": "toolparameterE3l",
+          "input_name": "in-1",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "Siding Wall Mapper",
+      "slug": null,
+      "description": "",
+      "type": "model",
+      "next_nodes": [
+        {
+          "slug": "toolparameterE3l",
+          "input_name": "in-1",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "Measurements AI document extractor",
+      "slug": "toolmeasurementn",
+      "description": "",
+      "type": "tool",
+      "next_nodes": [
+        {
+          "slug": "toolparameterE3l",
+          "input_name": "in-1",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "Scope normalizer",
+      "slug": "toolscopeNormajo",
+      "description": "",
+      "type": "tool",
+      "next_nodes": [
+        {
+          "slug": null,
+          "input_name": "in-1",
+          "output_name": "output"
+        }
+      ]
+    },
+    {
+      "name": "Parameter Extractor Service ",
+      "slug": "toolparameterE3l",
+      "description": "",
+      "type": "tool",
+      "next_nodes": []
+    },
+    {
+      "name": "Write normalized data",
+      "slug": "toolwriteNormabn",
+      "description": "",
+      "type": "tool",
+      "next_nodes": []
+    }
+  ]
+}

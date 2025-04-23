@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "python": {
+      "indentation": "spaces",
+      "spaces_per_indent": 4,
+      "max_line_length": 79,
+      "quotes": "single",
+      "imports": {
+        "order": ["standard_library", "third_party", "local"],
+        "group_by_type": true
+      },
+      "naming": {
+        "classes": "PascalCase",
+        "functions": "snake_case",
+        "variables": "snake_case",
+        "constants": "UPPER_SNAKE_CASE"
+      }
+    }
+  }
+} 
