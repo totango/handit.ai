@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handit.AI Alert</title>
+  <style>
+    /* General Reset and Base Styles */
+    body, p, h1, h2, h3, h4, h5, h6 {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+      line-height: 1.5;
+    }
+    body {
+      background-color: #0F0E17;
+      color: #FFFFFF;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      padding: 40px 0;
+      background-color: #0F0E17;
+    }
+
+    /* Content */
+    .content {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #1C162F;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: bold;
+      color: #FFFFFF;
+      background-image: linear-gradient(to right, #ffffffa3, #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Main Message */
+    .main-message {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #FFFFFF;
+    }
+
+    /* Error Information */
+    .error-info {
+      background-color: #2B2C34;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .error-info p {
+      font-size: 16px;
+      margin: 5px 0;
+    }
+    .error-info .label {
+      font-weight: bold;
+      color: #FFFFFF;
+    }
+
+    /* CTA Button */
+    .button {
+      display: inline-block;
+      background-color: #5E3DF4;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+    .button:hover {
+      background-color: #4b2ecf;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #BBBBBB;
+      margin-top: 30px;
+    }
+
+    /* Mobile Optimization */
+    @media screen and (max-width: 600px) {
+      .content {
+        padding: 20px;
+      }
+      .main-message {
+        font-size: 18px;
+      }
+      .button {
+        padding: 10px 15px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Email Content -->
+    <div class="content">
+      <!-- Header -->
+      <div class="header">
+        <h1>Handit.AI</h1>
+      </div>
+
+      <!-- Main Message -->
+      <p class="main-message">🚨 New Issue Detected</p>
+      <p style="text-align: center; font-size: 16px; color: #CCCCCC;">
+        We notified recently active team members about an issue in your project.
+      </p>
+
+      <!-- Error Details -->
+      <div class="error-info">
+        <p><span class="label">🛑 Error Type:</span> {{errorType}}</p>
+        <p><span class="label">📝 Description:</span> {{errorDescription}}</p>
+        <p><span class="label">📅 Date:</span> {{errorDate}}</p>
+        <p><span class="label">🤖 Model:</span> {{errorModel}}</p>
+      </div>
+
+      <!-- CTA Button -->
+      <div style="text-align: center;">
+        <a href="{{alertLink}}" class="button">View Alert</a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      &copy; {{year}} Handit.AI. All rights reserved. <br />
+      <a href="https://handit.ai" style="color: #5E3DF4; text-decoration: none;">Visit our website</a>
+    </div>
+  </div>
+</body>
+</html>

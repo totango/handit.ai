@@ -1,0 +1,108 @@
+{
+  "language": "python",
+  "rules": [
+    {
+      "name": "Import HanditTracker if missing",
+      "description": "Ensure HanditTracker is imported at the top of the file.",
+      "condition": {
+        "not": {
+          "has_import": "from handit import HanditTracker"
+        }
+      },
+      "action": {
+        "add_import": "from handit import HanditTracker"
+      }
+    },
+    {
+      "name": "Initialize HanditTracker",
+      "description": "Insert tracker setup after imports.",
+      "condition": {
+        "not": {
+          "has_variable_assignment": "tracker = HanditTracker()"
+        }
+      },
+      "action": {
+        "insert_after_imports": "from handit_service import tracker"
+      }
+    },
+    {
+      "name": "Wrap sync functions with tracker.trace_agent_node_func_sync",
+      "description": "For sync functions in handit.config.json, wrap using the correct Handit method.",
+      "condition": {
+        "and": [
+          {
+            "type": "function_definition"
+          },
+          {
+            "not": {
+              "has_modifier": "async"
+            }
+          },
+          {
+            "in_handit_json": "function.name"
+          }
+        ]
+      },
+      "action": {
+        "wrap_body": "return tracker.trace_agent_node_func_sync({function_name}, key=\"{slug}\")(*args, **kwargs)"
+      }
+    },
+    {
+      "name": "Wrap async functions with tracker.trace_agent_node_func",
+      "description": "For async functions in handit.config.json, wrap using the correct Handit method.",
+      "condition": {
+        "and": [
+          {
+            "type": "function_definition"
+          },
+          {
+            "has_modifier": "async"
+          },
+          {
+            "in_handit_json": "function.name"
+          }
+        ]
+      },
+      "action": {
+        "wrap_body": "return await tracker.trace_agent_node_func({function_name}, key=\"{slug}\")(*args, **kwargs)"
+      }
+    },
+    {
+      "name": "Decorate agent function with @tracker.start_agent_tracing()",
+      "description": "Add agent-level decorator if this is the root agent method.",
+      "condition": {
+        "and": [
+          {
+            "type": "function_definition"
+          },
+          {
+            "not": {
+              "has_decorator": "@tracker.start_agent_tracing()"
+            }
+          },
+          {
+            "in_handit_json": "agent"
+          }
+        ]
+      },
+      "action": {
+        "add_decorator": "@tracker.start_agent_tracing()"
+      }
+    },
+    {
+      "name": "Create handit_service.py file with tracker setup",
+      "description": "Ensure a shared Handit service file exists for reuse.",
+      "condition": {
+        "not": {
+          "file_exists": "handit_service.py"
+        }
+      },
+      "action": {
+        "create_file": {
+          "path": "handit_service.py",
+          "content": "from handit import HanditTracker\n\ntracker = HanditTracker()\ntracker.config(api_key=\"<your-api-key>\")\n"
+        }
+      }
+    }
+  ]
+}

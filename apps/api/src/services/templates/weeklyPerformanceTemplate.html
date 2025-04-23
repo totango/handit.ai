@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Handit.AI Weekly Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 60px 30px;
+        background: #ffffff url('bg-real.png') no-repeat top center;
+        background-size: cover;
+        border-radius: 16px;
+        box-sizing: border-box;
+      }
+
+      .logo {
+        display: block;
+        margin-left: auto;
+        margin-bottom: 40px;
+        width: 180px;
+        height: auto;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #00272f;
+        margin-bottom: 24px;
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #00272f;
+        margin-top: 36px;
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 15px;
+        color: #00272f;
+        margin: 12px 0;
+        line-height: 1.6;
+      }
+
+      .label {
+        font-weight: 600;
+        color: #02f7aa;
+      }
+
+      .button {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 24px;
+        background-color: #02f7aa;
+        color: #00272f !important;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: #00272f;
+        margin-top: 40px;
+      }
+
+      .footer a {
+        color: #00272f;
+        text-decoration: none;
+      }
+
+      ul {
+        padding-left: 0;
+        list-style-type: none;
+        margin: 0;
+      }
+
+      li {
+        margin-bottom: 16px;
+      }
+
+      li a {
+        color: #02f7aa;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      li a:hover {
+        text-decoration: underline;
+      }
+
+      .agent-summary {
+        margin-top: 8px;
+        padding: 10px;
+        background-color: rgba(2, 247, 170, 0.05);
+        border-left: 3px solid #02f7aa;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #00272f;
+      }
+
+      @media screen and (max-width: 600px) {
+        .container {
+          padding: 40px 20px;
+        }
+        .logo {
+          width: 100px;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img class="logo" src="logo.png" alt="Handit.ai Logo" />
+
+      <h1>Weekly AI Performance Report</h1>
+      <p>Hi {{client_name}},</p>
+
+      <p>
+        Here's your weekly performance update from Handit.ai. Our platform continuously monitored and improved your AI models and agents to boost accuracy, reliability, and value.
+      </p>
+
+      {{#if agents.length}}
+      <h2>🤖 Agent Optimization Highlights</h2>
+      <ul>
+        {{#each agents}}
+        <li>
+          <a href="https://dashboard.handit.ai/ag-monitoring?agentId={{id}}">{{name}}</a>
+          {{#if agent_summary}}
+          <div class="agent-summary">
+            {{{agent_summary}}} 
+          </div>
+          {{/if}}
+        </li>
+        {{/each}}
+      </ul>
+      {{/if}}
+
+      <a href="{{tracing_url}}" class="button">View Full Report in Dashboard</a>
+
+      <div class="footer">
+        &copy; {{year}} Handit.ai — Monitoring and optimizing AI systems in real time.<br />
+        <a href="mailto:contact@handit.ai">contact@handit.ai</a>
+      </div>
+    </div>
+  </body>
+</html>

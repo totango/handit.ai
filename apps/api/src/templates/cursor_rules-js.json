@@ -1,0 +1,43 @@
+{
+  "language": "javascript",
+  "rules": [
+    {
+      "name": "Import Handit methods if missing",
+      "description": "Ensure Handit methods are imported",
+      "condition": {
+        "not": {
+          "has_import": "import { startAgentTracing, traceAgentNode } from \"@handit.ai/node\""
+        }
+      },
+      "action": {
+        "add_import": "import { startAgentTracing, traceAgentNode } from \"@handit.ai/node\""
+      }
+    },
+    {
+      "name": "Ensure config() is called at entry file",
+      "description": "Call Handit config at top level",
+      "condition": { "file_name_matches": "index.js|main.js|server.js" },
+      "action": {
+        "insert_after_imports": "config({ apiKey: \"<your-api-key>\" });"
+      }
+    },
+    {
+      "name": "Wrap agent with startAgentTracing",
+      "description": "Wrap agent function with tracing",
+      "condition": {
+        "and": [{ "type": "function_call" }, { "in_handit_json": "agent" }]
+      },
+      "action": { "wrap_with": "startAgentTracing({original_code})" }
+    },
+    {
+      "name": "Wrap functions with traceAgentNode",
+      "description": "Wrap node execution with Handit trace",
+      "condition": {
+        "and": [{ "type": "function_call" }, { "in_handit_json": "node" }]
+      },
+      "action": {
+        "wrap_with": "traceAgentNode({ agentNodeId: \"{slug}\", callback: {original_code} })"
+      }
+    }
+  ]
+}
