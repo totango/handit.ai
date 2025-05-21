@@ -34,7 +34,7 @@ export const up = async (queryInterface, Sequelize) => {
       defaultValue: Sequelize.fn('NOW'),
     },
   });
-  await queryInterface.addIndex('ModelDeployHistories', ['modelId']);
+  await queryInterface.addIndex('ModelDeployHistories', ['model_id']);
   await queryInterface.addIndex('ModelDeployHistories', ['version']);
 };
 
