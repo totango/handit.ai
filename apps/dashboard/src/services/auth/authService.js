@@ -12,7 +12,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import { setCredentials, setUserData } from '../../store/authSlice';
 import { baseQueryWithSandbox } from '../baseQuery';
-import { event } from '@/lib/gtag';
+import { paths } from '@/paths';
 
 /**
  * Authentication API instance created using Redux Toolkit Query
@@ -120,6 +120,7 @@ export const authApi = createApi({
           }
         } catch (err) {
           console.error('Failed to get user:', err);
+          window.location.href = paths.auth.custom.signIn;
           return {
             error: 'Failed to get user',
             message: 'Could not fetch user data',

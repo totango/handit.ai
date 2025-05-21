@@ -51,6 +51,7 @@
  * @property {string} paths.purchase - Purchase page external link
  */
 export const paths = {
+  home: '/',
   auth: {
     custom: {
       signIn: '/auth/custom/sign-in',

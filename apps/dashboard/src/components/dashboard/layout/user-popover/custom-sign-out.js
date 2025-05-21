@@ -25,6 +25,7 @@ import { authClient } from '@/lib/auth/custom/client';
 import { logger } from '@/lib/default-logger';
 import { useUser } from '@/hooks/use-user';
 import { toast } from '@/components/core/toaster';
+import { paths } from '@/paths';
 
 /**
  * CustomSignOut Component
@@ -63,12 +64,19 @@ export function CustomSignOut() {
       // Refresh the auth state
       await checkSession?.();
 
-      // UserProvider, for this case, will not refresh the router and we need to do it manually
+      // Optionally clear RTK Query cache here if you use it
+      // dispatch(api.util.resetApiState());
+
+      // Refresh the router and redirect to sign-in
       router.refresh();
-      // After refresh, AuthGuard will handle the redirect
+      router.push(paths.auth.custom.signIn);
+
     } catch (err) {
       logger.error('Sign out error', err);
       toast.error('Something went wrong, unable to sign out');
+    } finally {
+      router.refresh();
+      router.push(paths.auth.custom.signIn);
     }
   }, [checkSession, router]);
 
