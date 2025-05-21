@@ -61,7 +61,7 @@ app.use(compression());
 
 // Enable CORS for all routes
 app.use(cors({
-  origin: ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://localhost:3002', '*', 'https://handit-dashboard.vercel.app', 'https://dashboard.handit.ai', 'https://sandbox.handit.ai','https://try.handit.ai', 'https://handit.ai', 'https://www.handit.ai', 'https://demo.handit.ai', 'https://www.demo.handit.ai'],
+  origin: ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://localhost:3002', '*', 'https://handit-dashboard.vercel.app', 'https://dashboard.handit.ai', 'https://sandbox.handit.ai','https://try.handit.ai', 'https://handit.ai', 'https://www.handit.ai', 'https://beta.handit.ai', 'https://www.beta.handit.ai'],
 }));
 
 // Remove global chunked transfer encoding middleware
