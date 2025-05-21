@@ -541,7 +541,7 @@ export default function PromptVersionsPage() {
                         '.MuiSelect-select': {
                           display: 'flex',
                           alignItems: 'center',
-                          height: 44,
+                          height: 30,
                           paddingTop: '8px',
                           paddingBottom: '8px',
                           fontSize: 16,
