@@ -230,7 +230,7 @@ export function MainNav({ items, title, onNewEvaluator, onUploadAgent, uploadLoa
               </Typography>
             )}
             {path === '/agents' && (
-              <Typography variant="h4" component="h1" sx={{ pl: 5 }}>
+              <Typography variant="h4" component="h1" sx={{ pl: '1vmax' }}>
                 Agents
               </Typography>
             )}
@@ -240,7 +240,11 @@ export function MainNav({ items, title, onNewEvaluator, onUploadAgent, uploadLoa
               </Typography>
             )}
             {(path.includes('ag-monitoring') || path.includes('ag-tracing') || path.includes('model-versions') || path.includes('prompt-versions')) && (
+              <div style={{
+                paddingLeft: '10px'
+              }}>
             <AgentSwitch onAgentChange={handleAgentChange} agentId={agentId} agents={agents} />
+            </div>
           )}
           {(path.includes('automated-insights') || path.includes('dynamic-review')) && (
             <ModelsSwitch onModelChange={(model) => onModelChange(path, router, model)} modelId={modelId} />

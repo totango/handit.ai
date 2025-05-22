@@ -46,14 +46,13 @@ export default function TracingPage() {
   return (
     <Box
       sx={{
-        maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
         pb: 0,
         width: 'var(--Content-width)',
       }}
     >
-      <Stack spacing={4} sx={{ mt: 2, mr: 2, ml: 2 }}>
+      <Stack spacing={4} sx={{ mt: 2, mr: 0, ml: 2 }}>
         {/* Tracing table component */}
         <TracingTable
           isLoading={isLoading}

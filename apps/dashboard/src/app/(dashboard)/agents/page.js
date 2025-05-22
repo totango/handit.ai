@@ -233,7 +233,6 @@ export default function Page() {
   return (
     <Box
       sx={{
-        maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
         width: 'var(--Content-width)',
@@ -242,61 +241,66 @@ export default function Page() {
         flexDirection: 'column',
       }}
     >
-      <Stack spacing={4}>
-        {/* Header section with title only */}
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
-          <Box sx={{ flex: '1 1 auto' }}>
-          </Box>
-        </Stack>
-        {/* Agent grid section */}
-        <Grid container spacing={3}>
-          {isLoading ? (
-            // Show loading skeletons
-            [...Array(3)].map((_, index) => (
-              <AgentSkeleton key={index} />
-            ))
-          ) : agents?.length > 0 ? (
-            // Show agent cards
-            agents.map((agent) => (
-              <Grid key={agent.id} item xs={12} md={4}>
-                <div onClick={() => handleCardClick(agent.id)}
-                  style={{ cursor: 'pointer', height: '100%' }}
-                >
-                  <ItemCard
-                    title={agent.name}
-                    description={agent.description}
-                    icon={Brain}
-                    onClick={() => handleCardClick(agent.id)}
-                    actionIcon={
-                      <IconButton
-                        onClick={(e) => handleMenuOpen(e, agent)}
-                        size="small"
-                        sx={{
-                          color: 'text.secondary',
-                          '&:hover': {
-                            color: 'text.primary',
-                          },
-                        }}
-                      >
-                        <DotsIcon size={20} weight="bold" />
-                      </IconButton>
-                    }
-                  />
-                </div>
+      <Grid container>
+        <Stack spacing={4}>
+          {/* Header section with title only */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
+            <Box sx={{ flex: '1 1 auto' }}>
+            </Box>
+          </Stack>
+          {/* Agent grid section */}
+          <Grid container spacing={3} sx={{
+            paddingLeft: '1vmax',
+          }}>
+            {isLoading ? (
+              // Show loading skeletons
+              [...Array(3)].map((_, index) => (
+                <AgentSkeleton key={index} />
+              ))
+            ) : agents?.length > 0 ? (
+              // Show agent cards
+              agents.map((agent) => (
+                <Grid key={agent.id} item xs={12} md={4} sx={{
+                }}>
+                  <div onClick={() => handleCardClick(agent.id)}
+                    style={{ cursor: 'pointer', height: '100%' }}
+                  >
+                    <ItemCard
+                      title={agent.name}
+                      description={agent.description}
+                      icon={Brain}
+                      onClick={() => handleCardClick(agent.id)}
+                      actionIcon={
+                        <IconButton
+                          onClick={(e) => handleMenuOpen(e, agent)}
+                          size="small"
+                          sx={{
+                            color: 'text.secondary',
+                            '&:hover': {
+                              color: 'text.primary',
+                            },
+                          }}
+                        >
+                          <DotsIcon size={20} weight="bold" />
+                        </IconButton>
+                      }
+                    />
+                  </div>
+                </Grid>
+              ))
+            ) : (
+              // Show empty state
+              <Grid item xs={12}>
+                <Card sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography color="text.secondary">
+                    No agents found. Create your first agent to get started.
+                  </Typography>
+                </Card>
               </Grid>
-            ))
-          ) : (
-            // Show empty state
-            <Grid item xs={12}>
-              <Card sx={{ p: 3, textAlign: 'center' }}>
-                <Typography color="text.secondary">
-                  No agents found. Create your first agent to get started.
-                </Typography>
-              </Card>
-            </Grid>
-          )}
-        </Grid>
-      </Stack>
+            )}
+          </Grid>
+        </Stack>
+      </Grid>
       {/* Agent action menu */}
       <Menu
         anchorEl={anchorEl}

@@ -282,7 +282,6 @@ export default function PromptVersionsPage() {
   return (
     <Box
       sx={{
-        maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
         width: 'var(--Content-width)',
@@ -294,7 +293,7 @@ export default function PromptVersionsPage() {
       }}
     >
       {/* Top Section: Bar Chart | Pie Chart | Status Card */}
-      <Grid container spacing={2} sx={{ px: 4, pt: 4, pb: 2 }} style={{ height: '40vh' }}>
+      <Grid container spacing={2} sx={{ px: 2, pt: 4, pb: 2, paddingRight: 0 }} style={{ height: '40vh' }}>
         {/* Left: Bar Chart */}
         <Grid item xs={12} md={6} lg={6}>
           <CorrectVsIncorrectComparison 
@@ -398,7 +397,10 @@ export default function PromptVersionsPage() {
           </Card>
         </Grid>
         {/* Right: Status Card */}
-        <Grid item xs={12} md={3} lg={3}>
+        <Grid item xs={12} md={3} lg={3} sx={{
+          paddingRight: 0,
+          marginRight: 0,
+        }}>
           <Card
             sx={{
               height: '36vh',
@@ -407,7 +409,10 @@ export default function PromptVersionsPage() {
               justifyContent: 'center',
               bgcolor: '#10181b',
               color: '#fff',
-              p: 3,
+              paddingLeft: 3,
+              paddingRight: 0,
+              paddingTop: 3,
+              paddingBottom: 3,
             }}
           >
             <Stack spacing={0} divider={<Divider sx={{ borderColor: '#23292f', my: 0.5 }} flexItem />}> 
@@ -490,7 +495,7 @@ export default function PromptVersionsPage() {
       </Grid>
 
       {/* Models Table Section */}
-      <Box sx={{ px: 4, pb: 4, pt: 4 }} style={{ height: '50vh' }}>
+      <Box sx={{ px: 2, pb: 4, pt: 4, paddingRight: 0 }} style={{ height: '50vh' }}>
         <ModelsTable onModelSelect={handleModelSelect} height="45vh" />
       </Box>
 

@@ -50,7 +50,6 @@ export default function EvaluationHubPage() {
   return (
     <Box
       sx={{
-        maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
         width: 'var(--Content-width)',
@@ -62,7 +61,7 @@ export default function EvaluationHubPage() {
       }}
     >
       {/* Main content container */}
-      <Box sx={{ px: 4, pb: 4, pt: 4 }}>
+      <Box sx={{ px: 2, pb: 4, pt: 4, paddingRight: 0 }}>
         <EvaluationHubTable onNewEvaluator={handleOpenDrawer} />
       </Box>
       <NewEvaluatorDrawer open={drawerOpen} onClose={handleCloseDrawer} onCreate={handleCreateEvaluator} />

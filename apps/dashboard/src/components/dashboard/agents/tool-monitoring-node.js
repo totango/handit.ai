@@ -160,7 +160,7 @@ export const ToolMonitoringNode = React.memo(({ id, data, isConnectable }) => {
           sx={{ flex: 1, borderRadius: 0, fontSize: 13, py: 1.2 }}
           onClick={handleLogsClick}
         >
-          Logs
+          Tracing
         </Button>
       </Box>
     </Box>
