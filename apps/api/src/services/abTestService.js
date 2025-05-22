@@ -16,7 +16,8 @@ export const evaluateAB = async (entry, modelObj, ModelLog, originalLogId, db, c
     { role: 'system', content: systemPrompt }
   ];
 
-  const optimizationToken = company?.optimizationToken;
+  const optimizationToken = await company.getOptimizationToken();
+  const defaultModel = company.optimizationModel;
 
   // If there are images, add them to the content
   if (attachments.length > 0) {
@@ -41,7 +42,10 @@ export const evaluateAB = async (entry, modelObj, ModelLog, originalLogId, db, c
   // Generate response using DeepInfra
   const completion = await generateAIResponse({
     messages,
-    numberOfAttachments: attachments.length
+    numberOfAttachments: attachments.length,
+    token: optimizationToken.token,
+    provider: optimizationToken.provider.name,
+    model: defaultModel,
   });
 
   // Track the result

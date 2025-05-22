@@ -50,8 +50,12 @@ export const generateAIResponse = async ({
   model = DEFAULT_MODEL,
   provider = 'TogetherAI',
 }) => {
+  console.log('entro');
   try {
     let completion;
+    console.log('provider', provider);
+    console.log('token', token);
+    console.log('model', model);
     if (provider === 'OpenAI') {
       const openai = new OpenAI({
         apiKey: token,

@@ -41,15 +41,40 @@ export default (sequelize, DataTypes) => {
 
 
     async evaluationPrompts() {
+      // check if model is optimzied get prompts of parent model
+      let modelId = this.id;
+      const originalModel =  await sequelize.models.ABTestModels.findOne({
+        where: {
+          optimizedModelId: this.id,
+        },
+      });
+      if (originalModel) {
+        modelId = originalModel.id;
+      }
+      
       const evaluationPrompts = await sequelize.models.ModelEvaluationPrompt.findAll({
         where: {
-          modelId: this.id,
+          modelId,
         },
         include: [
           {
             model: sequelize.models.EvaluationPrompt,
             as: 'evaluationPrompt',
-            attributes: ['id', 'name', 'prompt'],
+            attributes: ['id', 'name', 'prompt', 'defaultProviderModel'],
+            include: [
+              {
+                model: sequelize.models.IntegrationToken,
+                as: 'defaultIntegrationToken',
+                attributes: ['id', 'name', 'providerId'],
+                include: [
+                  {
+                    model: sequelize.models.Provider,
+                    as: 'provider',
+                    attributes: ['id', 'name'],
+                  },
+                ],
+              },
+            ],
           },
           {
             model: sequelize.models.IntegrationToken,
@@ -581,37 +606,36 @@ export default (sequelize, DataTypes) => {
     
     async generateInsights() {
       const modelLogs = await this.getMetricProcessedLogs();
-      // SELECT RANDOM 10 modelLogs
       const randomModelLogs = modelLogs.sort(() => Math.random() - 0.5);
       const insights = [];
       for (let i = 0; i < randomModelLogs.length; i++) {
         const modelLog = modelLogs[i];
         if (!isCorrect(modelLog) && insights.length < 3) {
-          const insightsModels = await this.getInsightsModels();
-          for (let i = 0; i < insightsModels.length; i++) {
-          const insightModel = insightsModels[i];
-          const percentage = insightModel.percentage;
+
+          const percentage = 50;
           const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
           if (randomNumberFrom0To100 <= percentage) {
-            const reviewer = await sequelize.models.Model.findOne({
-              where: {
-                id: insightModel.insightModelId,
-              },
-            });
+            const modelGroup = await this.getModelGroup();
+            const company = await modelGroup.getCompany();
+
+            const optimizationToken = await company.getOptimizationToken();
+            const defaultModel = company.optimizationModel;
             try {
               await runReview(
                 modelLog,
-                reviewer,
+                null,
                 sequelize.models.ModelLog,
                 sequelize.models.Insights,
                 this.problemType,
                 this.version,
-                this.id
+                this.id,
+                optimizationToken.token,
+                optimizationToken.provider.name,
+                defaultModel
               );
             } catch (error) {
               console.error('error', error);
             }
-          }
           }
         }
       }
@@ -713,6 +737,7 @@ export default (sequelize, DataTypes) => {
     }
 
     async applySuggestions() {
+      console.log('applySuggestions');
       const prompt = await this.prompt();
       const suggestions = await sequelize.models.Insights.findAll({
         where: {
@@ -725,9 +750,14 @@ export default (sequelize, DataTypes) => {
       if (!suggestions.length || !prompt) {
         return null;
       }
+      const modelGroup = await this.getModelGroup();
+      const company = await modelGroup.getCompany();
 
-      const enhancedPromptResult = await enhancePrompt(prompt, suggestions);
+      const optimizationToken = await company.getOptimizationToken();
+      const defaultModel = company.optimizationModel;
 
+      const enhancedPromptResult = await enhancePrompt(prompt, suggestions, optimizationToken.token, optimizationToken.provider.name, defaultModel);
+      console.log('enhancedPromptResult', enhancedPromptResult);
       return enhancedPromptResult;
     }
 
