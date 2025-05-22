@@ -460,6 +460,11 @@ export default (sequelize, DataTypes) => {
       allowNull: true,
       field: 'optimization_token_id',
     },
+    optimizationModel: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: 'optimization_model',
+    },
   }, {
     sequelize,
     modelName: 'Company',
