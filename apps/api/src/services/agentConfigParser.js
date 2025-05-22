@@ -90,7 +90,6 @@ export const parseAgentConfig = async (rawConfig) => {
         }
       ],
       responseFormat: AgentConfigSchema,
-      token: process.env.TOGETHER_API_KEY
     });
 
     const parsedConfig = JSON.parse(completion.choices[0].message.content);
