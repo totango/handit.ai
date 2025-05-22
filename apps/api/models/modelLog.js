@@ -179,7 +179,7 @@ export default (sequelize, DataTypes) => {
                     name: `${model.name} - Reviewer`,
                     provider: model.provider,
                     parameters: {
-                      problemType: model.problemType,
+                      problemType: 'oss',
                     },
                     modelGroupId: model.modelGroupId,
                     type: 'largeLanguageModel',
