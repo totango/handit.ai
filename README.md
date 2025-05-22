@@ -58,6 +58,68 @@ Early adopters and contributors are welcome to **follow the build**, **open issu
 
 ---
 
+## 🚀 Getting Started
+
+Handit is designed to be easy to run locally with Docker Compose. You can get both the backend (API) and frontend (dashboard) running with a single command.
+
+### 1. Prerequisites
+- [Docker](https://www.docker.com/get-started) & [Docker Compose](https://docs.docker.com/compose/)
+- (Optional for advanced users) [Node.js](https://nodejs.org/) and [PostgreSQL](https://www.postgresql.org/)
+
+### 2. Clone the Repository
+```bash
+git clone https://github.com/handit-ai/handit.ai.git
+cd handit.ai
+```
+
+### 3. Environment Variables
+Create a `.env` file in the root directory (or set the variables in your shell):
+```
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=your_db_name
+```
+You can also add any other environment variables required by the API or dashboard.
+
+### 4. Run in Development Mode
+This uses `docker-compose.dev.yml` for hot-reloading and local development:
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- API: [http://localhost:3001/api](http://localhost:3001/api)
+- Database: localhost:5432 (Postgres)
+- Redis: localhost:6379
+
+### 5. Run in Production Mode
+This uses `docker-compose.yml` for a production-like environment:
+```bash
+docker compose -f docker-compose.yml up --build
+```
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- API: [http://localhost:3001/api](http://localhost:3001/api)
+
+### 6. Manual Local Setup (Advanced)
+If you want to run the backend and frontend separately (without Docker):
+- Install dependencies in each app:
+  ```bash
+  cd apps/api && npm install
+  cd ../dashboard && npm install
+  ```
+- Start Postgres and Redis locally, and set up your `.env` files.
+- Run the backend:
+  ```bash
+  cd apps/api
+  npm run dev
+  ```
+- Run the frontend:
+  ```bash
+  cd apps/dashboard
+  npm run dev
+  ```
+
+---
+
 ## 📚 Documentation
 
 - Docs and hosted playground coming soon  
