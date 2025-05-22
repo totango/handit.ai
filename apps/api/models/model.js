@@ -39,6 +39,36 @@ export default (sequelize, DataTypes) => {
       Model.hasMany(models.ModelEvaluationPrompt, { foreignKey: 'modelId', as: 'evaluationPrompts' });
     }
 
+
+    async evaluationPrompts() {
+      const evaluationPrompts = await sequelize.models.ModelEvaluationPrompt.findAll({
+        where: {
+          modelId: this.id,
+        },
+        include: [
+          {
+            model: sequelize.models.EvaluationPrompt,
+            as: 'evaluationPrompt',
+            attributes: ['id', 'name', 'prompt'],
+          },
+          {
+            model: sequelize.models.IntegrationToken,
+            as: 'integrationToken',
+            attributes: ['id', 'name', 'providerId'],
+            include: [
+              {
+                model: sequelize.models.Provider,
+                as: 'provider',
+                attributes: ['id', 'name'],
+              },
+            ],
+          },
+        ],
+      });
+  
+      return evaluationPrompts;
+    }
+
     /**
      * Release a specific prompt version: set active_version to false for all, then true for the target
      * @param {Object} params - Parameters for release
@@ -214,6 +244,9 @@ export default (sequelize, DataTypes) => {
           }
         );
 
+        const modelGroup = await this.getModelGroup();
+        const company = await modelGroup.getCompany();
+
         await Promise.all(
           entries.map(async (entry) => {
             const modelLog = await sequelize.models.ModelLog.findByPk(entry.id);
@@ -222,7 +255,8 @@ export default (sequelize, DataTypes) => {
               abTests[i],
               sequelize.models.ModelLog,
               modelLog.id,
-              sequelize.models
+              sequelize.models,
+              company
             );
           }, 0)
         );

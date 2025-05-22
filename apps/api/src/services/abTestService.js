@@ -2,7 +2,7 @@ import { generateAIResponse } from './aiService.js';
 import { executeTrack } from './trackService.js';
 import { parseAttachments, parseInputContent } from './parser.js';
 
-export const evaluateAB = async (entry, modelObj, ModelLog, originalLogId, db) => {
+export const evaluateAB = async (entry, modelObj, ModelLog, originalLogId, db, company = null) => {
   const { Model } = db;
   const model = await Model.findByPk(modelObj.id);
 
@@ -15,6 +15,8 @@ export const evaluateAB = async (entry, modelObj, ModelLog, originalLogId, db) =
   const messages = [
     { role: 'system', content: systemPrompt }
   ];
+
+  const optimizationToken = company?.optimizationToken;
 
   // If there are images, add them to the content
   if (attachments.length > 0) {
@@ -34,6 +36,7 @@ export const evaluateAB = async (entry, modelObj, ModelLog, originalLogId, db) =
       content: textContent
     });
   }
+
 
   // Generate response using DeepInfra
   const completion = await generateAIResponse({

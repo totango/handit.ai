@@ -101,6 +101,26 @@ export default (sequelize, DataTypes) => {
       return users;
     }
 
+    async getOptimizationToken() {
+      const optimizationTokenId = this.optimizationTokenId;
+      if (!optimizationTokenId) {
+        return null;
+      }
+      const optimizationToken = await sequelize.models.IntegrationToken.findOne({
+        where: {
+          id: optimizationTokenId,
+        },
+        include: [
+          {
+            model: sequelize.models.Provider,
+            as: 'provider',
+            attributes: ['id', 'name'],
+          },
+        ],
+      });
+      return optimizationToken;
+    }
+
     async moveModelMetricsToLast30Days() {
       const modelGroups = await sequelize.models.ModelGroup.findAll({
         where: {

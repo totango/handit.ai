@@ -6,6 +6,7 @@ import {
 } from '../src/services/outputProcessingService.js';
 import {
   batchEvaluate,
+  singleEvaluate,
 } from '../src/services/evaluationService.js';
 import { executeCalculateMetricsForModel } from '../src/services/modelMetricLogCalulatorService.js';
 import { evaluateAB } from '../src/services/abTestService.js';
@@ -174,42 +175,29 @@ export default (sequelize, DataTypes) => {
               if (!model.isReviewer) {
                 const reviewers = await model.getReviewers();
                 if (reviewers.length === 0) {
-                  const logsCount = await sequelize.models.ModelLog.count({
-                    where: { modelId: model.id },
+                  const reviewer = await sequelize.models.Model.create({
+                    name: `${model.name} - Reviewer`,
+                    provider: model.provider,
+                    parameters: {
+                      problemType: model.problemType,
+                    },
+                    modelGroupId: model.modelGroupId,
+                    type: 'largeLanguageModel',
+                    problemType: model.problemType,
+                    modelCategory: model.modelCategory,
+                    active: true,
+                    isReviewer: true,
                   });
 
-                  if (logsCount >= 10) {
-                    const logs = await sequelize.models.ModelLog.findAll({
-                      where: { modelId: model.id },
-                      order: [['createdAt', 'DESC']],
-                      limit: 10,
-                    });
-                    const problemType = await detectProblemType(model, logs);
-
-                    const reviewer = await sequelize.models.Model.create({
-                      name: `${model.name} - Reviewer`,
-                      provider: model.provider,
-                      parameters: {
-                        problemType: problemType.problemType,
-                      },
-                      modelGroupId: model.modelGroupId,
-                      type: 'largeLanguageModel',
-                      problemType: model.problemType,
-                      modelCategory: model.modelCategory,
-                      active: true,
-                      isReviewer: true,
-                    });
-
-                    await sequelize.models.ReviewersModels.create({
-                      reviewerId: reviewer.dataValues.id,
-                      modelId: model.id,
-                      reviewer_id: reviewer.dataValues.id,
-                      model_id: model.id,
-                      activationThreshold: 5,
-                      evaluationPercentage: 30,
-                      limit: 5,
-                    });
-                  }
+                  await sequelize.models.ReviewersModels.create({
+                    reviewerId: reviewer.dataValues.id,
+                    modelId: model.id,
+                    reviewer_id: reviewer.dataValues.id,
+                    model_id: model.id,
+                    activationThreshold: 5,
+                    evaluationPercentage: 30,
+                    limit: 5,
+                  });
                 }
               }
 
@@ -258,10 +246,13 @@ export default (sequelize, DataTypes) => {
 
                 const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
                 if (randomNumberFrom0To100 <= evaluationPercentage) {
-                  await batchEvaluate(
-                    [modelLog],
+                  const modelId = modelLog.modelId;
+                  const model = await sequelize.models.Model.findByPk(modelId);
+                  const prompts = await model.evaluationPrompts();
+                  await singleEvaluate(
+                    modelLog,
                     reviewerInstance,
-                    sequelize.models.ModelLog
+                    prompts
                   );
                 }
               }
@@ -276,7 +267,8 @@ export default (sequelize, DataTypes) => {
                     abTestModels[i],
                     sequelize.models.ModelLog,
                     modelLog.id,
-                    sequelize.models
+                    sequelize.models,
+                    company
                   );
                 }
               }

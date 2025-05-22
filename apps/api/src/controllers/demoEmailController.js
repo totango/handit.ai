@@ -54,7 +54,7 @@ export const evaluateEmail = async (req, res) => {
   });
   
   
-  const result = await singleEvaluate(modelLog, evaluator, ModelLog);
+  const result = await singleEvaluate(modelLog, evaluator);
 
   return res.json(result);
 };
