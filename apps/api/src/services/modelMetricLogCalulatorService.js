@@ -19,14 +19,34 @@ export const executeCalculateMetricsForModel = async (model, ModelMetricLog, log
 
   const modelMetrics = await model.getModelMetrics();
 
-  if (notProcessedLogs.length < 30) {
+  if (notProcessedLogs.length < 0) {
     return { message: 'No logs found for model' };
   }
 
   // iterate over modelMetrics
   for (let j = 0; j < modelMetrics.length; j++) {
     const metric = modelMetrics[j];
-
+    if (metric.type === 'oss') {
+      let avg = 0;
+      for (let i = 0; i < notProcessedLogs.length; i++) {
+        const log = notProcessedLogs[i];
+        const actual = log.actual[metric.name];
+        if (actual) {
+          avg += actual;
+        }
+      }
+      if (notProcessedLogs.length > 0) {
+        avg = avg / (notProcessedLogs.length * 10.0);
+      }
+      await ModelMetricLog.create({
+        modelMetricId: metric.dataValues.id,
+        value: avg,
+        label: metric.dataValues.name,
+        logs: [],
+        version: logVersion,
+      });
+      continue;
+    }
 
     const mapping = model.parameters?.mapping;
     const calculator = calculators[model.problemType];

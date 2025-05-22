@@ -53,6 +53,57 @@ export default (sequelize, DataTypes) => {
     tableName: 'ModelEvaluationPrompts',
     timestamps: true,
     underscored: true,
+    hooks: {
+      afterCreate: async (modelEvaluationPrompt) => {
+        const promptId = modelEvaluationPrompt.evaluationPromptId;
+        const prompt = await sequelize.models.EvaluationPrompt.findByPk(promptId);
+
+        const modelMetric = await sequelize.models.ModelMetric.findOne({
+          where: {
+            modelId: modelEvaluationPrompt.modelId,
+            name: prompt.name,
+          },
+        });
+
+        if (!modelMetric) {
+        await sequelize.models.ModelMetric.create({
+          modelId: modelEvaluationPrompt.modelId,
+          name: prompt.name,
+          type: 'oss',
+          label: prompt.name,
+            description: prompt.name,
+            threshold: 1,
+          });
+        }
+
+        const abTests = await sequelize.models.ABTestModels.findAll({
+          where: {
+            modelId: modelEvaluationPrompt.modelId,
+          },
+        });
+        
+        for (let i = 0; i < abTests.length; i++) {
+          const abTest = abTests[i];
+          const modelMetric = await sequelize.models.ModelMetric.findOne({
+            where: {
+              modelId: abTest.optimizedModelId,
+              name: prompt.name,
+            },
+          });
+
+          if (!modelMetric) {
+            await sequelize.models.ModelMetric.create({
+              modelId: abTest.optimizedModelId,
+              name: prompt.name,
+              type: 'oss',
+              label: prompt.name,
+              description: prompt.name,
+              threshold: 1,
+            });
+          }
+        }
+      }
+    }
   });
   return ModelEvaluationPrompt;
 }; 
