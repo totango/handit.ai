@@ -110,7 +110,7 @@ export const summaryEvaluation = async (log, evaluatorPrompts = null) => {
   return summary;
 };
 
-export const singleEvaluate = async (entry, evaluator, ModelLog) => {
+export const singleEvaluate = async (entry, evaluator, prompts = []) => {
   const MAX_RETRIES = 2;
 
   let retries = 0;
@@ -118,7 +118,7 @@ export const singleEvaluate = async (entry, evaluator, ModelLog) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      evaluation = await evaluate(entry, evaluator, ModelLog);
+      evaluation = await evaluate(entry, prompts);
       break; 
     } catch {
       retries++;
@@ -126,25 +126,13 @@ export const singleEvaluate = async (entry, evaluator, ModelLog) => {
   }
   let parsedOutput;
 
-  if (evaluation.type === 'evaluators') {
-    if (evaluator.parameters.problemType === 'classification') {
-      parsedOutput = parseClassificationOutput(evaluation);
-    } else {
-      parsedOutput = parseEvaluatorsOutput(evaluation.evaluations);
-    }
-  } else {
-    if (evaluator.parameters.outputStyle === 'LLM') {
-      parsedOutput = parseLLMOutput(evaluation);
-    } else {
-      parsedOutput = parseClassificationOutput(evaluation);
-    }
-  }
-  const evaluatorPrompts = evaluationObject[evaluator.parameters.problemType];
+  parsedOutput = parseEvaluatorsOutput(evaluation.evaluations);
+
   const summary = await summaryEvaluation(
     {
       actual: parsedOutput,
     },
-    evaluatorPrompts
+    prompts
   );
 
   const parsedOutputWithSummary = {
@@ -183,7 +171,7 @@ export const evaluateSamples = async (
 
       while (retries < MAX_RETRIES) {
         try {
-          evaluation = await evaluate(entry, evaluator, ModelLog);
+          evaluation = await evaluate(entry, []);
           return { entry, evaluation };
         } catch (error) {
           retries++;
@@ -277,28 +265,11 @@ export const parseLLMOutput = (output) => {
 };
 
 export const parseEvaluatorsOutput = (evaluations) => {
-  const accuracy =
-    evaluations.some(
-      (evaluation) =>
-        evaluation.evaluator === 'accuracy' && evaluation.score >= 8
-    ) || evaluations.every((evaluation) => evaluation.score >= 8);
-  const accuracyScore = evaluations.find(
-    (evaluation) => evaluation.evaluator === 'accuracy'
-  )?.score;
-
-  const coherenceScore = evaluations.find(
-    (evaluation) => evaluation.evaluator === 'coherence'
-  )?.score;
-
-  const relevanceScore = evaluations.find(
-    (evaluation) => evaluation.evaluator === 'relevance'
-  )?.score;
-
+  const accuracy = evaluations.every((evaluation) => evaluation.score >= 8);
+  
   const output = {
     evaluations,
     correct: accuracy,
-    relevance: relevanceScore || accuracyScore,
-    coherence: coherenceScore || accuracyScore,
   };
 
   for (const evaluation of evaluations) {
@@ -308,14 +279,7 @@ export const parseEvaluatorsOutput = (evaluations) => {
   return output;
 };
 
-const evaluate = async (entry, evaluator, ModelLog) => {
-  const slug = evaluator.slug;
-
-  const outputStyle = evaluator.parameters.outputStyle;
-
-  let completion;
-  let messages;
-  const context = parseContext(entry.input);
+const evaluate = async (entry, prompts = []) => {
   const attachment = await parseAttachments(entry.input);
   const parsedOutput = parseOutputContent(entry.output);
   const imageAttachments = attachment
@@ -350,26 +314,26 @@ const evaluate = async (entry, evaluator, ModelLog) => {
           .replaceAll('gpt-4o', '')
           .replaceAll('gpt-4o-mini', '');
 
-  const isLLMEvaluation =
-    evaluator.parameters?.problemType === 'text_generation';
-  const evaluatorPrompts = evaluationObject[evaluator.parameters.problemType];
+
+  const evaluatorPrompts = prompts;
   const evaluations = [];
 
-  if (evaluatorPrompts) {
-    const evaluators = evaluatorPrompts.evaluators;
-    for (let i = 0; i < evaluators.length; i++) {
-      const evaluator = evaluators[i];
+  if (evaluatorPrompts && evaluatorPrompts.length > 0) {
+    for (let i = 0; i < evaluatorPrompts.length; i++) {
+      const evaluator = evaluatorPrompts[i];
 
       const message = [
         {
           role: 'system',
-          content:
-            evaluator.system +
-            `\n\n ${
-              evaluator.problemType === 'demo'
-                ? 'You expert in Business Email generation, the email must be professional and well written and structured, the email must be in spanish, the email must not contain missing data, which means if someting is missing then it should not show placeholders, it should just avoid that, also it must not make up data.'
-                : context
-            }`,
+          content: evaluator.evaluationPrompt.prompt
+          + `### **Return a structured JSON response** in the following format:
+          Return a structured JSON response with your assessment.
+          
+                {
+                  "score": (score from 0-10),
+                  "analysis": "Concise summary of the evaluation focusing strictly on accuracy.",
+                  "errors": ["List of errors"]
+                }`,
         },
         {
           role: 'user',
@@ -392,7 +356,12 @@ const evaluate = async (entry, evaluator, ModelLog) => {
             },
             {
               type: 'text',
-              text: evaluator.user,
+              text: `Evaluate the user input and the extracted output and return a structured JSON response in the following format:
+              {
+                "score": (score from 0-10),
+                "analysis": "Concise summary of the evaluation focusing strictly on accuracy.",
+                "errors": ["List of errors"]
+              }`,
             },
           ],
         },
@@ -400,119 +369,24 @@ const evaluate = async (entry, evaluator, ModelLog) => {
       const completion = await generateAIResponse({
         messages: message,
         numberOfAttachments: imageAttachments.length,
-        responseFormat: evaluator.format,
+        responseFormat: z.object({
+          score: z.number(),
+          analysis: z.string(),
+          errors: z.array(z.string()),
+        }),
+        token: evaluator.integrationToken.token,
+        provider: evaluator.integrationToken.provider.name,
+        model: evaluator.providerModel,
       });
 
 
       evaluations.push({
         ...JSON.parse(completion.choices[0].message.content),
-        evaluator: evaluator.key,
+        evaluator: evaluator.evaluationPrompt.name,
       });
     }
 
-    const hasAccuracy = evaluations.some(
-      (evaluation) => evaluation.evaluator === 'accuracy'
-    );
-
-    if (!hasAccuracy && evaluatorPrompts.accuracyEvaluation) {
-      const accuracy = evaluatorPrompts.accuracyEvaluation(evaluations);
-      evaluations.push({ ...accuracy, evaluator: 'accuracy' });
-    }
-
-    await executeTrack(
-      evaluator,
-      {
-        modelId: slug,
-        input: {
-          system: context,
-          content: [
-            {
-              type: 'text',
-              text: 'User Input:',
-            },
-            ...(Array.isArray(userContent)
-              ? userContent
-              : [
-                  {
-                    type: 'text',
-                    text: userContent,
-                  },
-                ]),
-            {
-              type: 'text',
-              text: `Extracted Output: ${parsedOutput}`,
-            },
-          ],
-        },
-        output: evaluations,
-      },
-      ModelLog
-    );
-
-    return { evaluations, type: 'evaluators' };
-  } else {
-    messages = [
-      {
-        role: 'system',
-        content: isLLMEvaluation
-          ? LLMEvaluationSystemPrompt
-          : classificationEvaluationSystemPrompt,
-      },
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: `System Prompt: ${context}`,
-          },
-          {
-            type: 'text',
-            text: 'User Input:',
-          },
-          ...(Array.isArray(userContent)
-            ? userContent
-            : [
-                {
-                  type: 'text',
-                  text: userContent,
-                },
-              ]),
-          {
-            type: 'text',
-            text: `Generated Output: ${parsedOutput}`,
-          },
-          {
-            type: 'text',
-            text: isLLMEvaluation
-              ? LLMEvaluationUserPrompt
-              : classificationEvaluationUserPrompt,
-          },
-        ],
-      },
-    ];
-
-    completion = await generateAIResponse({
-      messages,
-      numberOfAttachments: imageAttachments.length,
-      responseFormat: 
-        outputStyle === 'LLM' ? LLMEvaluation : ClassificationEvaluation,
-    });
-
-    await executeTrack(
-      evaluator,
-      {
-        modelId: slug,
-        input: messages,
-        output: completion,
-      },
-      ModelLog
-    );
-
-    const answer = JSON.parse(completion.choices[0].message.content);
-    if (evaluations.length > 0) {
-      answer.evaluations = evaluations;
-    }
-    return answer;
+    return evaluations;
   }
 };
 
@@ -573,7 +447,7 @@ export const batchEvaluate = async (entries, evaluator, ModelLog) => {
       }));
     
     if (imageAttachments.length === 0) {
-      return await singleEvaluate(entry, evaluator, ModelLog);
+      return await singleEvaluate(entry, evaluator);
     }
 
     const userContent =

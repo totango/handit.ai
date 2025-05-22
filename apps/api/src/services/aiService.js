@@ -33,13 +33,6 @@ function zodSchemaToJson(schema) {
   return null;
 }
 
-const together = new Together({
-  apiKey: process.env.TOGETHER_API_KEY
-});
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
 const DEFAULT_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8";
 
 /**
@@ -52,18 +45,26 @@ const DEFAULT_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8";
  */
 export const generateAIResponse = async ({
   messages,
-  numberOfAttachments = 0,
   responseFormat = null,
+  token = process.env.TOGETHER_API_KEY,
+  model = DEFAULT_MODEL,
+  provider = 'TogetherAI',
 }) => {
   try {
     let completion;
-    if (numberOfAttachments > 5) {
+    if (provider === 'OpenAI') {
+      const openai = new OpenAI({
+        apiKey: token,
+      });
       completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model,
         messages,
         response_format: responseFormat ? zodResponseFormat(responseFormat, 'responseFormat') : null
       });
-    } else {
+    } else if (provider === 'TogetherAI') {
+      const together = new Together({
+        apiKey: token,
+      });
       const responseFormatJson = zodSchemaToJson(responseFormat);
       if (responseFormatJson) {
         messages.push({
@@ -75,7 +76,7 @@ export const generateAIResponse = async ({
         messages[0] = system;
       }
       completion = await together.chat.completions.create({
-        model: DEFAULT_MODEL,
+        model,
         messages,
       });
     }
