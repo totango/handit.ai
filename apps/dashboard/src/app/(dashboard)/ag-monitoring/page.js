@@ -140,7 +140,6 @@ export default function MonitoringPage() {
   return (
     <Box
       sx={{
-        maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
         width: 'var(--Content-width)',
@@ -185,7 +184,7 @@ export default function MonitoringPage() {
               height: '460px',
               marginBottom: '30px',
             }}
-            style={{ display: 'flex', flexDirection: 'column' }}
+            style={{ display: 'flex', flexDirection: 'column', paddingRight: 0 }}
           >
             <AgentCurrentMetricsChart
               data={selectedNode ? selectedNode?.data?.type === 'model' ? metricsComparisonLastMonth : toolMetricsComparisonLastMonth : agentMetricsComparisonLastMonth}
@@ -205,7 +204,7 @@ export default function MonitoringPage() {
               flexDirection: 'column',
               marginBottom: '30px',
             }}
-            style={{ display: 'flex', flexDirection: 'column' }}
+            style={{ display: 'flex', flexDirection: 'column', paddingRight: 0 }}
           >
             <AgentMetricsCard selectedNode={selectedNode} isLoading={metricsLoading} data={metrics} agent={agentDetails} />
           </Grid>

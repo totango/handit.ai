@@ -64,15 +64,15 @@ export const AgentMonitoring = ({
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
   // Viewport configuration for initial node centering
-  const [initialViewport, setInitialViewport] = React.useState({ x: 0, y: 0, zoom: 0.8 });
+  const [initialViewport, setInitialViewport] = React.useState({ x: 100, y: 100, zoom: 0.5 });
   React.useEffect(() => {
     if (initialNodes && initialNodes.length > 0) {
       const first = initialNodes[0];
       if (first && first.position) {
         setInitialViewport({
-          x: -first.position.x + 300,
-          y: -first.position.y + 50,
-          zoom: 0.8,
+          x: first.position.x + 100,
+          y: first.position.y + 100,
+          zoom: 0.5,
         });
       }
     }

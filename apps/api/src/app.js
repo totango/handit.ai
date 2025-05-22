@@ -76,9 +76,6 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
-new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
-});
 app.use('/api/setup', setupRouter);
 
 

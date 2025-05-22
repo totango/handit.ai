@@ -247,7 +247,8 @@ export const DeploymentMonitoringNode = React.memo(({ id, data, isConnectable })
           borderRadius: '8px',
           background: 'var(--mui-palette-background-paper, #181c20)',
           boxShadow: 1,
-          px: 1.5,
+          paddingLeft: 0,
+          paddingRight: 0,
           paddingTop: 1.5,
           paddingBottom: 0,
           display: 'flex',
@@ -256,7 +257,7 @@ export const DeploymentMonitoringNode = React.memo(({ id, data, isConnectable })
         }}
       >
         {/* Type */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1.5, paddingLeft: 1.5, paddingRight: 1.5 }}>
           <Typography variant="body2" color="text.secondary">
             Type
           </Typography>
@@ -269,7 +270,7 @@ export const DeploymentMonitoringNode = React.memo(({ id, data, isConnectable })
             {problemTypeLabel}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1.5, paddingLeft: 1.5, paddingRight: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             
             <Typography variant="body2" color="text.secondary">
