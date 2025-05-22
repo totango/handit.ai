@@ -126,22 +126,10 @@ export const singleEvaluate = async (entry, evaluator, prompts = []) => {
   }
   let parsedOutput;
 
-  parsedOutput = parseEvaluatorsOutput(evaluation.evaluations);
-
-  const summary = await summaryEvaluation(
-    {
-      actual: parsedOutput,
-    },
-    prompts
-  );
-
-  const parsedOutputWithSummary = {
-    ...parsedOutput,
-    summary,
-  };
+  parsedOutput = parseEvaluatorsOutput(evaluation);
 
   await updateModelLog(entry, {
-    actual: parsedOutputWithSummary,
+    actual: parsedOutput,
     autoEvaluationProcessed: true,
     processed: true,
     status: isCorrect({ actual: parsedOutput }) ? 'success' : 'error',
@@ -321,11 +309,10 @@ const evaluate = async (entry, prompts = []) => {
   if (evaluatorPrompts && evaluatorPrompts.length > 0) {
     for (let i = 0; i < evaluatorPrompts.length; i++) {
       const evaluator = evaluatorPrompts[i];
-
       const message = [
         {
           role: 'system',
-          content: evaluator.evaluationPrompt.prompt
+          content: evaluator.evaluationPrompt.dataValues.prompt
           + `### **Return a structured JSON response** in the following format:
           Return a structured JSON response with your assessment.
           
@@ -374,9 +361,9 @@ const evaluate = async (entry, prompts = []) => {
           analysis: z.string(),
           errors: z.array(z.string()),
         }),
-        token: evaluator.integrationToken.token,
-        provider: evaluator.integrationToken.provider.name,
-        model: evaluator.providerModel,
+        token: evaluator.evaluationPrompt.defaultIntegrationToken.token,
+        provider: evaluator.evaluationPrompt.defaultIntegrationToken.provider.name,
+        model: evaluator.evaluationPrompt.defaultProviderModel,
       });
 
 
@@ -388,6 +375,7 @@ const evaluate = async (entry, prompts = []) => {
 
     return evaluations;
   }
+  return [];
 };
 
 /**

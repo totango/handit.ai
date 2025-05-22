@@ -66,15 +66,18 @@ export const runWeeklyOptimization = async (req, res) => {
             await model.updateOptimizedPrompt(newPrompt);
           } else {
             // Create a new optimized model
+            const originalModel = model.toJSON();
+            // remove id from originalModel
+            delete originalModel.id;
             const optimizedModel = await Model.create({
-              ...model.toJSON(),
+              ...originalModel,
               slug: `${model.slug}-optimized-${Date.now()}`,
               isOptimized: true,
               parameters: {
                 prompt: newPrompt,
                 problemType: model.parameters?.problemType
               },
-              problemType: model.problemType
+              problemType: model.problemType,
             });
 
             // Copy metrics and reviewers
@@ -91,7 +94,9 @@ export const runWeeklyOptimization = async (req, res) => {
             for (const reviewer of reviewers) {
               await ReviewersModels.create({
                 modelId: optimizedModel.id,
-                reviewerId: reviewer.id
+                model_id: model.id,
+                reviewer_id: reviewer.reviewerId,
+                reviewerId: reviewer.reviewerId
               });
             }
 

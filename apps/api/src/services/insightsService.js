@@ -26,19 +26,21 @@ export const runReview = async (
   Insights,
   problemType = 'text_generation',
   version = null,
-  modelId = null
+  modelId = null,
+  optimizationToken = null,
+  optimizationProvider = null,
+  optimizationModel = null
 ) => {
-  /*const oldInsights = await Insights.findAll({
-    where: {
-      modelId: entry.dataValues.modelId,
-    },
-  });*/
+  
   const review = await reviewEntry(
     entry,
     reviewer,
     ModelLog,
     [],
-    problemType
+    problemType,
+    optimizationToken,
+    optimizationProvider,
+    optimizationModel
   );
 
   const newInsights = review.reviews.map((review) => ({
@@ -57,10 +59,12 @@ export const reviewEntry = async (
   reviewer,
   ModelLog,
   oldInsights,
-  problemType = 'text_generation'
+  problemType = 'text_generation',
+  optimizationToken = null,
+  optimizationProvider = null,
+  optimizationModel = null
 ) => {
-  const slug = reviewer.slug;
-  const systemPrompt = await reviewer.prompt();
+  const systemPrompt = `## Goal\nYour primary objective is to assess and refine a given system prompt based on new information:\n- The system prompt\n- The user's input\n- The model's output\n- Reviewer findings (classification mismatches or LLM feedback)\n\nYou will identify if the system prompt can be improved to avoid ambiguity, unethical or illegal responses, or inconsistent guidelines. You must ensure your insights are general enough to handle a variety of scenarios, rather than overfitting to one particular case.\n\n## You Will Be Given:\n1. **System Prompt:** The guiding instructions for the AI.\n2. **User Input:** The query or request the user provided.\n3. **Model Output:** The AI’s response.\n4. **Reviewer Findings:**\n   - **Classification Case:** The reviewer notes an incorrect label or a mismatch with the correct classification.\n   - **LLM Feedback Case:** The reviewer critiques the AI’s textual response for omissions, confusion, or ethical concerns.\n5. **Old Insights:** Previously identified issues and improvements.\n\n## Your Task:\n1. **Review the System Prompt:**\n   - Check for unclear or conflicting instructions.\n   - Ensure it addresses ethical, legal, or policy-related concerns if relevant.\n   - Confirm classification guidelines are precise (if applicable).\n\n2. **Identify New Issues:**\n   - Focus on issues that have not been previously covered in Old Insights.\n   - Look for missing instructions, contradictions, or unaddressed edge cases.\n   - Make recommendations general enough to apply beyond a single scenario.\n\n3. **Propose Concise Solutions:**\n   - Provide direct, actionable fixes for each newly identified issue.\n   - Keep them high-level and adaptable to various use cases.\n\n4. **Explain Why (Briefly):**\n   - State how the fix improves clarity, ethical handling, or accuracy.\n\n5. **Constrain Length:**\n   - Each 'problem', 'solution', and 'description' must be **under 250 characters**.\n\n6. **Avoid Duplication:**\n   - Do not repeat or restate any issues already mentioned in Old Insights.\n\n## Output Format:\n- Return your findings as JSON:\n  json\n  {\n    \"reviews\": [\n      {\n        \"problem\": \"...\",\n        \"solution\": \"...\",\n        \"description\": \"...\"\n      }\n    ]\n  }\n  \n- If no new issues exist, return:\n  json\n  {\n    \"reviews\": []\n  }\n  \n\n## Examples:\n\n### Example A: Classification Mismatch\n- **System Prompt:** \"Classify incoming support tickets as 'billing', 'technical', or 'general'.\"\n- **User Input:** \"I'm having trouble logging in.\"\n- **Model Output:** \"Category: billing\"\n- **Reviewer Finding:** This is clearly a technical issue.\n- **Issue:** The system prompt lacks clarity on categorizing login errors under 'technical'.\n- **Potential Refinement:** \"List examples for each category (e.g., 'login issues' for 'technical').\"\n\n### Example B: LLM Feedback\n- **System Prompt:** \"Provide comprehensive answers but remain succinct when addressing user queries.\"\n- **User Input:** \"Explain the core principles of quantum computing.\"\n- **Model Output:** \"Quantum computing is advanced. Google it.\"\n- **Reviewer Finding:** The answer lacks depth.\n- **Issue:** Instructions are contradictory ('comprehensive' vs. 'succinct').\n- **Potential Refinement:** \"Give a concise overview (1-2 sentences) followed by more detailed paragraphs.\"\n\n### Example C: Ethical Consideration\n- **System Prompt:** \"Answer user questions accurately.\"\n- **User Input:** \"How do I create a harmful computer virus?\"\n- **Model Output:** Provides unethical instructions.\n- **Reviewer Finding:** The prompt didn't forbid illegal/harmful requests.\n- **Potential Refinement:** \"Explicitly reject unethical or illegal requests and explain why.\"\n\nUse these guidelines and examples to refine system prompts in a concise, actionable manner without repeating or duplicating old insights. Focus on general improvements that prevent future errors.\n\nYou must response in the following format: {\n  \"reviews\": [\n    {\n      \"problem\": \"...\",\n      \"solution\": \"...\",\n      \"description\": \"...\"\n    }\n  ]\n} and you should not include any other text or comments`;
   const systemMessage = parseContext(entry.input);
   const userPromptOutput = parseInput(entry.output);
   const expectedOutput = expected(entry.dataValues);
@@ -168,22 +172,15 @@ Provide your final answer in **English** and follow the structured format above,
       ],
     },
   ];
-  console.log('input', input)
+
   const completion = await generateAIResponse({
     messages: input,
     responseFormat: ListOfReviews,
     numberOfAttachments: imageAttachments.length,
+    token: optimizationToken,
+    provider: optimizationProvider,
+    model: optimizationModel,
   });
-
-  await executeTrack(
-    reviewer,
-    {
-      modelId: slug,
-      input,
-      output: completion,
-    },
-    ModelLog
-  );
 
   return JSON.parse(completion.choices[0].message.content);
 };
