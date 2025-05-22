@@ -6,7 +6,6 @@ import { Sequelize } from 'sequelize';
 import cors from 'cors';
 import compression from 'compression';
 import authRoutes from './routes/authRoutes.js';
-import demoEmailRoutes from './routes/demoEmailRoutes.js';
 import agentStructureRoutes from './routes/agentStructureRoutes.js';
 
 // Importing all route files
@@ -27,7 +26,6 @@ import trackRoutes from './routes/trackRoutes.js';
 import monitoringRoutes from './routes/monitoringRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
-import analyticsRoutes from './routes/analyticsRoutes.js';
 import abTestRoutes from './routes/abTestRoutes.js';  
 import insightsRoutes from './routes/insightsRoutes.js';
 import performanceRoutes from './routes/performanceRoutes.js';
@@ -35,16 +33,12 @@ import authenticateJWT from './middleware/authMiddleware.js';
 import automaticOptimizationRoutes from './routes/automaticOptimizationRoutes.js';
 import evaluatorRoutes from './routes/evaluatorRoutes.js';
 import agentRoutes from './routes/agentRoutes.js';
-import weeklyEmailRoutes from './routes/weeklyEmailRoutes.js';
 import { addMetricJob } from './jobs/metricJob.js';
 import setupRouter from './routes/setupRouter.js';
-import checkRoutes from './routes/checkRoutes.js';
-import weeklyOptimizationRoutes from './routes/weeklyOptimizationRoutes.js';
 import samplingRoutes from './routes/samplingRoutes.js';
 import nodeMetricsRoutes from './routes/nodeMetricsRoutes.js';
 import messageRouter from './routes/messageRouter.js';
 import validateApiToken from './middleware/apiTokenMiddleware.js';
-import emailAutonomRoutes from './routes/emailAutonomRoutes.js';
 import promptVersionRoutes from './routes/promptVersionRoutes.js';
 import integrationTokenRoutes from './routes/integrationTokenRoutes.js';
 import evaluatorMetricRoutes from './routes/evaluatorMetricRoutes.js';
@@ -90,12 +84,6 @@ app.use('/api/setup', setupRouter);
 
 // Public routes
 app.use('/api/auth', authRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/demo-email', demoEmailRoutes);
-app.use('/api/check', checkRoutes);
-app.use('/api/weekly-email', weeklyEmailRoutes);
-app.use('/api/weekly-optimization', weeklyOptimizationRoutes);
-app.use('/api/email-autonom', emailAutonomRoutes);
 app.use('/api/sampling', validateApiToken, samplingRoutes);
 app.use('/api/node-metrics', validateApiToken, nodeMetricsRoutes);
 app.use('/api/messages', validateApiToken, messageRouter);
