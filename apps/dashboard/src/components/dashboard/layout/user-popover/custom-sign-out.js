@@ -64,9 +64,6 @@ export function CustomSignOut() {
       // Refresh the auth state
       await checkSession?.();
 
-      // Optionally clear RTK Query cache here if you use it
-      // dispatch(api.util.resetApiState());
-
       // Refresh the router and redirect to sign-in
       router.refresh();
       router.push(paths.auth.custom.signIn);
@@ -74,8 +71,7 @@ export function CustomSignOut() {
     } catch (err) {
       logger.error('Sign out error', err);
       toast.error('Something went wrong, unable to sign out');
-    } finally {
-      router.refresh();
+      // Even if sign out fails, redirect to sign-in page
       router.push(paths.auth.custom.signIn);
     }
   }, [checkSession, router]);

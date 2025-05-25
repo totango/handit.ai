@@ -65,6 +65,7 @@ export const paths = {
       account: '/settings/account',
       billing: '/settings/billing',
       integrations: '/settings/integrations',
+      tokens: '/settings/tokens',
       notifications: '/settings/notifications',
       security: '/settings/security',
       team: '/settings/team',

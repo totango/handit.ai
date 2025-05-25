@@ -16,7 +16,6 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import { config } from '@/config';
-import { IntegrationTokensManager } from '@/components/dashboard/settings/integrations-tokens-manager';
 import { Integrations } from '@/components/dashboard/settings/integrations';
 import { useGetUserQuery } from '@/services/auth/authService';
 
@@ -34,14 +33,16 @@ export default function Page() {
       {/* Page Header */}
       <div>
         <Typography variant="h4">API Integrations</Typography>
+        <Typography color="text.secondary" sx={{ mt: 1 }}>
+          Manage your API keys and integration settings
+        </Typography>
       </div>
 
-      {/* Integration Tokens Management Section */}
+      {/* API Integration Management Section */}
       <Integrations
         productionKey={userData?.company?.apiToken}
         stagingKey={userData?.company?.stagingApiToken}
       />
-      <IntegrationTokensManager initialOptimizationTokenId={userData?.company?.optimizationTokenId ? String(userData.company.optimizationTokenId) : ''} />
     </Stack>
   );
 }
