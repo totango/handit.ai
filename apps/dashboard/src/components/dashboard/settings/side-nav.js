@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
+import { Key as KeyIcon } from '@phosphor-icons/react/dist/ssr/Key';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
@@ -34,9 +35,15 @@ const navItems = [
     items: [
       {
         key: 'integrations',
-        title: 'API Integration',
+        title: 'Integrations',
         href: paths.dashboard.settings.integrations,
         icon: 'plugs-connected',
+      },
+      {
+        key: 'tokens',
+        title: 'Model Tokens',
+        href: paths.dashboard.settings.tokens,
+        icon: 'key',
       },
     ],
   },
@@ -44,6 +51,7 @@ const navItems = [
 
 const icons = {
   'credit-card': CreditCardIcon,
+  'key': KeyIcon,
   'lock-key': LockKeyIcon,
   'plugs-connected': PlugsConnectedIcon,
   'user-circle': UserCircleIcon,

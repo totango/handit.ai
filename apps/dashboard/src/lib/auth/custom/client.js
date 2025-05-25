@@ -1,6 +1,23 @@
 'use client';
 
 import { authApi } from '@/services/auth/authService';
+import { kpiApi } from '@/services/kpiService';
+import { modelsApi } from '@/services/modelsService';
+import { alertsApi } from '@/services/alertsService';
+import { monitoringApi } from '@/services/monitoringService';
+import { modelsMetricsApi } from '@/services/modelMetricsService';
+import { datasetsApi } from '@/services/datasetsService';
+import { dashboardApi } from '@/services/dashboardService';
+import { insightsApi } from '@/services/insightsService';
+import { agentsApi } from '@/services/agentsService';
+import { setupApi } from '@/services/setupService';
+import { demoEmailApi } from '@/services/demoEmailService';
+import { conversationApi } from '@/services/conversationService';
+import { promptApi } from '@/services/promptService';
+import { reviewersTemplateApi } from '@/services/reviewersTemplateService';
+import { integrationTokenApi } from '@/services/integrationTokenService';
+import { evaluatorMetricApi } from '@/services/evaluatorMetricService';
+import { providerApi } from '@/services/providerService';
 import { store } from '@/store';
 
 /**
@@ -135,6 +152,23 @@ class AuthClient {
 
     // Reset API state to clear any cached data
     await store.dispatch(authApi.util.resetApiState());
+    await store.dispatch(kpiApi.util.resetApiState());
+    await store.dispatch(modelsApi.util.resetApiState());
+    await store.dispatch(alertsApi.util.resetApiState());
+    await store.dispatch(monitoringApi.util.resetApiState());
+    await store.dispatch(modelsMetricsApi.util.resetApiState());
+    await store.dispatch(datasetsApi.util.resetApiState());
+    await store.dispatch(dashboardApi.util.resetApiState());
+    await store.dispatch(insightsApi.util.resetApiState());
+    await store.dispatch(agentsApi.util.resetApiState());
+    await store.dispatch(setupApi.util.resetApiState());
+    await store.dispatch(demoEmailApi.util.resetApiState());
+    await store.dispatch(conversationApi.util.resetApiState());
+    await store.dispatch(promptApi.util.resetApiState());
+    await store.dispatch(reviewersTemplateApi.util.resetApiState());
+    await store.dispatch(integrationTokenApi.util.resetApiState());
+    await store.dispatch(evaluatorMetricApi.util.resetApiState());
+    await store.dispatch(providerApi.util.resetApiState());
     return {};
   }
 }
