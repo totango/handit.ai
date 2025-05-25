@@ -28,6 +28,7 @@ export function VerticalLayout({ children }) {
     const { data } = useGetMineModelLogsCountQuery();
     modelLogs = data;
   }
+  modelLogs = { count: 1 };
 
   const sideNavWidth = sideNavOpen ? '280px' : '64px';
 
