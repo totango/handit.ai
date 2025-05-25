@@ -109,7 +109,7 @@ export function VerticalLayout({ children }) {
               </Typography>
               <Link
                 component={RouterLink}
-                href="https://docs.handit.ai/connecting-your-model-a-complete-guide"
+                href="https://docs.handit.ai/quickstart"
                 target="_blank"
                 sx={{ fontWeight: '500', fontSize: '14px', color: 'rgba(255, 255, 255, 0.8)', textDecoration: 'underline', fontWeight: 'bold' }}
               >
