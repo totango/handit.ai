@@ -1,6 +1,25 @@
 import db from '../../models/index.js';
 
-const { Model } = db;
+const { Model, AgentNode, Agent } = db;
+
+export const getActivePrompt = async (req, res) => {
+  try {
+    const agent = await Agent.findOne({ where: { slug: req.params.agentSlug }});
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    const llmNodes = await AgentNode.findAll({ where: { agentId: agent.id, type: 'model' }});
+    const models = await Model.findAll({ where: { id: llmNodes.map(node => node.modelId) }});
+    const activePrompts = {};
+    for (const model of models) {
+      const prompt = await model.getModelVersion();
+      activePrompts[model.slug] = prompt.parameters.prompt;
+    }
+    res.status(200).json(activePrompts);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
 export const getOptimizedPrompt = async (req, res) => {
   try {
