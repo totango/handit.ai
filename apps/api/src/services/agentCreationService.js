@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 
 const { Agent, AgentNode, AgentConnection, Model, ModelGroup } = db;
 
-export const createAgentFromConfig = async (config, companyId) => {
+export const createAgentFromConfig = async (config, companyId, isN8N = false) => {
   const slug = config.agent.slug || generateSlug(config.agent.name)
   const createdAgent = await Agent.findOne({ where: { slug, companyId } });
   if (createdAgent) {
