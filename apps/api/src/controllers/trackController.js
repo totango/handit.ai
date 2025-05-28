@@ -10,7 +10,131 @@ const {
   AgentNodeLog,
   Company,
   AgentNode,
+  Agent,
 } = db;
+
+export const bulkTrack = async (req, res) => {
+  try {
+    // Get the token from the request headers
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+    const agentSlug = req.body.agentName;
+
+    // Validate token and get environment
+    const companyAuth = await Company.validateApiToken(token);
+    if (!companyAuth) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    const { environment, company } = companyAuth;
+
+    const companyId = company.id || company.dataValues.id;
+    let agents = await Agent.findAll({ where: { companyId } });
+    if (agentSlug) {
+      agents = agents.filter(agent => agent.slug === agentSlug);
+    }
+    const agentNodes = await AgentNode.findAll({ where: { agentId: { [Op.in]: agents.map(agent => agent.id) } } });
+    const availableModels = agentNodes.map(node => node.modelId);
+    // Only process workflowData
+    if (!req.body.workflowData || !Array.isArray(req.body.workflowData)) {
+      return res.status(400).json({ error: 'Request body must have workflowData as an array' });
+    }
+    const items = req.body.workflowData;
+    const openaiToken = req.body.openAI?.token;
+    const evaluationModel = req.body.openAI?.model;
+
+    let agentLogId = null;
+    // Process each item sequentially to preserve order
+    const results = [];
+    for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
+      const item = items[itemIdx];
+      try {
+        // Use item.id as the node slug
+        const nodeName = item.slug;
+        let modelId = item.input?.params?.modelId || nodeName;
+        const slug = nodeName;
+        const camelCaseSlug = camelize(slug);
+        const lowerCaseSlug = slug.toLowerCase();
+
+        let model = await Model.findOne({ where: { slug, id: { [Op.in]: availableModels } } });
+        if (!model) {
+          model = await Model.findOne({ where: { slug: modelId, id: { [Op.in]: availableModels } } });
+        }
+        if (!model) {
+          model = await Model.findOne({ where: { slug: camelCaseSlug, id: { [Op.in]: availableModels } } });
+        }
+        if (!model) {
+          model = await Model.findOne({ where: { slug: lowerCaseSlug, id: { [Op.in]: availableModels } } });
+        }
+        let agentNode = null;
+        if (!model) {
+          agentNode = await db.AgentNode.findOne({
+            where: {
+              [db.Sequelize.Op.or]: [{ slug }, { slug: modelId }],
+              type: 'tool',
+              id: { [Op.in]: agentNodes.map(node => node.id) }
+            },
+          });
+          if (!agentNode) {
+            agentNode = await db.AgentNode.findOne({
+              where: {
+                [db.Sequelize.Op.or]: [
+                  { slug: camelCaseSlug },
+                  { slug: modelId },
+                  { slug: slug },
+                  { slug: lowerCaseSlug },
+                ],
+                type: 'tool',
+                id: { [Op.in]: agentNodes.map(node => node.id) }
+              },
+            });
+          }
+        }
+        // Compose track data
+        const trackData = {
+          ...item,
+          environment,
+          evaluationToken: openaiToken,
+          evaluationModel,
+          nodeName,
+          agentLogId,
+          slug: null,
+        };
+        // Save using the same logic as track
+        const answer = agentNode
+          ? await executeToolTrack(agentNode, trackData)
+          : await executeTrack(model, trackData, ModelLog);
+        agentLogId = answer.agentLogId;
+        if (answer.error) {
+          results.push({ node: nodeName, error: answer.error });
+        } else {
+          results.push({ node: nodeName, success: true, modelLogId: answer.modelLogId || null });
+        }
+      } catch (err) {
+        console.log('err', err);
+        results.push({ node: item.id, error: err.message });
+      }
+    }
+
+    const agentLog = await AgentLog.findByPk(agentLogId);
+    if (agentLog) {
+     await agentLog.update({
+      status: 'success',
+      output: results,
+     });
+    }
+    res.status(201).json({ results });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+function camelize(str) {
+  return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+    return index === 0 ? word.toLowerCase() : word.toUpperCase();
+  }).replace(/\s+/g, '');
+};
 
 export const urlsToTrack = async (req, res) => {
   try {
