@@ -2034,14 +2034,15 @@ export const uploadAgent = async (req, res) => {
 
     // Parse the uploaded JSON file
     const rawConfig = JSON.parse(req.file.buffer.toString());
-
+    const isN8N = rawConfig.versionId;
     // Use AI to parse and structure the configuration
     const parsedConfig = await parseAgentConfig(rawConfig);
 
     // Create the agent and related records
     const agent = await createAgentFromConfig(
       parsedConfig,
-      req.userObject.companyId
+      req.userObject.companyId,
+      isN8N
     );
 
     res.status(201).json({
