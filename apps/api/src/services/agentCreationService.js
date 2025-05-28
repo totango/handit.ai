@@ -1,7 +1,8 @@
+import evaluationPrompt from '../../models/evaluationPrompt.js';
 import db from '../../models/index.js';
 import { Op } from 'sequelize';
 
-const { Agent, AgentNode, AgentConnection, Model, ModelGroup } = db;
+const { Agent, AgentNode, AgentConnection, Model, ModelGroup, ModelEvaluationPrompt, EvaluationPrompt } = db;
 
 export const createAgentFromConfig = async (config, companyId, isN8N = false) => {
   const slug = config.agent.slug || generateSlug(config.agent.name)
@@ -39,8 +40,28 @@ export const createAgentFromConfig = async (config, companyId, isN8N = false) =>
           parameters: nodeConfig?.model?.parameters || {},
           slug: generateSlug(nodeConfig.name),
           modelGroupId: modelGroup.id,
-          active: true
+          active: true,
+          flags: {
+            isN8N: isN8N
+          }
         });
+
+        if (isN8N) {
+          // add hallucination evaluator
+          const hallucinationEvaluator = await EvaluationPrompt.findOne({
+            where: {
+              name: 'Hallucination & Factual Accuracy Evaluation',
+              companyId: companyId
+            }
+          });
+          if (hallucinationEvaluator) {
+            await ModelEvaluationPrompt.create({
+              modelId: model.id,
+              evaluationPromptId: hallucinationEvaluator.id,
+              companyId: companyId
+            });
+          }
+        }
 
         // Create the model node
         node = await AgentNode.create({
