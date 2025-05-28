@@ -1,10 +1,14 @@
 import db from '../../models/index.js';
 import { Op } from 'sequelize';
 
-const { Agent, AgentNode, AgentConnection, Model } = db;
+const { Agent, AgentNode, AgentConnection, Model, ModelGroup } = db;
 
 export const createAgentFromConfig = async (config, companyId) => {
-
+  const slug = config.agent.slug || generateSlug(config.agent.name)
+  const createdAgent = await Agent.findOne({ where: { slug, companyId } });
+  if (createdAgent) {
+    throw new Error('Agent already exists');
+  }
   try {
     // Create the agent
     const agent = await Agent.create({
@@ -22,15 +26,19 @@ export const createAgentFromConfig = async (config, companyId) => {
       
       if (nodeConfig.type === 'model') {
         // Create the model first
-        console.log('nodeConfig', nodeConfig);
+        const modelGroup = await ModelGroup.create({
+          name: nodeConfig.name,
+          description: nodeConfig.description,
+          companyId: companyId
+        });
         const model = await Model.create({
           name: nodeConfig.name,
           description: nodeConfig.description,
           provider: nodeConfig?.model?.provider || 'openai',
           problemType: nodeConfig?.model?.problem_type || 'text_generation',
           parameters: nodeConfig?.model?.parameters || {},
-          slug: nodeConfig.slug || generateSlug(nodeConfig.name),
-          modelGroupId: 1, // You might want to make this configurable
+          slug: generateSlug(nodeConfig.name),
+          modelGroupId: modelGroup.id,
           active: true
         });
 
@@ -88,7 +96,6 @@ export const createAgentFromConfig = async (config, companyId) => {
 
     // Update node types (initial/end nodes)
     await AgentConnection.updateNodeTypes(agent.id);
-
 
     // Fetch the complete agent with all relations
     const completeAgent = await Agent.findByPk(agent.id, {
