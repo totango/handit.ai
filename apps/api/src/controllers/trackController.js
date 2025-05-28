@@ -32,7 +32,9 @@ export const bulkTrack = async (req, res) => {
     const companyId = company.id || company.dataValues.id;
     let agents = await Agent.findAll({ where: { companyId } });
     if (agentSlug) {
-      agents = agents.filter(agent => agent.slug === agentSlug);
+      // camelize the agentSlug
+      const camelizedAgentSlug = camelize(agentSlug);
+      agents = agents.filter(agent => agent.slug === agentSlug || agent.slug === camelizedAgentSlug);
     }
     const agentNodes = await AgentNode.findAll({ where: { agentId: { [Op.in]: agents.map(agent => agent.id) } } });
     const availableModels = agentNodes.map(node => node.modelId);
