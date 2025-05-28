@@ -2034,7 +2034,7 @@ export const uploadAgent = async (req, res) => {
 
     // Parse the uploaded JSON file
     const rawConfig = JSON.parse(req.file.buffer.toString());
-    const isN8N = rawConfig.versionId;
+    const isN8N = rawConfig.versionId ? true : false;
     // Use AI to parse and structure the configuration
     const parsedConfig = await parseAgentConfig(rawConfig);
 
