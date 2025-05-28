@@ -1703,6 +1703,12 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         allowNull: true,
       },
+      flags: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+        defaultValue: null,
+        comment: 'JSON field for storing logic-related flags and metadata'
+      },
       modelGroupId: {
         type: DataTypes.INTEGER,
         allowNull: false,
