@@ -252,7 +252,8 @@ export default (sequelize, DataTypes) => {
                   await singleEvaluate(
                     modelLog,
                     reviewerInstance,
-                    prompts
+                    prompts,
+                    model.flags?.isN8N
                   );
                 }
               }

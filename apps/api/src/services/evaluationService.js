@@ -110,7 +110,7 @@ export const summaryEvaluation = async (log, evaluatorPrompts = null) => {
   return summary;
 };
 
-export const singleEvaluate = async (entry, evaluator, prompts = []) => {
+export const singleEvaluate = async (entry, evaluator, prompts = [], isN8N = false) => {
   const MAX_RETRIES = 2;
 
   let retries = 0;
@@ -118,7 +118,7 @@ export const singleEvaluate = async (entry, evaluator, prompts = []) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      evaluation = await evaluate(entry, prompts);
+      evaluation = await evaluate(entry, prompts, isN8N);
       break; 
     } catch {
       retries++;
@@ -361,9 +361,10 @@ const evaluate = async (entry, prompts = []) => {
           analysis: z.string(),
           errors: z.array(z.string()),
         }),
-        token: evaluator.evaluationPrompt.defaultIntegrationToken.token,
-        provider: evaluator.evaluationPrompt.defaultIntegrationToken.provider.name,
-        model: evaluator.evaluationPrompt.defaultProviderModel,
+        isN8N: isN8N,
+        token: evaluator.evaluationPrompt?.defaultIntegrationToken?.token,
+        provider: evaluator.evaluationPrompt?.defaultIntegrationToken?.provider?.name,
+        model: evaluator.evaluationPrompt?.defaultProviderModel,
       });
 
 
