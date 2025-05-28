@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useGetAgentByIdQuery, useGetAgentsQuery } from '@/services/agentsService';
+import { useGetAgentByIdQuery, useGetAgentsQuery, useUploadAgentMutation } from '@/services/agentsService';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
@@ -20,6 +20,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
+import { toast } from '@/components/core/toaster';
 
 import { TerminalWindow } from '@phosphor-icons/react';
 import { FloppyDisk } from '@phosphor-icons/react';
@@ -32,12 +33,12 @@ import { UserPopover } from '../user-popover/user-popover';
 import { XCircle } from '@phosphor-icons/react';
 import { useGetUserQuery } from '@/services/auth/authService';
 import { dark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { DialogActions, DialogContentText } from '@mui/material';
+import { CircularProgress, DialogActions, DialogContentText } from '@mui/material';
 import { ModelsSwitch } from '../models-switch';
 import { paths } from '@/paths';
 import { ConnectAgentDialog } from '@/components/dashboard/agents/connect-agent-dialog';
 
-export function MainNav({ items, title, onNewEvaluator, onUploadAgent, uploadLoading }) {
+export function MainNav({ items, title, onNewEvaluator }) {
   const [openNav, setOpenNav] = React.useState(false);
   const path = usePathname();
   const { data: agents = [] } = useGetAgentsQuery();
@@ -51,6 +52,9 @@ export function MainNav({ items, title, onNewEvaluator, onUploadAgent, uploadLoa
   const [pendingNavigation, setPendingNavigation] = React.useState(null);
   const [isBackNavigation, setIsBackNavigation] = React.useState(false);
   const fileInputRef = React.useRef(null);
+  const [uploadAgent] = useUploadAgentMutation();
+  const [uploadLoading, setUploadLoading] = React.useState(false);
+
 
   // Get current environment
   const environment = React.useMemo(() => {
@@ -182,8 +186,52 @@ export function MainNav({ items, title, onNewEvaluator, onUploadAgent, uploadLoa
     };
   }, [handleNavigation]);
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadLoading(true);
+    try {
+      const result = await uploadAgent(file).unwrap();
+
+      // If successful, reload page
+      if (result?.id) {
+        window.location.reload();
+      }
+
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      toast.error('Error uploading agent: An Agent with this name already exists');
+      console.error('Error uploading agent:', error);
+      // Optionally show a notification here
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
   return (
     <React.Fragment>
+      {uploadLoading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+          }}
+        >
+          <CircularProgress size={30} />
+        </Box>
+      )}
       
       <Box
         component="header"
@@ -283,7 +331,7 @@ export function MainNav({ items, title, onNewEvaluator, onUploadAgent, uploadLoa
                   ref={fileInputRef}
                   accept=".json"
                   style={{ display: 'none' }}
-                  onChange={onUploadAgent}
+                  onChange={handleFileUpload}
                 />
                 <Button
                   onClick={() => fileInputRef.current?.click()}
