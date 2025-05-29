@@ -18,7 +18,8 @@ import {
   getAgentEntryFlow,
   cloneAgent,
   uploadAgent,
-  getAgentCorrectEntriesByDay
+  getAgentCorrectEntriesByDay,
+  createFromTrace
 } from '../controllers/agentController.js';
 import multer from 'multer';
 
@@ -46,6 +47,7 @@ router.get('/:agentId/entries/:entryId/flow', getAgentEntryFlow);
 router.post('/:id/clone', cloneAgent);
 router.post('/upload', upload.single('file'), uploadAgent);
 router.get('/:id/correct-entries', getAgentCorrectEntriesByDay);
+router.post('/entries/:entryLogId/create-agent', createFromTrace);
 
 
 export default router;
