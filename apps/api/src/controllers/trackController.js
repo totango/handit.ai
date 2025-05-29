@@ -106,8 +106,9 @@ export const bulkTrack = async (req, res) => {
             },
           });
           if (tempAgentNode) {
+
             model = await db.Model.findOne({
-              where: { id: agentNode.modelId },
+              where: { id: tempAgentNode.dataValues.modelId },
             });
           }
         }
