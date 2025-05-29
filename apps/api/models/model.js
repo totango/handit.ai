@@ -221,12 +221,6 @@ export default (sequelize, DataTypes) => {
           },
           order: [['createdAt', 'DESC']],
         });
-        // if the last version is active, set it to inactive
-        if (lastVersion && lastVersion.activeVersion) {
-          await lastVersion.update({
-            activeVersion: false,
-          });
-        }
         await sequelize.models.ModelVersions.create({
           modelId: optimizedModel.id,
           parameters: {
@@ -235,7 +229,6 @@ export default (sequelize, DataTypes) => {
           version: lastVersion ? parseInt(lastVersion.version) + 1 : 1,
           activeVersion: false,
         });
-        
       }
     }
 
