@@ -195,7 +195,7 @@ export default (sequelize, DataTypes) => {
                     reviewer_id: reviewer.dataValues.id,
                     model_id: model.id,
                     activationThreshold: 5,
-                    evaluationPercentage: 30,
+                    evaluationPercentage: model.flags?.isN8N ? 100 : 30,
                     limit: 5,
                   });
                 }
