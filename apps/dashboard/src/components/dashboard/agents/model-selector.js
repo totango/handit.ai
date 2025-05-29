@@ -132,13 +132,10 @@ export const ModelSelector = ({ value, onChange, error, selectEnabled = true, is
   };
 
   const handleModelCreated = async (modelData) => {
-    console.log('plssss')
-    console.log('modelData', modelData);
     try {
       // 1. Create the model
-      console.log('entroooooo')
       const createdModel = await addModel(modelData).unwrap();
-      console.log('createdModel', createdModel);
+
       // 2. Associate each reviewer
       if (modelData.evaluatorIds && modelData.evaluatorIds.length > 0) {
         await Promise.all(

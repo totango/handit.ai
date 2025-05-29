@@ -138,7 +138,6 @@ export const executeTrack = async (model, data, ModelLog) => {
       modelLogId: modelLog.dataValues.id,
     };
   } catch (error) {
-    console.log('error', error);
     return { error: error.message };
   }
 };

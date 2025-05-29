@@ -94,7 +94,6 @@ export default function MonitoringPage() {
           : [{ id: 'output', label: 'Output' }];
           
       // Return formatted node data
-      console.log('----- metrics -----', metrics)
         console.log(node.model_id)
       
       return {

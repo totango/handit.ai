@@ -102,14 +102,12 @@ export function CreateModelForm({ onClose, open = false, onSubmit }) {
    * Handles form submission with validation
    */
   const handleSubmit = async () => {
-    console.log('entroooooo 1111')
     setNewError('');
-    console.log('entroooooo 2222')
-    console.log('name', name);
+
     if (!name || name === '') {
       return setNewError('Model name is required');
     }
-    console.log('entroooooo 3333')
+
     const modelData = {
       name,
       url,

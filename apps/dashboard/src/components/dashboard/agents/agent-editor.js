@@ -110,15 +110,13 @@ export const AgentEditor = ({ title, initialNodes = [], initialEdges = [], onSav
    * @param {string} modelId - The ID of the newly created model
    */
   const handleModelCreated = async (modelData) => {
-    console.log('plssss')
-    console.log('modelData', modelData);
     setLoading(true);
     setSnackbar({ open: false, message: '' });
     try {
       // 1. Create the model
-      console.log('entroooooo')
+
       const createdModel = await addModel(modelData).unwrap();
-      console.log('createdModel', createdModel);
+
       // 2. Associate each reviewer
       if (modelData.evaluatorIds && modelData.evaluatorIds.length > 0) {
         await Promise.all(

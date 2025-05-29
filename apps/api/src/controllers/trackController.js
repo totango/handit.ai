@@ -121,6 +121,10 @@ export const bulkTrack = async (req, res) => {
           agentLogId,
           slug: null,
         };
+
+        if (item.output && Object.keys(item.output).length === 0) {
+          continue;
+        }
         // Save using the same logic as track
         const answer = agentNode
           ? await executeToolTrack(agentNode, trackData)
