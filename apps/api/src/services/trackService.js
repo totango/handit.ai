@@ -211,7 +211,7 @@ export const executeToolTrack = async (agentNode, data) => {
           agentId: agent.id,
           agentNodeId: agentNode.id,
           input: data.input,
-          output: data.output,
+          output: data.output || {},
           environment: data.environment || 'production',
           operationType: agentNode.config?.operationType || 'tool_operation',
           status: data.error ? 'error' : 'success',

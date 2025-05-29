@@ -93,6 +93,19 @@ export const bulkTrack = async (req, res) => {
             });
           }
         }
+        if (!agentNode && !model) {
+          agentNode = await db.AgentNode.findOne({
+            where: {
+              slug: [nodeName, camelCaseSlug, lowerCaseSlug, modelId],
+              id: { [Op.in]: agentNodes.map(node => node.id) }
+            },
+          });
+          if (agentNode) {
+            model = await db.Model.findOne({
+              where: { id: agentNode.modelId },
+            });
+          }
+        }
         // Compose track data
         const trackData = {
           ...item,
