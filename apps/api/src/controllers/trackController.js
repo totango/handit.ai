@@ -99,13 +99,13 @@ export const bulkTrack = async (req, res) => {
           }
         }
         if (!agentNode && !model) {
-          agentNode = await db.AgentNode.findOne({
+          const tempAgentNode = await db.AgentNode.findOne({
             where: {
               slug: [nodeName, camelCaseSlug, lowerCaseSlug, lowerCamelSlug, modelId],
               id: { [Op.in]: agentNodes.map(node => node.id) }
             },
           });
-          if (agentNode) {
+          if (tempAgentNode) {
             model = await db.Model.findOne({
               where: { id: agentNode.modelId },
             });
