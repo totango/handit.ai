@@ -28,13 +28,17 @@ export const parseContext = (data) => {
   const systemMessages = [];
   
   const extractSystemContent = (item) => {
+    if (item?.input?.options?.systemMessage) {
+      systemMessages.push(item.input.options.systemMessage);
+      return;
+    }
     if (!item) return;
     
     if (Array.isArray(item)) {
       item.forEach(extractSystemContent);
     } else if (typeof item === 'object') {
-      if (item.options?.systemMessage) {
-        systemMessages.push(item.options.systemMessage);
+      if (item?.input?.options?.systemMessage) {
+        systemMessages.push(item.input.options.systemMessage);
       }
       if (item.role === 'system' && item.content) {
         systemMessages.push(item.content);
