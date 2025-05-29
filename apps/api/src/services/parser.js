@@ -33,6 +33,9 @@ export const parseContext = (data) => {
     if (Array.isArray(item)) {
       item.forEach(extractSystemContent);
     } else if (typeof item === 'object') {
+      if (item.options?.systemMessage) {
+        systemMessages.push(item.options.systemMessage);
+      }
       if (item.role === 'system' && item.content) {
         systemMessages.push(item.content);
       } else {
