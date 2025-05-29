@@ -58,6 +58,7 @@ export const bulkTrack = async (req, res) => {
         const slug = nodeName;
         const camelCaseSlug = camelize(slug);
         const lowerCaseSlug = slug.toLowerCase();
+        const lowerCamelSlug = camelize(lowerCaseSlug);
 
         let model = await Model.findOne({ where: { slug, id: { [Op.in]: availableModels } } });
         if (!model) {
@@ -68,6 +69,9 @@ export const bulkTrack = async (req, res) => {
         }
         if (!model) {
           model = await Model.findOne({ where: { slug: lowerCaseSlug, id: { [Op.in]: availableModels } } });
+        }
+        if (!model) {
+          model = await Model.findOne({ where: { slug: lowerCamelSlug, id: { [Op.in]: availableModels } } });
         }
         let agentNode = null;
         if (!model) {
@@ -83,6 +87,7 @@ export const bulkTrack = async (req, res) => {
               where: {
                 [db.Sequelize.Op.or]: [
                   { slug: camelCaseSlug },
+                  { slug: lowerCamelSlug },
                   { slug: modelId },
                   { slug: slug },
                   { slug: lowerCaseSlug },
@@ -96,7 +101,7 @@ export const bulkTrack = async (req, res) => {
         if (!agentNode && !model) {
           agentNode = await db.AgentNode.findOne({
             where: {
-              slug: [nodeName, camelCaseSlug, lowerCaseSlug, modelId],
+              slug: [nodeName, camelCaseSlug, lowerCaseSlug, lowerCamelSlug, modelId],
               id: { [Op.in]: agentNodes.map(node => node.id) }
             },
           });
