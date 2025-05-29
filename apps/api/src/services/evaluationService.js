@@ -267,7 +267,8 @@ export const parseEvaluatorsOutput = (evaluations) => {
   return output;
 };
 
-const evaluate = async (entry, prompts = []) => {
+const evaluate = async (entry, prompts = [], isN8N = false) => {
+  console.log('prompts::', prompts);
   const attachment = await parseAttachments(entry.input);
   const parsedOutput = parseOutputContent(entry.output);
   const imageAttachments = attachment

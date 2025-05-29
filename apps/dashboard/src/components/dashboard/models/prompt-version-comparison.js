@@ -467,10 +467,9 @@ export function PromptVersionComparison({
   console.log('metricComparisons', metricComparisons);
   const leftAccuracy = metricComparisons.find((m) => m.label === 'Accuracy')?.left?.value.slice(0, -1);
   const rightAccuracy = metricComparisons.find((m) => m.label === 'Accuracy')?.right?.value.slice(0, -1);
-
+  console.log('leftPromptData?.parameters?.prompt', leftPromptData?.parameters?.prompt);
   onLeftAccuracyChange(parseFloat(leftAccuracy) / 100.0);
   onRightAccuracyChange(parseFloat(rightAccuracy) / 100.0);
-
   // Custom styles for diff viewer (less strong green/red, similar to new-prompt-comparison.js)
   const diffCustomStyles = {
     variables: {
@@ -617,14 +616,24 @@ export function PromptVersionComparison({
       </Grid>
       <Grid item xs={12} md={5.8} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ maxHeight: '50vh', overflow: 'auto', border: '0px solid var(--mui-palette-divider)', borderRadius: '0px', my: 2 }}>
-          <ReactDiffViewer
-            oldValue={leftPromptData?.parameters?.prompt || ''}
-            newValue={rightPromptData?.parameters?.prompt || ''}
-            splitView={true}
-            useDarkTheme={true}
-            styles={diffCustomStyles}
-            compareMethod={DiffMethod.LINES}
-          />
+        {leftPromptData?.parameters?.prompt === rightPromptData?.parameters?.prompt ? (
+  <ReactDiffViewer
+  oldValue={'- ' + leftPromptData?.parameters?.prompt || ''}
+  newValue={'+ ' + rightPromptData?.parameters?.prompt || ''}
+  splitView={true}
+  useDarkTheme={true}
+  styles={diffCustomStyles}
+/>
+) : (
+  <ReactDiffViewer
+    oldValue={leftPromptData?.parameters?.prompt || ''}
+    newValue={rightPromptData?.parameters?.prompt || ''}
+    splitView={true}
+    useDarkTheme={true}
+    styles={diffCustomStyles}
+    compareMethod={DiffMethod.LINES}
+  />
+)}
         </Box>
       </Grid>
       <Box sx={{ bgcolor: 'transparent', borderRadius: '8px', mb: 2, pl: 0, pr: 0, mt: 2 }}>
