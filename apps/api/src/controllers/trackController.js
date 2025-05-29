@@ -1,6 +1,8 @@
 import db from '../../models/index.js';
 import { executeTrack, executeToolTrack } from '../services/trackService.js';
 import { Op } from 'sequelize';
+import { createAgentFromConfig } from '../services/agentCreationService.js';
+import { generateSlug } from '../utils/slugGenerator.js';
 
 const {
   Model,
@@ -181,7 +183,6 @@ export const track = async (req, res) => {
   try {
     // Get the token from the request headers
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('token', token);
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
@@ -191,12 +192,29 @@ export const track = async (req, res) => {
     if (!companyAuth) {
       return res.status(401).json({ error: 'Invalid token' });
     }
-    const { environment } = companyAuth;
+    const { environment, company } = companyAuth;
 
     // Split the modelId by '-' and get the actual modelId (second part)
     const split = req.body.modelId.split('-');
-
+    const agentName = req.body.agentName;
+    const agentSlug = agentName ? generateSlug(agentName) : split[0];
     const modelId = split[split.length - 1];
+
+    const agent = await Agent.findOne({ where: { slug: agentSlug, companyId: company.id } });
+    if (!agent) {
+      const agentConfig = {
+        agent: {
+          name: agentName,
+          description: 'Automatically created agent from tracking request',
+          slug: agentSlug
+        },
+        nodes: []
+      };
+
+      // Create the agent
+      await createAgentFromConfig(agentConfig, company.id);
+    }
+
     if (!modelId) {
       return res.status(201).json({
         error: 'Invalid modelId format. Expected format: agentId-modelId',
