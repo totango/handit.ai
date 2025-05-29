@@ -4,7 +4,7 @@ const { Model, AgentNode, Agent } = db;
 
 export const getActivePrompt = async (req, res) => {
   try {
-    const agent = await Agent.findOne({ where: { slug: req.params.agentSlug }});
+    const agent = await Agent.findOne({ where: { slug: req.params.agentSlug, companyId: req.userObject.companyId }});
     if (!agent) {
       return res.status(404).json({ error: 'Agent not found' });
     }
@@ -12,8 +12,9 @@ export const getActivePrompt = async (req, res) => {
     const models = await Model.findAll({ where: { id: llmNodes.map(node => node.modelId) }});
     const activePrompts = {};
     for (const model of models) {
+      const agentNode = llmNodes.find(node => node.modelId === model.id);
       const prompt = await model.getModelVersion();
-      activePrompts[model.slug] = prompt?.parameters?.prompt;
+      activePrompts[agentNode.dataValues.slug] = prompt?.parameters?.prompt;
     }
     res.status(200).json(activePrompts);
   } catch (error) {
