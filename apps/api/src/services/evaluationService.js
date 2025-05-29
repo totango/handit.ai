@@ -286,6 +286,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
   const attachment = await parseAttachments(entry.input);
   const parsedOutput = parseOutputContent(entry.output);
   const context = parseContext(entry.input);
+  const observation = entry?.input?.previousSteps?.map((step) => step.observation).join('\n\n');
 
   const imageAttachments = attachment
     .filter(
@@ -356,6 +357,8 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
                   },
                 ]),
             { type: 'text', text: `System Prompt: ${context}` },
+            // add observation only if it is not empty
+            observation && { type: 'text', text: `Observation over the RAG db: ${observation}` },
             {
               type: 'text',
               text: `Extracted Output: ${parsedOutput}`,
