@@ -233,7 +233,7 @@ export default (sequelize, DataTypes) => {
             prompt,
           },
           version: lastVersion ? parseInt(lastVersion.version) + 1 : 1,
-          activeVersion: true,
+          activeVersion: false,
         });
         
       }
