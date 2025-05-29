@@ -26,6 +26,7 @@ import os from 'os';
 import { generateAIResponse } from './aiService.js';
 import { Op } from 'sequelize';
 
+
 const evaluationObject = {
   data_extraction: dataExtractionPrompts,
   generation: textGenerationPrompts,
@@ -110,7 +111,7 @@ export const summaryEvaluation = async (log, evaluatorPrompts = null) => {
   return summary;
 };
 
-export const singleEvaluate = async (entry, evaluator, prompts = [], isN8N = false) => {
+export const singleEvaluate = async (entry, evaluator, prompts = [], isN8N = false, EvaluationLog = null) => {
   const MAX_RETRIES = 2;
 
   let retries = 0;
@@ -134,6 +135,20 @@ export const singleEvaluate = async (entry, evaluator, prompts = [], isN8N = fal
     processed: true,
     status: isCorrect({ actual: parsedOutput }) ? 'success' : 'error',
   });
+
+  for (const ev of evaluation) {
+    const evaluationId = ev.evaluatorId;
+    const score = ev.score;
+    if (!EvaluationLog) {
+      continue;
+    }
+    await EvaluationLog.create({
+      modelLogId: entry.id,
+      modelId: entry.modelId,
+      evaluationPromptId: evaluationId,
+      isCorrect: score >= 8,
+    });
+  }
 
   return { entry, evaluation };
 };
@@ -268,9 +283,10 @@ export const parseEvaluatorsOutput = (evaluations) => {
 };
 
 const evaluate = async (entry, prompts = [], isN8N = false) => {
-  console.log('prompts::', prompts);
   const attachment = await parseAttachments(entry.input);
   const parsedOutput = parseOutputContent(entry.output);
+  const context = parseContext(entry.input);
+
   const imageAttachments = attachment
     .filter(
       (att) =>
@@ -309,6 +325,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
 
   if (evaluatorPrompts && evaluatorPrompts.length > 0) {
     for (let i = 0; i < evaluatorPrompts.length; i++) {
+      if (!parsedOutput || parsedOutput === null || parsedOutput === undefined || parsedOutput === '') continue;
       const evaluator = evaluatorPrompts[i];
       const message = [
         {
@@ -338,6 +355,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
                     text: userContent,
                   },
                 ]),
+            { type: 'text', text: `System Prompt: ${context}` },
             {
               type: 'text',
               text: `Extracted Output: ${parsedOutput}`,
@@ -372,6 +390,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
       evaluations.push({
         ...JSON.parse(completion.choices[0].message.content),
         evaluator: evaluator.evaluationPrompt.name,
+        evaluatorId: evaluator.evaluationPrompt.id,
       });
     }
 

@@ -486,6 +486,9 @@ const NodeDetails = ({
     }
   };
   const parseEvaluationInsight = (evaluator, index) => {
+    if (evaluator instanceof Object && evaluator.analysis) {
+      return evaluator.evaluator + ': ' + evaluator.analysis;
+    }
     evaluator = evaluator.replaceAll('```json', '').replaceAll('```', '');
     try {
       evaluator = JSON.parse(evaluator);

@@ -605,7 +605,6 @@ export default (sequelize, DataTypes) => {
     }
     
     async generateInsights() {
-      console.log('generateInsights');
       const modelLogs = await this.getMetricProcessedLogs();
       const randomModelLogs = modelLogs.sort(() => Math.random() - 0.5);
       const insights = [];
@@ -781,7 +780,6 @@ export default (sequelize, DataTypes) => {
       }
 
       const enhancedPromptResult = await enhancePrompt(prompt, suggestions, token, provider, defaultModel);
-      console.log('enhancedPromptResult', enhancedPromptResult);
       return enhancedPromptResult;
     }
 
@@ -995,10 +993,8 @@ export default (sequelize, DataTypes) => {
 
       const nowAt4pm = new Date(new Date().setDate(new Date().getDate() + 2));
       nowAt4pm.setHours(16, 0, 0, 0);
-      console.log('limit', limit);
-      console.log('yesterdayAt4pm', yesterdayAt4pm);
-      console.log('id', this.id);
-      console.log('nowAt4pm', nowAt4pm);
+
+      
       const modelLogs = await sequelize.models.ModelLog.findAll({
         where: {
           modelId: this.id,

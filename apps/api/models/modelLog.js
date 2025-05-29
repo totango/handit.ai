@@ -253,7 +253,8 @@ export default (sequelize, DataTypes) => {
                     modelLog,
                     reviewerInstance,
                     prompts,
-                    model.flags?.isN8N
+                    model.flags?.isN8N,
+                    sequelize.models.EvaluationLog
                   );
                 }
               }

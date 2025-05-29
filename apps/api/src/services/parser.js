@@ -28,8 +28,8 @@ export const parseContext = (data) => {
   const systemMessages = [];
   
   const extractSystemContent = (item) => {
-    if (item?.input?.options?.systemMessage) {
-      systemMessages.push(item.input.options.systemMessage);
+    if (item?.input?.options?.systemMessage || item?.systemMessage || item?.options?.systemMessage) {
+      systemMessages.push(item?.input?.options?.systemMessage || item?.systemMessage || item?.options?.systemMessage);
       return;
     }
     if (!item) return;
