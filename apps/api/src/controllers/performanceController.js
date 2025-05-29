@@ -13,7 +13,7 @@ export const getActivePrompt = async (req, res) => {
     const activePrompts = {};
     for (const model of models) {
       const prompt = await model.getModelVersion();
-      activePrompts[model.slug] = prompt.parameters.prompt;
+      activePrompts[model.slug] = prompt?.parameters?.prompt;
     }
     res.status(200).json(activePrompts);
   } catch (error) {
