@@ -605,21 +605,32 @@ export default (sequelize, DataTypes) => {
     }
     
     async generateInsights() {
+      console.log('generateInsights');
       const modelLogs = await this.getMetricProcessedLogs();
       const randomModelLogs = modelLogs.sort(() => Math.random() - 0.5);
       const insights = [];
       for (let i = 0; i < randomModelLogs.length; i++) {
         const modelLog = modelLogs[i];
-        if (!isCorrect(modelLog) && insights.length < 3) {
-
-          const percentage = 50;
+        if (!isCorrect(modelLog) && insights.length < 5) {
+          const percentage = 100;
           const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
           if (randomNumberFrom0To100 <= percentage) {
             const modelGroup = await this.getModelGroup();
             const company = await modelGroup.getCompany();
+            let optimizationToken;
+            let defaultModel;
+            let provider;
+            if (this.flags?.isN8N) {
+              optimizationToken = process.env.TOGETHER_API_KEY;
+              defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'; // TODO: change to the default model of the company
+              provider = 'TogetherAI';
+            } else {
+              const token = await company.getOptimizationToken();
+              optimizationToken = token.token;
+              defaultModel = company.optimizationModel;
+              provider = token.provider.name;
+            }
 
-            const optimizationToken = await company.getOptimizationToken();
-            const defaultModel = company.optimizationModel;
             try {
               await runReview(
                 modelLog,
@@ -629,8 +640,8 @@ export default (sequelize, DataTypes) => {
                 this.problemType,
                 this.version,
                 this.id,
-                optimizationToken.token,
-                optimizationToken.provider.name,
+                optimizationToken,
+                provider,
                 defaultModel
               );
             } catch (error) {
@@ -737,8 +748,11 @@ export default (sequelize, DataTypes) => {
     }
 
     async applySuggestions() {
-      console.log('applySuggestions');
-      const prompt = await this.prompt();
+      const modelVersion = await this.getModelVersion();
+      let prompt = modelVersion?.parameters?.prompt;
+      if (!prompt) {
+        prompt = await this.prompt();
+      }
       const suggestions = await sequelize.models.Insights.findAll({
         where: {
           modelId: this.id,
@@ -752,11 +766,21 @@ export default (sequelize, DataTypes) => {
       }
       const modelGroup = await this.getModelGroup();
       const company = await modelGroup.getCompany();
+      let token;
+      let defaultModel;
+      let provider;
+      if (this.flags?.isN8N) {
+        token = process.env.TOGETHER_API_KEY;
+        defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+        provider = 'TogetherAI';
+      } else {
+        const optimizationToken = await company.getOptimizationToken();
+        token = optimizationToken.token;
+        defaultModel = company.optimizationModel;
+        provider = optimizationToken.provider.name;
+      }
 
-      const optimizationToken = await company.getOptimizationToken();
-      const defaultModel = company.optimizationModel;
-
-      const enhancedPromptResult = await enhancePrompt(prompt, suggestions, optimizationToken.token, optimizationToken.provider.name, defaultModel);
+      const enhancedPromptResult = await enhancePrompt(prompt, suggestions, token, provider, defaultModel);
       console.log('enhancedPromptResult', enhancedPromptResult);
       return enhancedPromptResult;
     }
