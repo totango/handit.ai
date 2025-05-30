@@ -119,11 +119,8 @@ export function CreateModelForm({ onClose, open = false, onSubmit }) {
       modelCategory,
       evaluatorIds: selectedEvaluators.map(ev => ev.id),
     };
-    console.log('entroooooo 4444')
-    console.log('modelData', modelData);
 
     const ans = await onSubmit(modelData);
-    console.log('ans', ans);
     // Reset form state
     setName('');
     setUrl('');
