@@ -12,5 +12,5 @@ export const generateSlug = (name) => {
       if (index === 0) return word;
       return word.charAt(0).toUpperCase() + word.slice(1);
     })
-    .join('') + Math.random().toString(36).substring(2, 4);
+    .join('');
 }; 
