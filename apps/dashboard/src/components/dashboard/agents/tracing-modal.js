@@ -635,6 +635,7 @@ const NodeDetails = ({
 
 
   const context = parseContext(step?.input);
+  const observation = step?.input?.previousSteps?.map((step) => step.observation).join('\n\n');
 
   // Get all available steps for this node
   const steps = node?.data?.sequence || [];
@@ -747,6 +748,25 @@ const NodeDetails = ({
               </AccordionSummary>
               <AccordionDetails sx={{ px: 0 }}>
                 <ContentCard>{context}</ContentCard>
+              </AccordionDetails>
+            </Accordion>
+          )}
+
+          {observation && (
+            <Accordion
+              expanded={expanded.includes('observation')}
+              onChange={handleAccordionChange('observation')}
+              sx={{
+                '&:before': { display: 'none' },
+                boxShadow: 'none',
+                bgcolor: 'transparent',
+              }}
+            >
+              <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
+                <Typography variant="subtitle2">RAG Observations</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 0 }}>
+                <ContentCard>{observation}</ContentCard>
               </AccordionDetails>
             </Accordion>
           )}
