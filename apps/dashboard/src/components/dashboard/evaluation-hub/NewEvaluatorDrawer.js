@@ -197,10 +197,6 @@ export default function NewEvaluatorDrawer({ open, onClose, onCreate, associateS
   };
 
   const handleSubmit = () => {
-    console.log('name:  ', name)
-    console.log('prompt:  ', prompt)
-    console.log('metricId:  ', metricId)
-    console.log('associations:  ', associations)
     if (!name || !prompt) return;
     onCreate({ name, prompt, metricId, associations, defaultProviderModel, defaultIntegrationTokenId: defaultTokenId });
     // Reset state after creation

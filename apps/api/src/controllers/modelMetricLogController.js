@@ -27,7 +27,6 @@ export const detectProblemTypeFunc = async (req, res) => {
       limit: 10
     });
     const problemType = await detectProblemType(model, logs);
-    console.log(problemType);
     res.status(201).json(problemType);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -64,7 +63,6 @@ export const fixModelLogsStatus = async (req, res) => {
 
     for (let i = 0; i < modelLogs[0].length; i++) {
       const log = modelLogs[0][i];
-      console.log('log', log);
       const correct = log.actual.metrics.correctness > 8;
       const actual = log.actual;
 
@@ -251,7 +249,6 @@ export const fixCorrectnessForModel = async (req, res) => {
     const processedLogs = modelLogs.filter((log) => log.processed);
 
     if (processedLogs.length === 0) {
-      console.log(`No logs found for model: ${model.name}`);
       return res.status(200).json({ message: 'No logs found for model' });
     }
 
@@ -345,7 +342,6 @@ export const autoEvaluateModel = async (req, res) => {
       const reviewer = reviewers[i].dataValues;
       const threshold = reviewer.activationThreshold;
       const unprocessedLogsCount = await model.getUnprocessedLogsCount();
-      console.log('unprocessedLogsCount', unprocessedLogsCount);
       const reviewerInstance = await Model.findOne({
         where: {
           id: reviewer.reviewerId,
@@ -354,7 +350,6 @@ export const autoEvaluateModel = async (req, res) => {
 
       if (unprocessedLogsCount >= threshold) {
         const unprocessedLogs = await model.getUnprocessedLogs(reviewer.limit);
-        console.log('unprocessedLogs', unprocessedLogs.length);
         await evaluateSamples(
           unprocessedLogs,
           unprocessedLogsCount,

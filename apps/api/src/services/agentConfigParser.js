@@ -106,7 +106,7 @@ export const parseAgentConfig = async (rawConfig) => {
 };
 
 
-function repositionGraphNodes(graph) {
+export const repositionGraphNodes = (graph) => {
   const nodeMap = {};
   const incomingCount = {};
   const outgoingMap = {};

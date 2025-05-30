@@ -1,6 +1,9 @@
 import db from '../../models/index.js';
 import { executeTrack, executeToolTrack } from '../services/trackService.js';
 import { Op } from 'sequelize';
+import { createAgentFromConfig } from '../services/agentCreationService.js';
+import { generateSlug } from '../utils/slugGenerator.js';
+import { findOrCreateAgentNode } from '../services/agentNodeService.js';
 
 const {
   Model,
@@ -20,7 +23,19 @@ export const bulkTrack = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
-    const agentSlug = req.body.agentName;
+    const agentName = req.body.agentName;
+    const agentSlug = agentName ? generateSlug(agentName) : null;
+    let agent = await Agent.findOne({ where: { slug: agentSlug } });
+    if (!agent) {
+      agent = await createAgentFromConfig({
+        agent: {
+          name: agentName,
+          description: 'Automatically created agent from tracking request',
+          slug: agentSlug
+        },
+        nodes: []
+      }, company.id);
+    }
 
     // Validate token and get environment
     const companyAuth = await Company.validateApiToken(token);
@@ -36,8 +51,7 @@ export const bulkTrack = async (req, res) => {
       const camelizedAgentSlug = camelize(agentSlug);
       agents = agents.filter(agent => agent.slug === agentSlug || agent.slug === camelizedAgentSlug);
     }
-    const agentNodes = await AgentNode.findAll({ where: { agentId: { [Op.in]: agents.map(agent => agent.id) } } });
-    const availableModels = agentNodes.map(node => node.modelId);
+
     // Only process workflowData
     if (!req.body.workflowData || !Array.isArray(req.body.workflowData)) {
       return res.status(400).json({ error: 'Request body must have workflowData as an array' });
@@ -60,94 +74,65 @@ export const bulkTrack = async (req, res) => {
         const lowerCaseSlug = slug.toLowerCase();
         const lowerCamelSlug = camelize(lowerCaseSlug);
 
-        let model = await Model.findOne({ where: { slug, id: { [Op.in]: availableModels } } });
-        if (!model) {
-          model = await Model.findOne({ where: { slug: modelId, id: { [Op.in]: availableModels } } });
-        }
-        if (!model) {
-          model = await Model.findOne({ where: { slug: camelCaseSlug, id: { [Op.in]: availableModels } } });
-        }
-        if (!model) {
-          model = await Model.findOne({ where: { slug: lowerCaseSlug, id: { [Op.in]: availableModels } } });
-        }
-        if (!model) {
-          model = await Model.findOne({ where: { slug: lowerCamelSlug, id: { [Op.in]: availableModels } } });
-        }
-        let agentNode = null;
-        if (!model) {
-          agentNode = await db.AgentNode.findOne({
-            where: {
-              [db.Sequelize.Op.or]: [{ slug }, { slug: modelId }],
-              type: 'tool',
-              id: { [Op.in]: agentNodes.map(node => node.id) }
-            },
-          });
-          if (!agentNode) {
-            agentNode = await db.AgentNode.findOne({
-              where: {
-                [db.Sequelize.Op.or]: [
-                  { slug: camelCaseSlug },
-                  { slug: lowerCamelSlug },
-                  { slug: modelId },
-                  { slug: slug },
-                  { slug: lowerCaseSlug },
-                ],
-                type: 'tool',
-                id: { [Op.in]: agentNodes.map(node => node.id) }
-              },
-            });
-          }
-        }
-        if (!agentNode && !model) {
-          const tempAgentNode = await db.AgentNode.findOne({
-            where: {
-              slug: [nodeName, camelCaseSlug, lowerCaseSlug, lowerCamelSlug, modelId],
-              id: { [Op.in]: agentNodes.map(node => node.id) }
-            },
-          });
-          if (tempAgentNode) {
+        let model = await Model.findOne({ 
+          where: { 
+            slug: { 
+              [Op.in]: [slug, modelId, camelCaseSlug, lowerCaseSlug, lowerCamelSlug] 
+            } 
+          } 
+        });
 
-            model = await db.Model.findOne({
-              where: { id: tempAgentNode.dataValues.modelId },
-            });
-          }
-        }
-        // Compose track data
-        const trackData = {
-          ...item,
-          environment,
-          evaluationToken: openaiToken,
-          evaluationModel,
-          nodeName,
-          agentLogId,
-          slug: null,
-        };
+        // For each agent, find or create the node
+        for (const agent of agents) {
+          const agentNode = await findOrCreateAgentNode({
+            agent,
+            nodeType: model ? 'model' : 'tool',
+            model,
+            nodeId: modelId,
+            nodeName: model?.name || nodeName,
+            toolType: item.toolType || 'HTTP',
+            description: model?.description || 'Automatically created node',
+            agentLogId
+          });
 
-        if (item.output && Object.keys(item.output).length === 0) {
-          continue;
-        }
-        // Save using the same logic as track
-        const answer = agentNode
-          ? await executeToolTrack(agentNode, trackData)
-          : await executeTrack(model, trackData, ModelLog);
-        agentLogId = answer.agentLogId;
-        if (answer.error) {
-          results.push({ node: nodeName, error: answer.error });
-        } else {
-          results.push({ node: nodeName, success: true, modelLogId: answer.modelLogId || null });
+          // Compose track data
+          const trackData = {
+            ...item,
+            environment,
+            evaluationToken: openaiToken,
+            evaluationModel,
+            nodeName,
+            agentLogId,
+            slug: null,
+          };
+
+          if (item.output && Object.keys(item.output).length === 0) {
+            continue;
+          }
+
+          // Save using the same logic as track
+          const answer = agentNode.type === 'tool'
+            ? await executeToolTrack(agentNode, trackData, agent)
+            : await executeTrack(model, trackData, ModelLog);
+
+          agentLogId = answer.agentLogId;
+          if (answer.error) {
+            results.push({ node: nodeName, error: answer.error });
+          } else {
+            results.push({ node: nodeName, success: true, modelLogId: answer.modelLogId || null });
+          }
         }
       } catch (err) {
-        console.log('err', err);
         results.push({ node: item.id, error: err.message });
       }
     }
 
     const agentLog = await AgentLog.findByPk(agentLogId);
     if (agentLog) {
-     await agentLog.update({
-      status: 'success',
-      output: results,
-     });
+      await agentLog.update({
+        status: 'success',
+        output: results,
+      });
     }
     res.status(201).json({ results });
   } catch (error) {
@@ -182,7 +167,6 @@ export const track = async (req, res) => {
   try {
     // Get the token from the request headers
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('token', token);
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
@@ -192,12 +176,31 @@ export const track = async (req, res) => {
     if (!companyAuth) {
       return res.status(401).json({ error: 'Invalid token' });
     }
-    const { environment } = companyAuth;
+    const { environment, company } = companyAuth;
 
     // Split the modelId by '-' and get the actual modelId (second part)
-    const split = req.body.modelId.split('-');
+    const split = req.body.modelId?.split('-');
+    const agentName = req.body.agentName;
+    const agentSlug = agentName ? generateSlug(agentName) : split[0];
+    const modelId = req.body.nodeName ? generateSlug(req.body.nodeName) : split[split.length - 1];
+    const nodeType = req.body.nodeType || 'model'; // Default to model if not specified
+    // Find or create the agent
+    let agent = await Agent.findOne({ where: { slug: agentSlug, companyId: company.id } });
 
-    const modelId = split[split.length - 1];
+    if (!agent) {
+      const agentConfig = {
+        agent: {
+          name: agentName || `Agent ${agentSlug}`,
+          description: 'Automatically created agent from tracking request',
+          slug: agentSlug
+        },
+        nodes: []
+      };
+
+      // Create the agent
+      agent = await createAgentFromConfig(agentConfig, company.id);
+    }
+
     if (!modelId) {
       return res.status(201).json({
         error: 'Invalid modelId format. Expected format: agentId-modelId',
@@ -208,23 +211,27 @@ export const track = async (req, res) => {
     let model = await Model.findOne({ where: { slug: modelId } });
 
     // If not found, try with the full modelId
-    if (!model) {
+    if (!model && req.body.modelId) {
       model = await Model.findOne({ where: { slug: req.body.modelId } });
     }
+    
 
-    // If still not found, try to find an AgentNode
-    let agentNode = null;
-    if (!model) {
-      agentNode = await db.AgentNode.findOne({
+    // Find or create the node
+    const agentNode = await findOrCreateAgentNode({
+      agent,
+      nodeType,
+      model,
+      nodeId: modelId,
+      nodeName: req.body.nodeName,
+      toolType: req.body.toolType || 'TOOL',
+      description: model?.description || 'Automatically created node',
+    });
+    if (agentNode.type === 'model') {
+      model = await Model.findOne({
         where: {
-          [db.Sequelize.Op.or]: [{ slug: modelId }, { slug: req.body.modelId }],
-          type: 'tool',
-        },
+          id: agentNode.modelId,
+        }
       });
-
-      if (!agentNode) {
-        return res.status(201).json({ error: 'Model or tool node not found' });
-      }
     }
 
     // Add environment to request body
@@ -232,30 +239,35 @@ export const track = async (req, res) => {
       ...req.body,
       environment,
     };
+
     // Execute appropriate tracking based on whether it's a tool node or not
-    const answer = agentNode
-      ? await executeToolTrack(agentNode, trackData)
+    const answer = agentNode.type === 'tool'
+      ? await executeToolTrack(agentNode, trackData, agent)
       : await executeTrack(model, trackData, ModelLog);
 
     if (answer.error) {
-      console.log('Error in track:', answer.error);
       return res.status(201).json({ error: answer.error });
     }
     res.status(201).json(answer);
   } catch (error) {
-    console.log('Error in track:', error);
     res.status(201).json({ error: error.message });
   }
 };
 
 export const endTrack = async (req, res) => {
   try {
-    const { error, stack, externalId } = req.body;
+    const { error, stack, externalId, agentName } = req.body;
     let { agentLogId } = req.body;
-    if (!agentLogId && !externalId) {
-      return res
-        .status(400)
-        .json({ error: 'agentLogId or externalId is required' });
+    if (!agentLogId && !externalId && agentName) {
+      const agent = await Agent.findOne({ where: { slug: [agentName, generateSlug(agentName)] } });
+      const agentLog = await AgentLog.findOne({
+        where: {
+          agentId: agent.id,
+          status: 'processing',
+        },
+        order: [['createdAt', 'DESC']],
+      });
+      agentLogId = agentLog?.id;
     }
 
     // Start transaction
