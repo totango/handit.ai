@@ -347,7 +347,6 @@ export default (sequelize, DataTypes) => {
                       },
                       problemType: model.problemType,
                     });
-                    console.log("paso 2")
 
                     // Copy metrics and reviewers
                     const metrics = await model.getModelMetrics();
@@ -358,7 +357,6 @@ export default (sequelize, DataTypes) => {
                         modelId: optimizedModel.id
                       });
                     }
-                    console.log("paso 3")
 
                     const reviewers = await model.getReviewers();
                     for (const reviewer of reviewers) {
@@ -369,7 +367,6 @@ export default (sequelize, DataTypes) => {
                         reviewerId: reviewer.reviewerId
                       });
                     }
-                    console.log("paso 4")
 
                     // Create AB test
                     await sequelize.models.ABTestModels.create({
@@ -378,7 +375,6 @@ export default (sequelize, DataTypes) => {
                       principal: true,
                       percentage: 30
                     });
-                    console.log("paso 5")
 
                     await model.updateOptimizedPrompt(newPrompt);
 
