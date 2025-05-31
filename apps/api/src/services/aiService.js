@@ -49,13 +49,15 @@ export const generateAIResponse = async ({
   token = process.env.TOGETHER_API_KEY,
   model = DEFAULT_MODEL,
   provider = 'TogetherAI',
+  isN8N = false,
 }) => {
-  console.log('entro');
   try {
     let completion;
-    console.log('provider', provider);
-    console.log('token', token);
-    console.log('model', model);
+    if (isN8N) {
+      provider = 'TogetherAI';
+      model = DEFAULT_MODEL;
+      token = process.env.TOGETHER_API_KEY;
+    }
     if (provider === 'OpenAI') {
       const openai = new OpenAI({
         apiKey: token,

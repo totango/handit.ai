@@ -39,7 +39,6 @@ export const isCorrect = (log) => {
     return false;
   }
   if (!log.actual) {
-    console.log('No actual value found');
     return false;
   }
   if (Object.keys(log.actual).includes('correct')) {

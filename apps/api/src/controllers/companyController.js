@@ -1,4 +1,5 @@
 import db from '../../models/index.js';
+import { createDefaultEvaluationPrompts } from '../services/evaluationPromptService.js';
 
 const { Company } = db;
 
@@ -24,6 +25,16 @@ export const createCompanyToken = async (req, res) => {
 export const createCompany = async (req, res) => {
   try {
     const company = await Company.create(req.body);
+    
+    // Create default evaluation prompts for the new company
+    try {
+      await createDefaultEvaluationPrompts(company.id);
+      console.log(`Created default evaluation prompts for new company: ${company.id}`);
+    } catch (error) {
+      console.error('Failed to create default evaluation prompts:', error);
+      // Don't fail the company creation if evaluation prompts fail
+    }
+    
     res.status(201).json(company);
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -2,21 +2,13 @@ import db from '../../models/index.js';
 
 export const createIntegrationToken = async (req, res) => {
   try {
-    console.log('createIntegrationToken', req.body);
     const companyId = req.userObject?.companyId || req.company?.id;
     if (!companyId) return res.status(400).json({ error: 'Missing companyId' });
     const { providerId, name, type, token, secret, data, expiresAt } = req.body;
-    console.log('createIntegrationToken', req.body);
     if (!providerId || !token) {
       return res.status(400).json({ error: 'providerId, type, and token are required' });
     }
-    console.log({
-      companyId,
-      providerId,
-      name,
-      type: 'token',
-      token,
-    })
+
     const integrationToken = await db.IntegrationToken.create({
       companyId,
       providerId,

@@ -188,7 +188,6 @@ export default function NewEvaluatorModal({ open, onClose, onCreate, associateSe
     try {
       const payload = { name, prompt, metricId, defaultProviderModel, defaultIntegrationTokenId: defaultTokenId };
       if (associateSection) payload.associations = associations;
-      console.log('payload', payload);
       const res = await createEvaluationPrompt(payload).unwrap();
       // The API returns { data: { ...evaluator } }
       const evaluator = res?.data;

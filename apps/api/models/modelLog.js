@@ -195,7 +195,7 @@ export default (sequelize, DataTypes) => {
                     reviewer_id: reviewer.dataValues.id,
                     model_id: model.id,
                     activationThreshold: 5,
-                    evaluationPercentage: 30,
+                    evaluationPercentage: model.flags?.isN8N ? 100 : 30,
                     limit: 5,
                   });
                 }
@@ -252,7 +252,9 @@ export default (sequelize, DataTypes) => {
                   await singleEvaluate(
                     modelLog,
                     reviewerInstance,
-                    prompts
+                    prompts,
+                    model.flags?.isN8N,
+                    sequelize.models.EvaluationLog
                   );
                 }
               }
@@ -312,6 +314,71 @@ export default (sequelize, DataTypes) => {
                     description: 'Model health check passed',
                     label: 'health_check',
                   });
+                }
+              }
+
+              if (model?.flags?.isN8N) {
+                await model.generateInsights();
+                const newPrompt = await model.applySuggestions();
+                if (newPrompt) {
+                  const existingABTest = await sequelize.models.ABTestModels.findOne({
+                    where: {
+                      modelId: model.id,
+                      principal: true
+                    }
+                  });
+        
+                  if (existingABTest) {
+                    // Update the optimized model version
+                    await model.updateOptimizedPrompt(newPrompt);
+                  } else {
+                    // Create a new optimized model
+                    const originalModel = model.toJSON();
+                    // remove id from originalModel
+                    delete originalModel.id;
+
+                    const optimizedModel = await sequelize.models.Model.create({
+                      ...originalModel,
+                      slug: `${model.slug}-optimized-${Date.now()}`,
+                      isOptimized: true,
+                      parameters: {
+                        prompt: newPrompt,
+                        problemType: model.parameters?.problemType
+                      },
+                      problemType: model.problemType,
+                    });
+
+                    // Copy metrics and reviewers
+                    const metrics = await model.getModelMetrics();
+                    for (const metric of metrics) {
+                      await sequelize.models.ModelMetric.create({
+                        ...metric.toJSON(),
+                        id: undefined,
+                        modelId: optimizedModel.id
+                      });
+                    }
+
+                    const reviewers = await model.getReviewers();
+                    for (const reviewer of reviewers) {
+                      await sequelize.models.ReviewersModels.create({
+                        modelId: optimizedModel.id,
+                        model_id: model.id,
+                        reviewer_id: reviewer.reviewerId,
+                        reviewerId: reviewer.reviewerId
+                      });
+                    }
+
+                    // Create AB test
+                    await sequelize.models.ABTestModels.create({
+                      modelId: model.id,
+                      optimizedModelId: optimizedModel.id,
+                      principal: true,
+                      percentage: 30
+                    });
+
+                    await model.updateOptimizedPrompt(newPrompt);
+
+                  }
                 }
               }
               if (!model.isReviewer && !model.isOptimized && !modelLog.originalLogId) {
