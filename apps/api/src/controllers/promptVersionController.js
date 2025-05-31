@@ -564,7 +564,6 @@ export async function getModelOptimizationStatus(req, res) {
       }
       // Fallback to static field if no metric
       if (lastAccuracy === null) lastAccuracy = targetModel.accuracy;
-      console.log('lastAccuracy', lastAccuracy);
       if (!abTest || !targetModel.isOptimized) {
         notOptimized++;
       } else if (lastAccuracy >= 0.8) {

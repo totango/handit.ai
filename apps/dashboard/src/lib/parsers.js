@@ -35,10 +35,14 @@ export const parseContext = (data) => {
   if (!data) return null;
 
   const systemMessages = [];
-  
+    console.log("data", data);
   const extractSystemContent = (item) => {
     if (!item) return;
-    
+    if (item?.input?.options?.systemMessage || item?.systemMessage) {
+      systemMessages.push(item?.input?.options?.systemMessage || item?.systemMessage);
+      return;
+    }
+
     if (Array.isArray(item)) {
       item.forEach(extractSystemContent);
     } else if (typeof item === 'object') {

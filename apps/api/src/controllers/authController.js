@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import db from '../../models/index.js';
 import bcrypt from 'bcryptjs';
+import { createDefaultEvaluationPrompts } from '../services/evaluationPromptService.js';
 
 const { User, Company, MarketingUser } = db;
 
@@ -38,27 +39,31 @@ export const signup = async (req, res) => {
 };
 
 export const signupCompany = async (req, res) => {
-  let company = null
-  if (req.body.companyId) {
-    company = await Company.findOne({
-      where: { nationalId: req.body.companyId },
-    });
-    if (!company) {
-      company = await Company.create({
-        name: req.body.companyName,
-        nationalId: req.body.companyId,
-      });
-    }
-  } else {
-    company = await Company.create({
-      name: req.body.firstName + ' ' + req.body.lastName,
-      nationalId: req.body.email,
-    });
-  }
+  let company = null;
+  let isNewCompany = false;
   
-  const { email, password, firstName, lastName } = req.body;
-
   try {
+    if (req.body.companyId) {
+      company = await Company.findOne({
+        where: { nationalId: req.body.companyId },
+      });
+      if (!company) {
+        company = await Company.create({
+          name: req.body.companyName,
+          nationalId: req.body.companyId,
+        });
+        isNewCompany = true;
+      }
+    } else {
+      company = await Company.create({
+        name: req.body.firstName + ' ' + req.body.lastName,
+        nationalId: req.body.email,
+      });
+      isNewCompany = true;
+    }
+    
+    const { email, password, firstName, lastName } = req.body;
+
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already registered' });
@@ -76,6 +81,17 @@ export const signupCompany = async (req, res) => {
       companyId: company.id,
       membershipId: 1,
     });
+
+    // Create default evaluation prompts for new companies
+    if (isNewCompany) {
+      try {
+        await createDefaultEvaluationPrompts(company.id);
+        console.log(`Created default evaluation prompts for new company: ${company.id}`);
+      } catch (error) {
+        console.error('Failed to create default evaluation prompts:', error);
+        // Don't fail the signup process if evaluation prompts fail
+      }
+    }
 
     const createdUser = await User.findByPk(user.id, {
       attributes: { exclude: ['password'] },
