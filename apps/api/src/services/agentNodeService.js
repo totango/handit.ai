@@ -246,7 +246,6 @@ export const findOrCreateAgentNode = async ({
     });
 
     // Reposition all nodes
-    await repositionAgentNodes(agent);
   }
 
   // Find last node and create connection if agentLogId is provided
@@ -258,5 +257,8 @@ export const findOrCreateAgentNode = async ({
       toNodeId: agentNode.id,
     });
   }
+
+  await repositionAgentNodes(agent);
+
   return agentNode;
 };
