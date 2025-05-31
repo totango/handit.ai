@@ -214,6 +214,7 @@ export const findOrCreateAgentNode = async ({
   nodeName,
   toolType = 'HTTP',
   description = '',
+  agentLogId = null,
 }) => {
   // Try to find existing node
   const agentLog = await AgentLog.findOne({
@@ -223,7 +224,9 @@ export const findOrCreateAgentNode = async ({
     },
     order: [['createdAt', 'DESC']],
   });
-  const agentLogId = agentLog?.id;
+  if (!agentLogId) {
+    agentLogId = agentLog?.id;
+  }
   let agentNode = await AgentNode.findOne({
     where: {
       [Op.or]: [{ slug: nodeId }, { slug: nodeName }],

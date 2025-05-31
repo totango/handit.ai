@@ -38,11 +38,9 @@ export const executeTrack = async (model, data, ModelLog) => {
     const agentNode = await model.sequelize.models.AgentNode.findOne({
       where: { modelId: data.modelId, deletedAt: null }
     });
-    console.log("agentNode sss", agentNode);
-
     // Start transaction to ensure data consistency
 
-    let agentLogId = data.agentLogId;
+    let agentLogId = data.agentLogId || data.executionId;
     let agentLog = null;
 
     // If agentLogId is provided, try to find it
@@ -53,6 +51,10 @@ export const executeTrack = async (model, data, ModelLog) => {
           environment: data.environment || 'production',
         },
       });
+      if (agentLog && agentLog.input === 'processing') {
+        agentLog.input = data.input;
+        await agentLog.save();
+      }
     }
 
     if (!agentLog && externalId) {
@@ -104,6 +106,7 @@ export const executeTrack = async (model, data, ModelLog) => {
       modelLog,
       agentLogId: agentLog?.dataValues.id,
       modelLogId: modelLog.dataValues.id,
+      executionId: agentLog?.dataValues.id,
     };
   } catch (error) {
     return { error: error.message };
@@ -115,7 +118,9 @@ export const executeToolTrack = async (agentNode, data, agent) => {
     // Start transaction to ensure data consistency
 
       let externalId = data.externalId;
-      let agentLogId = data.agentLogId;
+      let agentLogId = data.agentLogId || data.executionId;
+      console.log("agentLogId 123", agentLogId);
+
       let agentLog = null;
 
       // If agentLogId is provided, try to find it
@@ -126,6 +131,11 @@ export const executeToolTrack = async (agentNode, data, agent) => {
             environment: data.environment || 'production',
           },
         });
+
+        if (agentLog && agentLog.input === 'processing') {
+          agentLog.input = data.input;
+          await agentLog.save();
+        }
       }
       if (!agentLog && externalId) {
         agentLog = await agentNode.sequelize.models.AgentLog.findOne({
@@ -133,6 +143,11 @@ export const executeToolTrack = async (agentNode, data, agent) => {
             externalId,
           },
         });
+
+        if (agentLog.input === 'processing') {
+          agentLog.input = data.input;
+          await agentLog.save();
+        }
       }
 
       // If this is an initial node and no agentLogId provided, create new agent log
@@ -230,7 +245,7 @@ export const executeToolTrack = async (agentNode, data, agent) => {
         );
       }
 
-      return { agentNodeLog, agentLogId: agentLog?.dataValues.id };
+      return { agentNodeLog, agentLogId: agentLog?.dataValues.id, executionId: agentLog?.dataValues.id };
 
   } catch (error) {
     return { error: error.message };
