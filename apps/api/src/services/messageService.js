@@ -49,9 +49,6 @@ export const getConversationContext = async (conversationId) => {
       order: [['createdAt', 'DESC']]
     });
 
-    console.log('messages', messages);
-    console.log('summary', summary);
-
     return {
       messages: messages.reverse(), // Return in chronological order
       summary: summary?.summary || null

@@ -551,7 +551,6 @@ const getModelMetrics = async (agentId) => {
                 }
               }
             } else {
-              console.log('no next next day');
               const avgToday = value;
               if (avgToday > nextDayValue) {
                 copyAggregatedMetrics[metric].optimizedDaily[nextDay].sum = avgToday * nextDayCount;

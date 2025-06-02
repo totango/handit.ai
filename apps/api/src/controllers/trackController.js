@@ -23,6 +23,12 @@ export const bulkTrack = async (req, res) => {
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
+    // Validate token and get environment
+    const companyAuth = await Company.validateApiToken(token);
+    if (!companyAuth) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    const { environment, company } = companyAuth;
     const agentName = req.body.agentName;
     const agentSlug = agentName ? generateSlug(agentName) : null;
     let agent = await Agent.findOne({ where: { slug: agentSlug } });
@@ -37,12 +43,7 @@ export const bulkTrack = async (req, res) => {
       }, company.id);
     }
 
-    // Validate token and get environment
-    const companyAuth = await Company.validateApiToken(token);
-    if (!companyAuth) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    const { environment, company } = companyAuth;
+    
 
     const companyId = company.id || company.dataValues.id;
     let agents = await Agent.findAll({ where: { companyId } });
@@ -60,14 +61,21 @@ export const bulkTrack = async (req, res) => {
     const openaiToken = req.body.openAI?.token;
     const evaluationModel = req.body.openAI?.model;
 
-    let agentLogId = req.body.agentLogId || req.body.executionId;
+    const log = await AgentLog.create({
+      agentId: agent.id,
+      input: 'processing',
+      environment,
+      status: 'processing',
+    });
+
+    let executionId = log.dataValues.id;
     // Process each item sequentially to preserve order
     const results = [];
     for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
       const item = items[itemIdx];
       try {
         // Use item.id as the node slug
-        const nodeName = item.slug;
+        const nodeName = item.nodeName || item.slug;
         let modelId = item.input?.params?.modelId || nodeName;
         const slug = nodeName;
         const camelCaseSlug = camelize(slug);
@@ -86,14 +94,22 @@ export const bulkTrack = async (req, res) => {
         for (const agent of agents) {
           const agentNode = await findOrCreateAgentNode({
             agent,
-            nodeType: model ? 'model' : 'tool',
+            nodeType: req.body.nodeType || 'model',
             model,
             nodeId: modelId,
             nodeName: model?.name || nodeName,
             toolType: item.toolType || 'HTTP',
             description: model?.description || 'Automatically created node',
-            agentLogId
+            agentLogId: executionId
           });
+
+          if (agentNode.type === 'model') {
+            model = await Model.findOne({
+              where: {
+                id: agentNode.modelId,
+              }
+            });
+          }
 
           // Compose track data
           const trackData = {
@@ -102,7 +118,7 @@ export const bulkTrack = async (req, res) => {
             evaluationToken: openaiToken,
             evaluationModel,
             nodeName,
-            agentLogId,
+            executionId,
             slug: null,
           };
 
@@ -115,8 +131,7 @@ export const bulkTrack = async (req, res) => {
             ? await executeToolTrack(agentNode, trackData, agent)
             : await executeTrack(model, trackData, ModelLog);
 
-          agentLogId = answer.agentLogId;
-          if (answer.error) {
+            if (answer.error) {
             results.push({ node: nodeName, error: answer.error });
           } else {
             results.push({ node: nodeName, success: true, modelLogId: answer.modelLogId || null });
@@ -127,7 +142,7 @@ export const bulkTrack = async (req, res) => {
       }
     }
 
-    const agentLog = await AgentLog.findByPk(agentLogId);
+    const agentLog = await AgentLog.findByPk(executionId);
     if (agentLog) {
       await agentLog.update({
         status: 'success',

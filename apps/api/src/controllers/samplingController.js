@@ -61,7 +61,7 @@ export const sampleNodes = async (req, res) => {
 export const sampleAgentEntriesExecute = async (req, res) => {
   try {
     const { agentId, nodeIds, fields, startDate, endDate, samplePercentage } = req.body;
-    console.log('sampleAgentEntriesExecute', req.body);
+
     const results = await sampleAgentEntries({
       agentId,
       nodeIds,

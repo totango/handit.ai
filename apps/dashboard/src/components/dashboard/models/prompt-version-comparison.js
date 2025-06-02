@@ -326,7 +326,6 @@ export function PromptVersionComparison({
   const handleDeploy = (versionId) => {
     setDeployAnchorEl(null);
     // TODO: Implement deployment logic
-    console.log('Deploying version:', versionId);
   };
 
   const leftPromptData = promptVersions?.find((v) => v.id === leftVersion);
@@ -361,7 +360,7 @@ export function PromptVersionComparison({
   function handleEditPrompt(side) {
     // Open edit dialog for the selected version
     let promptData = side === 'left' ? leftPromptData : rightPromptData;
-    console.log('promptData', promptData);
+
     setEditPromptText(promptData?.parameters?.prompt || '');
     setEditPromptVersion(promptData);
     setIsEditDialogOpen(true);
@@ -464,10 +463,10 @@ export function PromptVersionComparison({
   }
 
   const metricComparisons = getMetricComparison(leftMetrics, rightMetrics);
-  console.log('metricComparisons', metricComparisons);
+
   const leftAccuracy = metricComparisons.find((m) => m.label === 'Accuracy')?.left?.value.slice(0, -1);
   const rightAccuracy = metricComparisons.find((m) => m.label === 'Accuracy')?.right?.value.slice(0, -1);
-  console.log('leftPromptData?.parameters?.prompt', leftPromptData?.parameters?.prompt);
+
   onLeftAccuracyChange(parseFloat(leftAccuracy) / 100.0);
   onRightAccuracyChange(parseFloat(rightAccuracy) / 100.0);
   // Custom styles for diff viewer (less strong green/red, similar to new-prompt-comparison.js)
