@@ -67,9 +67,6 @@ export async function createDefaultEvaluationPrompts(companyId) {
       createdPrompts.push(evaluationPrompt);
     }
 
-    console.log(
-      `Created ${createdPrompts.length} default evaluation prompts for company ${companyId}`
-    );
     return createdPrompts;
   } catch (error) {
     console.error('Error creating default evaluation prompts:', error);

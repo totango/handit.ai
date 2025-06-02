@@ -119,7 +119,6 @@ export const executeToolTrack = async (agentNode, data, agent) => {
 
       let externalId = data.externalId;
       let agentLogId = data.agentLogId || data.executionId;
-      console.log("agentLogId 123", agentLogId);
 
       let agentLog = null;
 

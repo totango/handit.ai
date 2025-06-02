@@ -166,7 +166,7 @@ export function EvaluationHubTable({ onNewEvaluator }) {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
-    console.log('filteredEvaluators', filteredEvaluators);
+
     return (
         <Box>
             {/* Header section with title and action buttons */}

@@ -53,7 +53,7 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
   const [isExpanded, setIsExpanded] = useState(false);
   const [assocMenuAnchorEl, setAssocMenuAnchorEl] = useState(null);
   const [assocMenuModelId, setAssocMenuModelId] = useState(null);
-  console.log('evaluator', evaluator);
+
   const [defaultProviderId, setDefaultProviderId] = useState(evaluator?.defaultIntegrationToken?.providerId || '');
   const [defaultProviderModel, setDefaultProviderModel] = useState(evaluator?.defaultProviderModel || '');
   const [defaultTokenId, setDefaultTokenId] = useState(evaluator?.defaultIntegrationToken?.id || '');
