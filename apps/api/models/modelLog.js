@@ -317,7 +317,8 @@ export default (sequelize, DataTypes) => {
                 }
               }
 
-              if (model?.flags?.isN8N) {
+              const random = Math.floor(Math.random() * 101);
+              if (random <= 10) {
                 await model.generateInsights();
                 const newPrompt = await model.applySuggestions();
                 if (newPrompt) {
