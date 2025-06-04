@@ -65,7 +65,7 @@ export default (sequelize, DataTypes) => {
               {
                 model: sequelize.models.IntegrationToken,
                 as: 'defaultIntegrationToken',
-                attributes: ['id', 'name', 'providerId'],
+                attributes: ['id', 'name', 'providerId', 'token'],
                 include: [
                   {
                     model: sequelize.models.Provider,
