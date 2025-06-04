@@ -94,7 +94,7 @@ export const bulkTrack = async (req, res) => {
         for (const agent of agents) {
           const agentNode = await findOrCreateAgentNode({
             agent,
-            nodeType: req.body.nodeType || 'model',
+            nodeType: item.nodeType || 'model',
             model,
             nodeId: modelId,
             nodeName: model?.name || nodeName,
