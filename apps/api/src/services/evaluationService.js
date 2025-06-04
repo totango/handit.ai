@@ -372,7 +372,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
                 "errors": ["List of errors"]
               }`,
             },
-          ],
+          ].filter((item) => item !== null && item !== undefined && item !== ''),
         },
       ];
       const completion = await generateAIResponse({
