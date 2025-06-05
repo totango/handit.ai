@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="903" alt="Screenshot 2025-05-21 at 11 09 55 AM" src="https://github.com/user-attachments/assets/e40d816e-3b2f-4abc-9bfb-400528db2b0d" />
+  <img width="903" alt="Handit.ai Banner" src="./apps/dashboard/public/assets/overview/handit-portada.png" />
 </p>
 
 >The Open Source Engine that Auto-Improves Your AI <br>
