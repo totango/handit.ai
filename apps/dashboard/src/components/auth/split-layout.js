@@ -81,7 +81,7 @@ export function SplitLayout({ children }) {
             flex: '1 1 auto',
             justifyContent: 'center',
             p: 2,
-            backgroundColor: 'rgb(2,31,36)'
+            backgroundColor: '#00232b'
           }}
         >
           <Box sx={{ maxWidth: '420px', width: '100%' }}>{children}</Box>
