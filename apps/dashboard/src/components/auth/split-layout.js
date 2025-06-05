@@ -56,7 +56,7 @@ export function SplitLayout({ children }) {
           display: { xs: 'none', lg: 'flex' },
           flexDirection: 'column',
           p: 4,
-          backgroundImage: 'url("/assets/hl3_upscaled.png")',
+          backgroundImage: 'url("/assets/bg-handit.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
