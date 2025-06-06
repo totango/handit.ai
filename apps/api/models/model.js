@@ -621,6 +621,13 @@ export default (sequelize, DataTypes) => {
               optimizationToken = token.token;
               defaultModel = company.optimizationModel;
               provider = token.provider.name;
+              if (!defaultModel) {
+                if (provider === 'OpenAI') {
+                  defaultModel = 'gpt-4o-mini';
+                } else if (provider === 'TogetherAI') {
+                  defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+                }
+              }
             }
 
             try {
