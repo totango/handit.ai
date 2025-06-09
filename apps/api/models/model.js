@@ -777,6 +777,13 @@ export default (sequelize, DataTypes) => {
         token = optimizationToken.token;
         defaultModel = company.optimizationModel;
         provider = optimizationToken.provider.name;
+        if (!defaultModel) {
+          if (provider === 'OpenAI') {
+            defaultModel = 'gpt-4o-mini';
+          } else if (provider === 'TogetherAI') {
+            defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+          }
+        }
       }
 
       const enhancedPromptResult = await enhancePrompt(prompt, suggestions, token, provider, defaultModel);
