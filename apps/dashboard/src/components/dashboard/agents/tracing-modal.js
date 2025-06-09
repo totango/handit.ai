@@ -634,7 +634,7 @@ const NodeDetails = ({
   }, [step]);
 
 
-  const context = parseContext(step?.input);
+  const context = parseContext(step?.input, model);
   const observation = step?.input?.previousSteps?.map((step) => step.observation).join('\n\n');
 
   // Get all available steps for this node
@@ -784,7 +784,7 @@ const NodeDetails = ({
               <Typography variant="subtitle2">{context ? 'User Prompt:' : 'Input:'}</Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ px: 0 }}>
-              <ContentCard>{parseInputContent(step.input)}</ContentCard>
+              <ContentCard>{parseInputContent(step.input, model)}</ContentCard>
             </AccordionDetails>
           </Accordion>
 
@@ -845,9 +845,10 @@ const NodeDetails = ({
  * @param {Array} props.cycles - Available execution cycles
  * @param {number} props.selectedCycle - Currently selected cycle index
  * @param {Function} props.onCycleChange - Callback when cycle selection changes
+ * @param {Object} props.model - The model data for parsing
  * @returns {JSX.Element} The entry overview component
  */
-const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle, onCycleChange }) => {
+const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle, onCycleChange, model }) => {
   const [entryAttachments, setEntryAttachments] = React.useState([]);
   const [expanded, setExpanded] = React.useState(['output']);
 
@@ -865,7 +866,7 @@ const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle,
     loadAttachments();
   }, [entry]);
 
-  const context = parseContext(entry?.input);
+  const context = parseContext(entry?.input, model);
   const getDisplayStatus = (status) => {
     return status;
   };
@@ -940,7 +941,7 @@ const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle,
           <Typography variant="subtitle2">{context ? 'User Prompt:' : 'Input:'}</Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ px: 0 }}>
-          <ContentCard>{parseInputContent(entry?.input)}</ContentCard>
+          <ContentCard>{parseInputContent(entry?.input, model)}</ContentCard>
         </AccordionDetails>
       </Accordion>
 
@@ -1844,6 +1845,7 @@ export function TracingModal({
                     entryFlow={entryFlow}
                     onImageSelect={setSelectedImage}
                     entry={entry}
+                    model={model}
                   />
                 )}
               </Box>
