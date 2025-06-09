@@ -29,13 +29,13 @@ const isValidImageBase64 = (base64String) => {
 /**
  * Extracts system messages as context from any data structure
  * @param {any} data - Input data structure
+ * @param {Object} model - Optional model object with systemPromptStructure
  * @returns {string|null} Concatenated context messages or null if none found
  */
-export const parseContext = (data) => {
+export const parseContext = (data, model = null) => {
   if (!data) return null;
 
   const systemMessages = [];
-    console.log("data", data);
   const extractSystemContent = (item) => {
     if (!item) return;
     if (item?.input?.options?.systemMessage || item?.systemMessage) {
@@ -55,7 +55,69 @@ export const parseContext = (data) => {
   };
   
   extractSystemContent(data);
+  
+  // If no system messages found and model has systemPromptStructure, try using it
+  if (systemMessages.length === 0 && model?.systemPromptStructure?.structure) {
+    const structure = model.systemPromptStructure.structure;
+    const systemPrompt = extractSystemPromptUsingStructure(data, structure);
+    if (systemPrompt) {
+      systemMessages.push(systemPrompt);
+    }
+  }
+  
   return systemMessages.length > 0 ? systemMessages.join(', ') : null;
+};
+
+/**
+ * Extracts system prompt using the detected structure
+ * @param {any} data - Input data structure
+ * @param {Object} structure - The system prompt structure
+ * @returns {string|null} The system prompt or null if not found
+ */
+const extractSystemPromptUsingStructure = (data, structure) => {
+  if (!data || !structure) return null;
+
+  try {
+    switch (structure.type) {
+      case 'array':
+        if (Array.isArray(data) && structure.arrayIndex !== undefined) {
+          const item = data[structure.arrayIndex];
+          if (item && typeof item === 'object' && item[structure.field]) {
+            return item[structure.field];
+          }
+        }
+        break;
+      
+      case 'nested':
+        const value = getNestedValue(data, structure.path);
+        if (value && typeof value === 'string') {
+          return value;
+        }
+        break;
+      
+      case 'direct':
+        if (data && typeof data === 'object' && data[structure.field]) {
+          return data[structure.field];
+        }
+        break;
+    }
+  } catch (error) {
+    console.error('Error extracting system prompt using structure:', error);
+  }
+
+  return null;
+};
+
+/**
+ * Gets a nested value from an object using a path string
+ * @param {Object} obj - The object to search
+ * @param {string} path - The path to the value (e.g., "input.options.systemMessage")
+ * @returns {any} The value at the path or undefined
+ */
+const getNestedValue = (obj, path) => {
+  return path.split('.').reduce((current, key) => {
+    return current && current[key] !== undefined ? current[key] : undefined;
+  }, obj);
 };
 
 /**
@@ -128,9 +190,10 @@ const extractAllDicts = (item, dicts = []) => {
 /**
  * Extracts meaningful content from input data
  * @param {any} data - Input data structure
+ * @param {Object} model - Optional model object with systemPromptStructure
  * @returns {string} Extracted content or formatted fallback
  */
-export const parseInputContent = (data) => {
+export const parseInputContent = (data, model = null) => {
   if (!data) return '';
   
   // First check for any __dict__ objects
@@ -168,6 +231,14 @@ export const parseInputContent = (data) => {
       // Skip system messages and attachments
       if (item.role === 'system') return;
       
+      // Skip system prompts using detected structure
+      if (model?.systemPromptStructure?.structure) {
+        const structure = model.systemPromptStructure.structure;
+        if (isSystemPromptField(item, structure)) {
+          return;
+        }
+      }
+      
       // Skip if the object is a Buffer
       if (item.type === 'Buffer') return;
       
@@ -198,6 +269,42 @@ export const parseInputContent = (data) => {
     return JSON.stringify(data, null);
   }
   return contents.join(', ');
+};
+
+/**
+ * Checks if an item is a system prompt field based on the detected structure
+ * @param {any} item - The item to check
+ * @param {Object} structure - The system prompt structure
+ * @returns {boolean} True if the item is a system prompt field
+ */
+const isSystemPromptField = (item, structure) => {
+  if (!item || !structure) return false;
+
+  try {
+    switch (structure.type) {
+      case 'array':
+        if (structure.arrayIndex !== undefined && structure.field) {
+          return item[structure.field] !== undefined;
+        }
+        break;
+      
+      case 'nested':
+        if (structure.field) {
+          return item[structure.field] !== undefined;
+        }
+        break;
+      
+      case 'direct':
+        if (structure.field) {
+          return item[structure.field] !== undefined;
+        }
+        break;
+    }
+  } catch (error) {
+    console.error('Error checking system prompt field:', error);
+  }
+
+  return false;
 };
 
 /**

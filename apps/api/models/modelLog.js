@@ -5,18 +5,16 @@ import {
   outputContainsError,
 } from '../src/services/outputProcessingService.js';
 import {
-  batchEvaluate,
   singleEvaluate,
 } from '../src/services/evaluationService.js';
 import { executeCalculateMetricsForModel } from '../src/services/modelMetricLogCalulatorService.js';
 import { evaluateAB } from '../src/services/abTestService.js';
 import { runReview } from '../src/services/insightsService.js';
 import { isCorrect } from '../src/services/entries/correctnessEvaluatorService.js';
-import { parseInput } from '../src/services/parseInput.js';
 import { redisService } from '../src/services/redisService.js';
 import { parseContext } from '../src/services/parser.js';
-import { detectProblemType } from '../src/services/problemTypeDetectorService.js';
 import { sendModelFailureNotification } from '../src/services/emailService.js';
+import { autoDetectAndUpdateSystemPromptStructure } from '../src/services/systemPromptStructureManagerService.js';
 
 export default (sequelize, DataTypes) => {
   class ModelLog extends Model {
@@ -148,7 +146,18 @@ export default (sequelize, DataTypes) => {
                 return;
               }
 
-              let prompt = parseContext(modelLog.input);
+              // Check if system prompt structure detection is needed
+              if (!model.systemPromptStructure) {
+                // If we have 3 or more logs, trigger structure detection
+                try {
+                  console.log(`Triggering system prompt structure detection for model ${model.id} (${model.name})`);
+                  await autoDetectAndUpdateSystemPromptStructure(model.id, sequelize.models.Model, sequelize.models.ModelLog);
+                } catch (error) {
+                  console.error(`Error detecting system prompt structure for model ${model.id}:`, error);
+                }
+              }
+
+              let prompt = parseContext(modelLog.input, model);
 
 
               if (!model.isOptimized && prompt && prompt.length > 0 && !modelLog.originalLogId) {
@@ -223,7 +232,7 @@ export default (sequelize, DataTypes) => {
                 !model.isOptimized &&
                 !modelLog.originalLogId
               ) {
-                const systemPrompt = parseInput(modelLog.input, 0, -1);
+                const systemPrompt = parseContext(modelLog.input, model);
                 await model.update({
                   parameters: {
                     ...model.parameters,

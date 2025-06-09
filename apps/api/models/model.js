@@ -1736,6 +1736,12 @@ export default (sequelize, DataTypes) => {
         defaultValue: null,
         comment: 'JSON field for storing logic-related flags and metadata'
       },
+      systemPromptStructure: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        field: 'system_prompt_structure',
+        comment: 'JSON field storing the detected structure for system prompt location in input data'
+      },
       modelGroupId: {
         type: DataTypes.INTEGER,
         allowNull: false,
