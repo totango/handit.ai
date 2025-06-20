@@ -383,10 +383,12 @@ const NodeDetails = ({
   model,
   onNodeUpdate,
   currentStepIndex,
+  disableCycles = false,
 }) => {
   const { user } = useUser();
   const isAdmin = user?.role === 'admin';
   const [step, setStep] = React.useState(node?.data?.steps?.[node?.data?.selectedCycleIndex]);
+  const [allSteps, setAllSteps] = React.useState([]);
 
   const [nodeAttachments, setNodeAttachments] = React.useState([]);
   const [expanded, setExpanded] = React.useState(['output']);
@@ -408,9 +410,16 @@ const NodeDetails = ({
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
-    const step = node?.data?.steps?.[selectedCycle];
-    setStep(step);
-  }, [node, selectedCycle]);
+    if (disableCycles && node?.data?.steps) {
+      // Get all steps for this node when cycles are disabled
+      setAllSteps(node.data.steps);
+      setStep(node.data.steps[0]); // Set first step as default
+    } else {
+      const step = node?.data?.steps?.[selectedCycle];
+      setStep(step);
+      setAllSteps([step].filter(Boolean));
+    }
+  }, [node, selectedCycle, disableCycles]);
 
   React.useEffect(() => {
     setRelevance(step?.actual?.relevance || 0);
@@ -670,6 +679,121 @@ const NodeDetails = ({
     );
   }
 
+  // Helper function to render step content
+  const renderStepContent = (stepData, stepIndex = null) => {
+    if (!stepData) return null;
+
+    const context = parseContext(stepData?.input, model);
+    const observation = stepData?.input?.previousSteps?.map((step) => step.observation).join('\n\n');
+    
+    const stepPrefix = stepIndex !== null ? `Step ${stepIndex + 1} - ` : '';
+
+    return (
+      <Box key={stepIndex} sx={{ mb: stepIndex !== null ? 4 : 0 }}>
+        {stepIndex !== null && (
+          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
+            Entry #{stepIndex + 1}
+          </Typography>
+        )}
+
+        {stepData?.actual?.summary ? (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {stepPrefix}Evaluation Insights
+            </Typography>
+            <Typography variant="body2">{stepData?.actual?.summary}</Typography>
+          </Box>
+        ) : (
+          stepData?.actual?.evaluations && stepData?.actual?.evaluations?.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                {stepPrefix}Evaluation Insights
+              </Typography>
+              {stepData?.actual?.evaluations.map((evaluator, index) => (
+                <Typography variant="body2" key={index}> - {parseEvaluationInsight(evaluator, index)}</Typography>
+              ))}
+            </Box>
+          ))}
+
+        {context && (
+          <Accordion
+            expanded={expanded.includes(`system-${stepIndex || 0}`)}
+            onChange={handleAccordionChange(`system-${stepIndex || 0}`)}
+            sx={{
+              '&:before': { display: 'none' },
+              boxShadow: 'none',
+              bgcolor: 'transparent',
+            }}
+          >
+            <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
+              <Typography variant="subtitle2">{stepPrefix}System Prompt</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 0 }}>
+              <ContentCard>{context}</ContentCard>
+            </AccordionDetails>
+          </Accordion>
+        )}
+
+        {observation && (
+          <Accordion
+            expanded={expanded.includes(`observation-${stepIndex || 0}`)}
+            onChange={handleAccordionChange(`observation-${stepIndex || 0}`)}
+            sx={{
+              '&:before': { display: 'none' },
+              boxShadow: 'none',
+              bgcolor: 'transparent',
+            }}
+          >
+            <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
+              <Typography variant="subtitle2">{stepPrefix}RAG Observations</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 0 }}>
+              <ContentCard>{observation}</ContentCard>
+            </AccordionDetails>
+          </Accordion>
+        )}
+
+        <Accordion
+          expanded={expanded.includes(`input-${stepIndex || 0}`)}
+          onChange={handleAccordionChange(`input-${stepIndex || 0}`)}
+          sx={{
+            '&:before': { display: 'none' },
+            boxShadow: 'none',
+            bgcolor: 'transparent',
+          }}
+        >
+          <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
+            <Typography variant="subtitle2">{stepPrefix}{context ? 'User Prompt:' : 'Input:'}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0 }}>
+            <ContentCard>{parseInputContent(stepData.input, model)}</ContentCard>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion
+          expanded={expanded.includes(`output-${stepIndex || 0}`)}
+          onChange={handleAccordionChange(`output-${stepIndex || 0}`)}
+          sx={{
+            '&:before': { display: 'none' },
+            boxShadow: 'none',
+            bgcolor: 'transparent',
+          }}
+        >
+          <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
+            <Typography variant="subtitle2">{stepPrefix}Output:</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0 }}>
+            <ContentCard>{parseOutputContent(stepData.output)}</ContentCard>
+          </AccordionDetails>
+        </Accordion>
+
+        {stepIndex !== null && stepIndex < allSteps.length - 1 && (
+          <Box sx={{ my: 3, borderBottom: 1, borderColor: 'divider' }} />
+        )}
+      </Box>
+    );
+  };
+
   return (
     <Stack spacing={3} sx={{ position: 'relative' }}>
       <Backdrop
@@ -694,7 +818,15 @@ const NodeDetails = ({
         </Typography>
       )}
 
-      {cycles.length > 1 && (
+      {disableCycles && allSteps.length > 1 && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgb(253, 151, 31)' }}>
+            This node was executed {allSteps.length} times. All entries are shown below:
+          </Typography>
+        </Box>
+      )}
+
+      {!disableCycles && cycles.length > 1 && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgb(253, 151, 31)' }}>
             Please select the cycle you want to debug:
@@ -711,103 +843,17 @@ const NodeDetails = ({
         </Box>
       )}
 
-      {
-        step?.actual?.summary ? (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Evaluation Insights
-            </Typography>
-            <Typography variant="body2">{step?.actual?.summary}</Typography>
-          </Box>
-        ) : (
-          step?.actual?.evaluations && step?.actual?.evaluations?.length > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Evaluation Insights
-              </Typography>
-              {step?.actual?.evaluations.map((evaluator, index) => (
-                <Typography variant="body2" key={index}> - {parseEvaluationInsight(evaluator, index)}</Typography>
-              ))}
-            </Box>
-          ))}
+      {disableCycles ? (
+        // Render all steps when cycles are disabled
+        allSteps.map((stepData, index) => renderStepContent(stepData, index))
+      ) : (
+        // Render single step when cycles are enabled
+        step && renderStepContent(step)
+      )}
 
       {step && (
         <>
-          {context && (
-            <Accordion
-              expanded={expanded.includes('system')}
-              onChange={handleAccordionChange('system')}
-              sx={{
-                '&:before': { display: 'none' },
-                boxShadow: 'none',
-                bgcolor: 'transparent',
-              }}
-            >
-              <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
-                <Typography variant="subtitle2">System Prompt</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: 0 }}>
-                <ContentCard>{context}</ContentCard>
-              </AccordionDetails>
-            </Accordion>
-          )}
-
-          {observation && (
-            <Accordion
-              expanded={expanded.includes('observation')}
-              onChange={handleAccordionChange('observation')}
-              sx={{
-                '&:before': { display: 'none' },
-                boxShadow: 'none',
-                bgcolor: 'transparent',
-              }}
-            >
-              <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
-                <Typography variant="subtitle2">RAG Observations</Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: 0 }}>
-                <ContentCard>{observation}</ContentCard>
-              </AccordionDetails>
-            </Accordion>
-          )}
-
-          <Accordion
-            expanded={expanded.includes('input')}
-            onChange={handleAccordionChange('input')}
-            sx={{
-              '&:before': { display: 'none' },
-              boxShadow: 'none',
-              bgcolor: 'transparent',
-            }}
-          >
-            <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
-              <Typography variant="subtitle2">{context ? 'User Prompt:' : 'Input:'}</Typography>
-            </AccordionSummary>
-            <AccordionDetails sx={{ px: 0 }}>
-              <ContentCard>{parseInputContent(step.input, model)}</ContentCard>
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Step Selector */}
-
           <AttachmentsSection attachments={nodeAttachments} onImageSelect={onImageSelect} />
-
-          <Accordion
-            expanded={expanded.includes('output')}
-            onChange={handleAccordionChange('output')}
-            sx={{
-              '&:before': { display: 'none' },
-              boxShadow: 'none',
-              bgcolor: 'transparent',
-            }}
-          >
-            <AccordionSummary expandIcon={<CaretDown />} sx={{ px: 0, minHeight: 'unset' }}>
-              <Typography variant="subtitle2">Output:</Typography>
-            </AccordionSummary>
-            <AccordionDetails sx={{ px: 0 }}>
-              <ContentCard>{parseOutputContent(step.output)}</ContentCard>
-            </AccordionDetails>
-          </Accordion>
 
           {/* Add evaluation section for admins */}
           {isAdmin && node.data.type !== 'tool' && (
@@ -848,7 +894,7 @@ const NodeDetails = ({
  * @param {Object} props.model - The model data for parsing
  * @returns {JSX.Element} The entry overview component
  */
-const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle, onCycleChange, model }) => {
+const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle, onCycleChange, model, disableCycles = false }) => {
   const [entryAttachments, setEntryAttachments] = React.useState([]);
   const [expanded, setExpanded] = React.useState(['output']);
 
@@ -892,7 +938,7 @@ const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle,
         </Box>
       )}
 
-      {cycles.length > 1 && (
+      {!disableCycles && cycles.length > 1 && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgb(253, 151, 31)' }}>
             Please select a specific cycle to debug:
@@ -906,6 +952,14 @@ const EntryOverview = ({ entryFlow, onImageSelect, entry, cycles, selectedCycle,
               ))}
             </Select>
           </FormControl>
+        </Box>
+      )}
+
+      {disableCycles && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'rgb(253, 151, 31)' }}>
+            Showing all execution steps in a single flow.
+          </Typography>
         </Box>
       )}
 
@@ -984,6 +1038,33 @@ const connectFullCycle = (cycle, edges) => {
     });
   }
   return cycle;
+};
+
+// Create a single cycle with all steps when cycles are disabled
+const createSingleCycle = (nodes, edges) => {
+  // Get all steps from all nodes
+  const allSteps = [];
+  nodes.forEach(node => {
+    if (node.data.sequence) {
+      node.data.sequence.forEach(step => {
+        if (!allSteps.includes(step)) {
+          allSteps.push(step);
+        }
+      });
+    }
+  });
+  
+  // Sort steps
+  allSteps.sort((a, b) => a - b);
+  
+  // Get all unique node IDs
+  const allNodeIds = [...new Set(nodes.map(node => node.id))];
+  
+  return [{
+    steps: allSteps,
+    nodes: allNodeIds,
+    edges: connectFullCycle({ nodes: allNodeIds, edges: [] }, edges).edges,
+  }];
 };
 
 const detectCycles = (nodes, edges) => {
@@ -1114,6 +1195,9 @@ export function TracingModal({
   onNodeUpdate = () => { },
   preSelectedNodeId = null,
 }) {
+  // Flag to disable cycles functionality - set to true to show all entries in one flow
+  const [disableCycles, setDisableCycles] = React.useState(true);
+  
   const [selectedNode, setSelectedNode] = React.useState(null);
   const [processedNodes, setProcessedNodes] = React.useState([]);
   const [processedEdges, setProcessedEdges] = React.useState([]);
@@ -1158,7 +1242,7 @@ export function TracingModal({
   // Add effect to detect cycles when nodes change
   React.useEffect(() => {
     if (nodes.length > 0) {
-      const detectedCycles = detectCycles(nodes, edges);
+      const detectedCycles = disableCycles ? createSingleCycle(nodes, edges) : detectCycles(nodes, edges);
       setCycles(detectedCycles);
       if (detectedCycles.length > 0) {
         setSelectedCycle(0);
@@ -1169,7 +1253,7 @@ export function TracingModal({
         });
       }
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, disableCycles]);
 
   // Modify the cycle selection handler
   const handleCycleChange = (event) => {
@@ -1452,9 +1536,11 @@ export function TracingModal({
             data: {
               ...node.data,
               isSelected: node.id == selectedNode?.id ? true : false,
-              currentStep: cycles[selectedCycle]?.steps[0],
+              currentStep: disableCycles ? node.data.sequence : cycles[selectedCycle]?.steps[0],
               selectedCycle: cycles[selectedCycle],
               selectedCycleIndex: selectedCycle,
+              disableCycles: disableCycles,
+              allSteps: disableCycles ? node.data.sequence : undefined,
             },
           };
         });
@@ -1519,9 +1605,11 @@ export function TracingModal({
             data: {
               ...node.data,
               isSelected: node.id == selectedNode?.id ? true : false,
-              currentStep: cycles[selectedCycle]?.steps[0],
+              currentStep: disableCycles ? node.data.sequence : cycles[selectedCycle]?.steps[0],
               selectedCycle: cycles[selectedCycle],
               selectedCycleIndex: selectedCycle,
+              disableCycles: disableCycles,
+              allSteps: disableCycles ? node.data.sequence : undefined,
             },
           };
         });
@@ -1536,16 +1624,18 @@ export function TracingModal({
           data: {
             ...node.data,
             isSelected: node.id == selectedNode?.id ? true : false,
-            currentStep: cycles[selectedCycle]?.steps[0],
+            currentStep: disableCycles ? node.data.sequence : cycles[selectedCycle]?.steps[0],
             selectedCycle: cycles[selectedCycle],
             selectedCycleIndex: selectedCycle,
+            disableCycles: disableCycles,
+            allSteps: disableCycles ? node.data.sequence : undefined,
           },
         };
       });
       setProcessedNodes([...newNodes]);
       setRegularEdges(edges);
     }
-  }, [nodes, edges, entry, selectedNode, selectedCycle]);
+  }, [nodes, edges, entry, selectedNode, selectedCycle, disableCycles]);
 
   const handlePaneClick = () => {
     setSelectedNode(null);
@@ -1739,9 +1829,23 @@ export function TracingModal({
           }}
         >
           <Typography variant="h6">Entry Flow Details</Typography>
-          <IconButton onClick={onClose}>
-            <XIcon />
-          </IconButton>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <FormControl size="small">
+              <InputLabel>View Mode</InputLabel>
+              <Select
+                value={disableCycles ? 'flat' : 'cycles'}
+                onChange={(e) => setDisableCycles(e.target.value === 'flat')}
+                label="View Mode"
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="cycles">Cycles</MenuItem>
+                <MenuItem value="flat">Flat View</MenuItem>
+              </Select>
+            </FormControl>
+            <IconButton onClick={onClose}>
+              <XIcon />
+            </IconButton>
+          </Stack>
         </Stack>
 
         {isLoading ? (
@@ -1836,6 +1940,7 @@ export function TracingModal({
                     onNodeUpdate={onNodeUpdate}
                     setCurrentStepIndex={setCurrentStepIndex}
                     currentStepIndex={currentStepIndex}
+                    disableCycles={disableCycles}
                   />
                 ) : (
                   <EntryOverview
@@ -1846,6 +1951,7 @@ export function TracingModal({
                     onImageSelect={setSelectedImage}
                     entry={entry}
                     model={model}
+                    disableCycles={disableCycles}
                   />
                 )}
               </Box>
