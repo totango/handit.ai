@@ -426,6 +426,7 @@ export default (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
       unique: true,
+      defaultValue: () => Company.generateApiToken(),
       field: 'api_token'
     },
     stagingApiToken: {

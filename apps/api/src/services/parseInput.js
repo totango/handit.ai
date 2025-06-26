@@ -1,5 +1,4 @@
-
-export const parseInput = (input, index = -1, startIndex = -1) => {
+export const parseInput = (input, index = -1, startIndex = -1, model = null) => {
   let processed_arr = [];
 
   if (Array.isArray(input)) {

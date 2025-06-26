@@ -28,6 +28,7 @@ export const executeTrack = async (model, data, ModelLog) => {
   }
 
   data.modelId = model.id;
+
   let error = false;
   if (detectError(data)) {
     error = true;
@@ -35,24 +36,11 @@ export const executeTrack = async (model, data, ModelLog) => {
   try {
     // Find the agent node associated with this model
     const agentNode = await model.sequelize.models.AgentNode.findOne({
-      where: { modelId: model.id, deletedAt: null },
-      include: [
-        {
-          model: model.sequelize.models.Agent,
-          where: { autoCapture: true },
-          required: true,
-        },
-      ],
+      where: { modelId: data.modelId, deletedAt: null }
     });
-
-    // If no agent node found or agent doesn't have autoCapture enabled, proceed normally
-    if (!agentNode) {
-      // test
-    }
-
     // Start transaction to ensure data consistency
 
-    let agentLogId = data.agentLogId;
+    let agentLogId = data.agentLogId || data.executionId;
     let agentLog = null;
 
     // If agentLogId is provided, try to find it
@@ -63,6 +51,10 @@ export const executeTrack = async (model, data, ModelLog) => {
           environment: data.environment || 'production',
         },
       });
+      if (agentLog && agentLog.input === 'processing') {
+        agentLog.input = data.input;
+        await agentLog.save();
+      }
     }
 
     if (!agentLog && externalId) {
@@ -73,10 +65,21 @@ export const executeTrack = async (model, data, ModelLog) => {
       });
     }
 
-    // If this is an initial node and no agentLogId provided, create new agent log
-    if (agentNode && agentNode.initialNode && !agentLog) {
+    if (!agentLog && agentNode) {
+      agentLog = await model.sequelize.models.AgentLog.findOne({
+        where: {
+          agentId: agentNode.agentId,
+          status: 'processing',
+          environment: data.environment || 'production',
+        },
+        order: [['createdAt', 'DESC']],
+        limit: 1,
+      });
+    }
+
+    if (!agentLog) {
       agentLog = await model.sequelize.models.AgentLog.create({
-        agentId: agentNode.Agent.id,
+        agentId: agentNode.agentId,
         input: data.input,
         status: error ? 'failed' : 'processing',
         environment: data.environment || 'production',
@@ -84,21 +87,8 @@ export const executeTrack = async (model, data, ModelLog) => {
           startedAt: new Date(),
           initialNodeId: agentNode.id,
         },
-        externalId: externalId,
       });
       agentLogId = agentLog.id;
-    }
-
-    if (!agentLog && agentNode) {
-      agentLog = await model.sequelize.models.AgentLog.findOne({
-        where: {
-          agentId: agentNode.Agent.id,
-          status: 'processing',
-          environment: data.environment || 'production',
-        },
-        order: [['createdAt', 'DESC']],
-        limit: 1,
-      });
     }
 
     // Create the model log with the agent log association if available
@@ -112,49 +102,24 @@ export const executeTrack = async (model, data, ModelLog) => {
       status: error ? 'crash' : 'success',
     });
 
-    // If this is an end node and we have an agent log and autoStop is enabled, update it
-    if (
-      agentNode &&
-      agentNode.endNode &&
-      agentLog &&
-      agentNode.Agent.autoStop
-    ) {
-      const endTime = new Date();
-      await agentLog.update({
-        status: error ? 'failed' : 'success',
-        output: data.output,
-        duration: endTime - new Date(agentLog.metadata.startedAt),
-        metadata: {
-          ...agentLog.metadata,
-          endedAt: endTime,
-          endNodeId: agentNode.id,
-        },
-      });
-    }
-
     return {
       modelLog,
       agentLogId: agentLog?.dataValues.id,
       modelLogId: modelLog.dataValues.id,
+      executionId: agentLog?.dataValues.id,
     };
   } catch (error) {
-    console.log('error', error);
     return { error: error.message };
   }
 };
 
-export const executeToolTrack = async (agentNode, data) => {
+export const executeToolTrack = async (agentNode, data, agent) => {
   try {
-    // Find the agent associated with this node
-    const agent = await agentNode.getAgent();
-    if (!agent) {
-      return { error: 'Agent not found for this node' };
-    }
-
     // Start transaction to ensure data consistency
 
       let externalId = data.externalId;
-      let agentLogId = data.agentLogId;
+      let agentLogId = data.agentLogId || data.executionId;
+
       let agentLog = null;
 
       // If agentLogId is provided, try to find it
@@ -165,6 +130,11 @@ export const executeToolTrack = async (agentNode, data) => {
             environment: data.environment || 'production',
           },
         });
+
+        if (agentLog && agentLog.input === 'processing') {
+          agentLog.input = data.input;
+          await agentLog.save();
+        }
       }
       if (!agentLog && externalId) {
         agentLog = await agentNode.sequelize.models.AgentLog.findOne({
@@ -172,10 +142,15 @@ export const executeToolTrack = async (agentNode, data) => {
             externalId,
           },
         });
+
+        if (agentLog.input === 'processing') {
+          agentLog.input = data.input;
+          await agentLog.save();
+        }
       }
 
       // If this is an initial node and no agentLogId provided, create new agent log
-      if (agentNode.initialNode && !agentLog) {
+      if (!agentLog && externalId) {
         // Create new agent log for this initial node
         agentLog = await agentNode.sequelize.models.AgentLog.create(
           {
@@ -204,6 +179,19 @@ export const executeToolTrack = async (agentNode, data) => {
           limit: 1,
         });
       }
+      
+      if (!agentLog) {
+        await agentNode.sequelize.models.AgentLog.create({
+          agentId: agent.id,
+          input: data.input,
+          status: 'processing',
+          environment: data.environment || 'production',
+          metadata: {
+            startedAt: new Date(),
+            initialNodeId: agentNode.id,
+          },
+        });
+      }
 
       // Create the agent node log
       const agentNodeLog = await agentNode.sequelize.models.AgentNodeLog.create(
@@ -211,7 +199,7 @@ export const executeToolTrack = async (agentNode, data) => {
           agentId: agent.id,
           agentNodeId: agentNode.id,
           input: data.input,
-          output: data.output,
+          output: data.output || {},
           environment: data.environment || 'production',
           operationType: agentNode.config?.operationType || 'tool_operation',
           status: data.error ? 'error' : 'success',
@@ -256,7 +244,7 @@ export const executeToolTrack = async (agentNode, data) => {
         );
       }
 
-      return { agentNodeLog, agentLogId: agentLog?.dataValues.id };
+      return { agentNodeLog, agentLogId: agentLog?.dataValues.id, executionId: agentLog?.dataValues.id };
 
   } catch (error) {
     return { error: error.message };

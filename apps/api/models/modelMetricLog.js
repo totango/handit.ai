@@ -217,7 +217,6 @@ export default (sequelize, DataTypes) => {
                 endDate: endOfWeek,
               },
             });
-            console.log('metricRecord', metricRecord);
             if (!metricRecord) {
               await sequelize.models.MetricRange.create({
                 companyId: companyId,

@@ -150,7 +150,6 @@ export async function getPromptsForModel(req, res) {
         { model: db.IntegrationToken, as: 'integrationToken' },
       ],
     });
-    console.log('associations:  ', associations)
     // Return both the association and the evaluation prompt
     const prompts = associations.map(a => ({
       // Association fields

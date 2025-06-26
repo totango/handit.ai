@@ -207,11 +207,8 @@ export function ModelsTable({ onModelSelect, height = '28vh' }) {
 
   // Extract models from agent data
   const models = React.useMemo(() => {
-    console.log('agent::::')
-    console.log(agent);
     if (!agent) return [];
 
-    console.log(agent.data.nodes);
     // Return only the model nodes from the agent
     return agent.data.AgentNodes
       ?.filter(node => node.type === 'model' && node.Model) // Only include nodes of type 'model' that have a Model
