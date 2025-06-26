@@ -118,8 +118,9 @@ export const AgentMonitoring = ({
   React.useEffect(() => {
     if (!initialNodes.length) return;
     const verticalSpacing = 30; 
+    let nodesInSamePosition = {};
 
-    const nodesWithData = initialNodes.sort((a,b) => a.position.y - b.position.y).map((node, idx) => {
+    const nodesWithData = initialNodes.sort((a,b) => a.position.x - b.position.x).map((node, idx) => {
       let nodeMetrics = metrics;
       if (node.data.type === 'model') {
         nodeMetrics = nodeMetrics?.modelMetrics?.metricsByModel?.[node.data.modelId]?.accuracy?.daily;
@@ -127,12 +128,17 @@ export const AgentMonitoring = ({
         nodeMetrics = nodeMetrics?.toolMetrics?.metricsByTool?.[node.data.id]?.daily;
       }
       const nodeColor = getNodeColor(node, nodeMetrics);
+      if (nodesInSamePosition[node.position.y]) {
+        nodesInSamePosition[node.position.y]++;
+      } else {
+        nodesInSamePosition[node.position.y] = 1;
+      }
       return {
         ...node,
         type: node.data.type === 'model' ? 'deploymentCustom' : node.data.type === 'tool' ? 'toolCustom' : 'custom',
         position: {
           ...node.position,
-          y: node.position.y + idx * verticalSpacing, // or just idx * verticalSpacing if starting from 0
+          x: node.position.x + nodesInSamePosition[node.position.y] * 80,
         },
         data: {
           ...node.data,

@@ -102,14 +102,12 @@ export function CreateModelForm({ onClose, open = false, onSubmit }) {
    * Handles form submission with validation
    */
   const handleSubmit = async () => {
-    console.log('entroooooo 1111')
     setNewError('');
-    console.log('entroooooo 2222')
-    console.log('name', name);
+
     if (!name || name === '') {
       return setNewError('Model name is required');
     }
-    console.log('entroooooo 3333')
+
     const modelData = {
       name,
       url,
@@ -121,11 +119,8 @@ export function CreateModelForm({ onClose, open = false, onSubmit }) {
       modelCategory,
       evaluatorIds: selectedEvaluators.map(ev => ev.id),
     };
-    console.log('entroooooo 4444')
-    console.log('modelData', modelData);
 
     const ans = await onSubmit(modelData);
-    console.log('ans', ans);
     // Reset form state
     setName('');
     setUrl('');

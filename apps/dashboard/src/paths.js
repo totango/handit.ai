@@ -88,8 +88,6 @@ export const paths = {
     businessMetrics: '/businessMetrics',
     smartFeedbackLoop: '/dynamic-review',
     modelRefinement: '/model-refinement',
-    models: '/models',
-    agents: '/agents',
     datasets: '/datasets',
     evaluationHub: '/evaluation-hub',
     mail: {

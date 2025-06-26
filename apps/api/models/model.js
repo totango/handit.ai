@@ -65,7 +65,7 @@ export default (sequelize, DataTypes) => {
               {
                 model: sequelize.models.IntegrationToken,
                 as: 'defaultIntegrationToken',
-                attributes: ['id', 'name', 'providerId'],
+                attributes: ['id', 'name', 'providerId', 'token'],
                 include: [
                   {
                     model: sequelize.models.Provider,
@@ -221,21 +221,14 @@ export default (sequelize, DataTypes) => {
           },
           order: [['createdAt', 'DESC']],
         });
-        // if the last version is active, set it to inactive
-        if (lastVersion && lastVersion.activeVersion) {
-          await lastVersion.update({
-            activeVersion: false,
-          });
-        }
         await sequelize.models.ModelVersions.create({
           modelId: optimizedModel.id,
           parameters: {
             prompt,
           },
           version: lastVersion ? parseInt(lastVersion.version) + 1 : 1,
-          activeVersion: true,
+          activeVersion: false,
         });
-        
       }
     }
 
@@ -610,16 +603,33 @@ export default (sequelize, DataTypes) => {
       const insights = [];
       for (let i = 0; i < randomModelLogs.length; i++) {
         const modelLog = modelLogs[i];
-        if (!isCorrect(modelLog) && insights.length < 3) {
-
-          const percentage = 50;
+        if (!isCorrect(modelLog) && insights.length < 5) {
+          const percentage = 100;
           const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
           if (randomNumberFrom0To100 <= percentage) {
             const modelGroup = await this.getModelGroup();
             const company = await modelGroup.getCompany();
+            let optimizationToken;
+            let defaultModel;
+            let provider;
+            if (this.flags?.isN8N) {
+              optimizationToken = process.env.TOGETHER_API_KEY;
+              defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'; // TODO: change to the default model of the company
+              provider = 'TogetherAI';
+            } else {
+              const token = await company.getOptimizationToken();
+              optimizationToken = token.token;
+              defaultModel = company.optimizationModel;
+              provider = token.provider.name;
+              if (!defaultModel) {
+                if (provider === 'OpenAI') {
+                  defaultModel = 'gpt-4o-mini';
+                } else if (provider === 'TogetherAI') {
+                  defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+                }
+              }
+            }
 
-            const optimizationToken = await company.getOptimizationToken();
-            const defaultModel = company.optimizationModel;
             try {
               await runReview(
                 modelLog,
@@ -629,8 +639,8 @@ export default (sequelize, DataTypes) => {
                 this.problemType,
                 this.version,
                 this.id,
-                optimizationToken.token,
-                optimizationToken.provider.name,
+                optimizationToken,
+                provider,
                 defaultModel
               );
             } catch (error) {
@@ -737,8 +747,11 @@ export default (sequelize, DataTypes) => {
     }
 
     async applySuggestions() {
-      console.log('applySuggestions');
-      const prompt = await this.prompt();
+      const modelVersion = await this.getModelVersion();
+      let prompt = modelVersion?.parameters?.prompt;
+      if (!prompt) {
+        prompt = await this.prompt();
+      }
       const suggestions = await sequelize.models.Insights.findAll({
         where: {
           modelId: this.id,
@@ -752,12 +765,28 @@ export default (sequelize, DataTypes) => {
       }
       const modelGroup = await this.getModelGroup();
       const company = await modelGroup.getCompany();
+      let token;
+      let defaultModel;
+      let provider;
+      if (this.flags?.isN8N) {
+        token = process.env.TOGETHER_API_KEY;
+        defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+        provider = 'TogetherAI';
+      } else {
+        const optimizationToken = await company.getOptimizationToken();
+        token = optimizationToken.token;
+        defaultModel = company.optimizationModel;
+        provider = optimizationToken.provider.name;
+        if (!defaultModel) {
+          if (provider === 'OpenAI') {
+            defaultModel = 'gpt-4o-mini';
+          } else if (provider === 'TogetherAI') {
+            defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+          }
+        }
+      }
 
-      const optimizationToken = await company.getOptimizationToken();
-      const defaultModel = company.optimizationModel;
-
-      const enhancedPromptResult = await enhancePrompt(prompt, suggestions, optimizationToken.token, optimizationToken.provider.name, defaultModel);
-      console.log('enhancedPromptResult', enhancedPromptResult);
+      const enhancedPromptResult = await enhancePrompt(prompt, suggestions, token, provider, defaultModel);
       return enhancedPromptResult;
     }
 
@@ -971,10 +1000,8 @@ export default (sequelize, DataTypes) => {
 
       const nowAt4pm = new Date(new Date().setDate(new Date().getDate() + 2));
       nowAt4pm.setHours(16, 0, 0, 0);
-      console.log('limit', limit);
-      console.log('yesterdayAt4pm', yesterdayAt4pm);
-      console.log('id', this.id);
-      console.log('nowAt4pm', nowAt4pm);
+
+      
       const modelLogs = await sequelize.models.ModelLog.findAll({
         where: {
           modelId: this.id,
@@ -1702,6 +1729,18 @@ export default (sequelize, DataTypes) => {
       parameters: {
         type: DataTypes.JSON,
         allowNull: true,
+      },
+      flags: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+        defaultValue: null,
+        comment: 'JSON field for storing logic-related flags and metadata'
+      },
+      systemPromptStructure: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        field: 'system_prompt_structure',
+        comment: 'JSON field storing the detected structure for system prompt location in input data'
       },
       modelGroupId: {
         type: DataTypes.INTEGER,

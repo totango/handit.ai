@@ -78,7 +78,6 @@ export const getAgentStructure = async (agentId) => {
     order: [['createdAt', 'DESC']],
   });
 
-  console.log(lastDateOfAgentLog);
 
   return {
     id: agent.id,

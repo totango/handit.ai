@@ -2,31 +2,38 @@
   <img width="903" alt="Handit.ai Banner" src="./apps/dashboard/public/assets/overview/handit-portada.png" />
 </p>
 
->The Open Source Engine that Auto-Improves Your AI <br>
->Handit evaluates every agent decision, auto-generates better prompts and datasets, A/B-tests the fix, and lets you control what goes live.
+# 🖐️ Handit - The Open Source Engine that Auto-Improves Your AI
+
+Handit evaluates every agent decision, auto-generates better prompts and datasets, A/B-tests the fix, and lets you control what goes live.
+
+Handit is a **developer-first, open-source platform that automatically improves your AI agents** in real-world settings.  
+It's designed to **evaluate**, **auto-generate improvements**, and **test fixes** for any AI agent you've deployed.
+
+This isn't another wrapper.  
+This is the auto-improvement engine your agents have been missing.
 
 ---
 
 ## 🌟 What Handit Delivers
 
-Handit gives you the tools to observe, evaluate, and improve every part of your LLM agents—node by node.
+Handit automatically improves every part of your AI agents—evaluating decisions, generating fixes, and testing improvements.
 
-- 🔍 **Track Everything**  
-  Capture all agent activity—inputs, outputs, tool calls, intermediate reasoning—across every node. Gain full visibility into how your agent actually behaves in production.
+- 🔍 **Evaluate Everything**  
+  Automatically assess every agent decision—inputs, outputs, tool calls, reasoning—across every node. Detect issues, hallucinations, and performance gaps in real-time.
 
-- 🧠 **Evaluate Automatically**  
-  Use LLM-based evaluators to score each output. Assess quality, correctness, hallucination risk, and more at every step in your agent's execution graph.
+- 🤖 **Auto-Generate Improvements**  
+  Automatically create better prompts, datasets, and configurations based on detected issues. Let AI improve your AI with targeted fixes for specific failure patterns.
 
-- 💡 **Generate Insights**  
-  Automatically detect failure patterns, drift, or low-performing prompts. Get actionable suggestions tied to specific parts of your agent.
+- 🧪 **A/B Test Automatically**  
+  Test improvements against your current setup with intelligent A/B testing. Compare performance, measure impact, and validate fixes before they go live.
 
-- ✍️ **Version Prompts**  
-  Track, compare, and roll back prompt changes. Version control is built into the system—by node, model, or project.
+- 🎛️ **Control What Goes Live**  
+  You decide what improvements to deploy. Review auto-generated fixes, approve changes, and roll back if needed. Full control over your agent's evolution.
 
-- 🔁 **Route Intelligently**  
-  Serve the best prompt version dynamically via A2A-style routing. Optimize execution paths before they even run.
+- ✍️ **Version Everything**  
+  Track every change, improvement, and rollback. Complete version control for prompts, datasets, and configurations—by node, model, or project.
 
-> If your agent is in production, Handit helps make sure it's actually working—and keeps getting better.
+> If your agent is in production, Handit automatically finds what's broken and fixes it—with your approval.
 
 # ✨ Core Features
 

@@ -5,18 +5,16 @@ import {
   outputContainsError,
 } from '../src/services/outputProcessingService.js';
 import {
-  batchEvaluate,
   singleEvaluate,
 } from '../src/services/evaluationService.js';
 import { executeCalculateMetricsForModel } from '../src/services/modelMetricLogCalulatorService.js';
 import { evaluateAB } from '../src/services/abTestService.js';
 import { runReview } from '../src/services/insightsService.js';
 import { isCorrect } from '../src/services/entries/correctnessEvaluatorService.js';
-import { parseInput } from '../src/services/parseInput.js';
 import { redisService } from '../src/services/redisService.js';
 import { parseContext } from '../src/services/parser.js';
-import { detectProblemType } from '../src/services/problemTypeDetectorService.js';
 import { sendModelFailureNotification } from '../src/services/emailService.js';
+import { autoDetectAndUpdateSystemPromptStructure } from '../src/services/systemPromptStructureManagerService.js';
 
 export default (sequelize, DataTypes) => {
   class ModelLog extends Model {
@@ -148,7 +146,18 @@ export default (sequelize, DataTypes) => {
                 return;
               }
 
-              let prompt = parseContext(modelLog.input);
+              // Check if system prompt structure detection is needed
+              if (!model.systemPromptStructure) {
+                // If we have 3 or more logs, trigger structure detection
+                try {
+                  console.log(`Triggering system prompt structure detection for model ${model.id} (${model.name})`);
+                  await autoDetectAndUpdateSystemPromptStructure(model.id, sequelize.models.Model, sequelize.models.ModelLog);
+                } catch (error) {
+                  console.error(`Error detecting system prompt structure for model ${model.id}:`, error);
+                }
+              }
+
+              let prompt = parseContext(modelLog.input, model);
 
 
               if (!model.isOptimized && prompt && prompt.length > 0 && !modelLog.originalLogId) {
@@ -195,7 +204,7 @@ export default (sequelize, DataTypes) => {
                     reviewer_id: reviewer.dataValues.id,
                     model_id: model.id,
                     activationThreshold: 5,
-                    evaluationPercentage: 30,
+                    evaluationPercentage: model.flags?.isN8N ? 100 : 30,
                     limit: 5,
                   });
                 }
@@ -223,7 +232,7 @@ export default (sequelize, DataTypes) => {
                 !model.isOptimized &&
                 !modelLog.originalLogId
               ) {
-                const systemPrompt = parseInput(modelLog.input, 0, -1);
+                const systemPrompt = parseContext(modelLog.input, model);
                 await model.update({
                   parameters: {
                     ...model.parameters,
@@ -252,7 +261,9 @@ export default (sequelize, DataTypes) => {
                   await singleEvaluate(
                     modelLog,
                     reviewerInstance,
-                    prompts
+                    prompts,
+                    model.flags?.isN8N,
+                    sequelize.models.EvaluationLog
                   );
                 }
               }
@@ -312,6 +323,72 @@ export default (sequelize, DataTypes) => {
                     description: 'Model health check passed',
                     label: 'health_check',
                   });
+                }
+              }
+
+              const random = Math.floor(Math.random() * 101);
+              if (random <= 20) {
+                await model.generateInsights();
+                const newPrompt = await model.applySuggestions();
+                if (newPrompt) {
+                  const existingABTest = await sequelize.models.ABTestModels.findOne({
+                    where: {
+                      modelId: model.id,
+                      principal: true
+                    }
+                  });
+        
+                  if (existingABTest) {
+                    // Update the optimized model version
+                    await model.updateOptimizedPrompt(newPrompt);
+                  } else {
+                    // Create a new optimized model
+                    const originalModel = model.toJSON();
+                    // remove id from originalModel
+                    delete originalModel.id;
+
+                    const optimizedModel = await sequelize.models.Model.create({
+                      ...originalModel,
+                      slug: `${model.slug}-optimized-${Date.now()}`,
+                      isOptimized: true,
+                      parameters: {
+                        prompt: newPrompt,
+                        problemType: model.parameters?.problemType
+                      },
+                      problemType: model.problemType,
+                    });
+
+                    // Copy metrics and reviewers
+                    const metrics = await model.getModelMetrics();
+                    for (const metric of metrics) {
+                      await sequelize.models.ModelMetric.create({
+                        ...metric.toJSON(),
+                        id: undefined,
+                        modelId: optimizedModel.id
+                      });
+                    }
+
+                    const reviewers = await model.getReviewers();
+                    for (const reviewer of reviewers) {
+                      await sequelize.models.ReviewersModels.create({
+                        modelId: optimizedModel.id,
+                        model_id: model.id,
+                        reviewer_id: reviewer.reviewerId,
+                        reviewerId: reviewer.reviewerId
+                      });
+                    }
+
+                    // Create AB test
+                    await sequelize.models.ABTestModels.create({
+                      modelId: model.id,
+                      optimizedModelId: optimizedModel.id,
+                      principal: true,
+                      percentage: 30
+                    });
+
+                    await model.updateOptimizedPrompt(newPrompt);
+
+                  }
                 }
               }
               if (!model.isReviewer && !model.isOptimized && !modelLog.originalLogId) {

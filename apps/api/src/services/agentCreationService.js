@@ -1,10 +1,15 @@
+import evaluationPrompt from '../../models/evaluationPrompt.js';
 import db from '../../models/index.js';
 import { Op } from 'sequelize';
 
-const { Agent, AgentNode, AgentConnection, Model } = db;
+const { Agent, AgentNode, AgentConnection, Model, ModelGroup, ModelEvaluationPrompt, EvaluationPrompt } = db;
 
-export const createAgentFromConfig = async (config, companyId) => {
-
+export const createAgentFromConfig = async (config, companyId, isN8N = false) => {
+  const slug = config.agent.slug || generateSlug(config.agent.name)
+  const createdAgent = await Agent.findOne({ where: { slug, companyId } });
+  if (createdAgent) {
+    throw new Error('Agent already exists');
+  }
   try {
     // Create the agent
     const agent = await Agent.create({
@@ -22,17 +27,41 @@ export const createAgentFromConfig = async (config, companyId) => {
       
       if (nodeConfig.type === 'model') {
         // Create the model first
-        console.log('nodeConfig', nodeConfig);
+        const modelGroup = await ModelGroup.create({
+          name: nodeConfig.name,
+          description: nodeConfig.description,
+          companyId: companyId
+        });
         const model = await Model.create({
           name: nodeConfig.name,
           description: nodeConfig.description,
           provider: nodeConfig?.model?.provider || 'openai',
           problemType: nodeConfig?.model?.problem_type || 'text_generation',
           parameters: nodeConfig?.model?.parameters || {},
-          slug: nodeConfig.slug || generateSlug(nodeConfig.name),
-          modelGroupId: 1, // You might want to make this configurable
-          active: true
+          slug: generateSlug(nodeConfig.name),
+          modelGroupId: modelGroup.id,
+          active: true,
+          flags: {
+            isN8N: isN8N
+          }
         });
+
+        if (isN8N) {
+          // add hallucination evaluator
+          const hallucinationEvaluator = await EvaluationPrompt.findOne({
+            where: {
+              name: 'Hallucination & Factual Accuracy Evaluation',
+              companyId: companyId
+            }
+          });
+          if (hallucinationEvaluator) {
+            await ModelEvaluationPrompt.create({
+              modelId: model.id,
+              evaluationPromptId: hallucinationEvaluator.id,
+              companyId: companyId
+            });
+          }
+        }
 
         // Create the model node
         node = await AgentNode.create({
@@ -88,7 +117,6 @@ export const createAgentFromConfig = async (config, companyId) => {
 
     // Update node types (initial/end nodes)
     await AgentConnection.updateNodeTypes(agent.id);
-
 
     // Fetch the complete agent with all relations
     const completeAgent = await Agent.findByPk(agent.id, {

@@ -20,13 +20,6 @@ export const layoutConfig = {
       title: 'General',
       items: [
         {
-          key: 'agents',
-          title: 'Your Agents',
-          icon: 'graph',
-          href: paths.dashboard.agents,
-        },
-
-        {
           key: 'connect',
           title: 'Docs',
           href: 'https://docs.handit.ai/',

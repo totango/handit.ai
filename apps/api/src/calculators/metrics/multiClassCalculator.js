@@ -61,9 +61,8 @@ async function calculateMetric(metric, logs, mapping = {}) {
     values[variable] = result;
   }
 
-  console.log('metric', metric);
   let calculatedFormula = formula;
-  console.log('calculatedFormula', calculatedFormula);
+
   for (const [variable, value] of Object.entries(values)) {
     calculatedFormula = calculatedFormula.replace(new RegExp(`\\b${variable}\\b`, 'g'), value);
   }

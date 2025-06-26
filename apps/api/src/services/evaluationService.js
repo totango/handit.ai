@@ -26,6 +26,7 @@ import os from 'os';
 import { generateAIResponse } from './aiService.js';
 import { Op } from 'sequelize';
 
+
 const evaluationObject = {
   data_extraction: dataExtractionPrompts,
   generation: textGenerationPrompts,
@@ -110,7 +111,7 @@ export const summaryEvaluation = async (log, evaluatorPrompts = null) => {
   return summary;
 };
 
-export const singleEvaluate = async (entry, evaluator, prompts = []) => {
+export const singleEvaluate = async (entry, evaluator, prompts = [], isN8N = false, EvaluationLog = null) => {
   const MAX_RETRIES = 2;
 
   let retries = 0;
@@ -118,7 +119,7 @@ export const singleEvaluate = async (entry, evaluator, prompts = []) => {
 
   while (retries < MAX_RETRIES) {
     try {
-      evaluation = await evaluate(entry, prompts);
+      evaluation = await evaluate(entry, prompts, isN8N);
       break; 
     } catch {
       retries++;
@@ -134,6 +135,20 @@ export const singleEvaluate = async (entry, evaluator, prompts = []) => {
     processed: true,
     status: isCorrect({ actual: parsedOutput }) ? 'success' : 'error',
   });
+
+  for (const ev of evaluation) {
+    const evaluationId = ev.evaluatorId;
+    const score = ev.score;
+    if (!EvaluationLog) {
+      continue;
+    }
+    await EvaluationLog.create({
+      modelLogId: entry.id,
+      modelId: entry.modelId,
+      evaluationPromptId: evaluationId,
+      isCorrect: score >= 8,
+    });
+  }
 
   return { entry, evaluation };
 };
@@ -267,9 +282,12 @@ export const parseEvaluatorsOutput = (evaluations) => {
   return output;
 };
 
-const evaluate = async (entry, prompts = []) => {
+const evaluate = async (entry, prompts = [], isN8N = false) => {
   const attachment = await parseAttachments(entry.input);
   const parsedOutput = parseOutputContent(entry.output);
+  const context = parseContext(entry.input);
+  const observation = entry?.input?.previousSteps?.map((step) => step.observation).join('\n\n');
+
   const imageAttachments = attachment
     .filter(
       (att) =>
@@ -308,6 +326,7 @@ const evaluate = async (entry, prompts = []) => {
 
   if (evaluatorPrompts && evaluatorPrompts.length > 0) {
     for (let i = 0; i < evaluatorPrompts.length; i++) {
+      if (!parsedOutput || parsedOutput === null || parsedOutput === undefined || parsedOutput === '') continue;
       const evaluator = evaluatorPrompts[i];
       const message = [
         {
@@ -337,6 +356,9 @@ const evaluate = async (entry, prompts = []) => {
                     text: userContent,
                   },
                 ]),
+            { type: 'text', text: `System Prompt: ${context}` },
+            // add observation only if it is not empty
+            observation && { type: 'text', text: `Observation over the RAG db: ${observation}` },
             {
               type: 'text',
               text: `Extracted Output: ${parsedOutput}`,
@@ -350,7 +372,7 @@ const evaluate = async (entry, prompts = []) => {
                 "errors": ["List of errors"]
               }`,
             },
-          ],
+          ].filter((item) => item !== null && item !== undefined && item !== ''),
         },
       ];
       const completion = await generateAIResponse({
@@ -361,15 +383,17 @@ const evaluate = async (entry, prompts = []) => {
           analysis: z.string(),
           errors: z.array(z.string()),
         }),
-        token: evaluator.evaluationPrompt.defaultIntegrationToken.token,
-        provider: evaluator.evaluationPrompt.defaultIntegrationToken.provider.name,
-        model: evaluator.evaluationPrompt.defaultProviderModel,
+        isN8N: isN8N,
+        token: evaluator.evaluationPrompt?.defaultIntegrationToken?.token,
+        provider: evaluator.evaluationPrompt?.defaultIntegrationToken?.provider?.name,
+        model: evaluator.evaluationPrompt?.defaultProviderModel,
       });
 
 
       evaluations.push({
         ...JSON.parse(completion.choices[0].message.content),
         evaluator: evaluator.evaluationPrompt.name,
+        evaluatorId: evaluator.evaluationPrompt.id,
       });
     }
 

@@ -37,8 +37,12 @@ const AgentConfigSchema = z.object({
 });
 
 export const parseAgentConfig = async (rawConfig) => {
+  if (rawConfig.nodes.length > 0 ) {
+   rawConfig.nodes = rawConfig.nodes.filter(node => !(node.type.includes("lmChatOpenAi") || node.type.includes("vectorStorePinecone") || node.type.includes("embeddingsOpenAi")));
+  }
   try {
-    const prompt = `Parse and structure the following agent configuration into a standardized format. 
+    const prompt = `Parse and structure the following agent configuration into a standardized format.
+    if you see AI Agent node that must always be a model node.
     The configuration should follow this structure:
     {
       "agent": {
@@ -82,20 +86,91 @@ export const parseAgentConfig = async (rawConfig) => {
       messages: [
         {
           role: "system",
-          content: "You are an expert at parsing and structuring agent configurations. Always ensure proper node positioning and connection mapping."
+          content: "You are an expert at parsing and structuring agent configurations. Always ensure proper node positioning and connection mapping. Arrange nodes in a top-to-bottom layout with proper spacing, and make sure the nodes are not overlapping, so use 300 units of spacing between nodes on Y axis and 300 units of spacing between nodes on X axis. If you see AI Agent node that must always be a model node. Organize the nodes top to down and consider inputs and outputs, so always a node that is an input for another node must be above the node that is the output for the other node."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      responseFormat: AgentConfigSchema,
+      responseFormat: AgentConfigSchema
     });
 
     const parsedConfig = JSON.parse(completion.choices[0].message.content);
-    return parsedConfig;
+
+    return repositionGraphNodes(parsedConfig);
   } catch (error) {
     console.error('Error parsing agent config:', error);
     throw error;
   }
-}; 
+};
+
+
+export const repositionGraphNodes = (graph) => {
+  const nodeMap = {};
+  const incomingCount = {};
+  const outgoingMap = {};
+
+  graph.nodes.forEach((node) => {
+    nodeMap[node.slug] = node;
+    incomingCount[node.slug] = 0;
+    outgoingMap[node.slug] = [];
+  });
+
+  // Build edges
+  graph.nodes.forEach((node) => {
+    node.next_nodes?.forEach((next) => {
+      incomingCount[next.slug]++;
+      outgoingMap[node.slug].push(next.slug);
+    });
+  });
+
+  // Topological sort using Kahn’s algorithm
+  const layers = [];
+  const queue = [];
+
+  for (const slug in incomingCount) {
+    if (incomingCount[slug] === 0) queue.push(slug);
+  }
+
+  const visited = new Set();
+  let layerIndex = 0;
+
+  while (queue.length > 0) {
+    const nextQueue = [];
+    const currentLayer = [];
+
+    while (queue.length > 0) {
+      const slug = queue.shift();
+      if (visited.has(slug)) continue;
+      visited.add(slug);
+      currentLayer.push(slug);
+
+      outgoingMap[slug]?.forEach((neighbor) => {
+        incomingCount[neighbor]--;
+        if (incomingCount[neighbor] === 0) {
+          nextQueue.push(neighbor);
+        }
+      });
+    }
+
+    layers.push(currentLayer);
+    queue.push(...nextQueue);
+  }
+
+  // Reposition nodes
+  const horizontalSpacing = 300;
+  const verticalSpacing = 300;
+
+  layers.forEach((layer, y) => {
+    layer.forEach((slug, x) => {
+      const node = nodeMap[slug];
+      node.position = {
+        x: x * horizontalSpacing,
+        y: y * verticalSpacing,
+      };
+    });
+  });
+
+  return graph;
+}
