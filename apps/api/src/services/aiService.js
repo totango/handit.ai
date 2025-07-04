@@ -106,7 +106,7 @@ export const generateAIResponse = async ({
         model: model || 'gemini-1.5-flash',
         contents: prompt,
       });
-      const text = result.text;
+      const text = result.text.replace(/```json\n|```/g, '');
       
       // Format response to match OpenAI structure
       completion = {
