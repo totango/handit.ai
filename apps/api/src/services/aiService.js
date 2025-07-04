@@ -130,9 +130,19 @@ export const generateAIResponse = async ({
       for (let i = 0; i < messages.length; i++) {
         const message = messages[i];
         if (message.role === 'user') {
-          conversationHistory.push(`User: ${message.content}`);
+          const content = message.content;
+          if (typeof content === 'object') {
+            conversationHistory.push(`User: ${JSON.stringify(content)}`);
+          } else {
+            conversationHistory.push(`User: ${content}`);
+          }
         } else if (message.role === 'assistant') {
-          conversationHistory.push(`Assistant: ${message.content}`);
+          const content = message.content;
+          if (typeof content === 'object') {
+            conversationHistory.push(`Assistant: ${JSON.stringify(content)}`);
+          } else {
+            conversationHistory.push(`Assistant: ${content}`);
+          }
         }
       }
       
