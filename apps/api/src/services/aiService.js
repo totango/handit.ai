@@ -1,6 +1,6 @@
 import Together from "together-ai";
 import OpenAI from 'openai';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 
@@ -32,6 +32,50 @@ function zodSchemaToJson(schema) {
     return zodSchemaToJson(schema._def.innerType);
   }
   return null;
+}
+
+function zodSchemaToGoogleAI(schema) {
+  if (schema instanceof z.ZodString) {
+    return { type: Type.STRING };
+  }
+  if (schema instanceof z.ZodNumber) {
+    return { type: Type.NUMBER };
+  }
+  if (schema instanceof z.ZodBoolean) {
+    return { type: Type.BOOLEAN };
+  }
+  if (schema instanceof z.ZodEnum) {
+    return { 
+      type: Type.STRING,
+      enum: schema._def.values
+    };
+  }
+  if (schema instanceof z.ZodArray) {
+    return {
+      type: Type.ARRAY,
+      items: zodSchemaToGoogleAI(schema._def.type)
+    };
+  }
+  if (schema instanceof z.ZodObject) {
+    const shape = schema._def.shape();
+    const properties = {};
+    const propertyOrdering = [];
+    
+    for (const key in shape) {
+      properties[key] = zodSchemaToGoogleAI(shape[key]);
+      propertyOrdering.push(key);
+    }
+    
+    return {
+      type: Type.OBJECT,
+      properties,
+      propertyOrdering
+    };
+  }
+  if (schema instanceof z.ZodOptional || schema instanceof z.ZodNullable) {
+    return zodSchemaToGoogleAI(schema._def.innerType);
+  }
+  return { type: Type.STRING };
 }
 
 const DEFAULT_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8";
@@ -94,25 +138,25 @@ export const generateAIResponse = async ({
       
       prompt += conversationHistory.join('\n');
       
-      // Handle response format for Google AI
+      // Build config for structured output
+      const config = {};
       if (responseFormat) {
-        const responseFormatJson = zodSchemaToJson(responseFormat);
-        if (responseFormatJson) {
-          prompt += `\n\nYou must respond in the following JSON format: ${JSON.stringify(responseFormatJson, null, 2)} and you should not include any other text or comments`;
-        }
+        const googleAISchema = zodSchemaToGoogleAI(responseFormat);
+        config.responseMimeType = "application/json";
+        config.responseSchema = googleAISchema;
       }
       
       const result = await genAI.models.generateContent({
         model: model || 'gemini-1.5-flash',
         contents: prompt,
+        config: Object.keys(config).length > 0 ? config : undefined,
       });
-      const text = result.text.replace(/```json\n|```/g, '');
       
       // Format response to match OpenAI structure
       completion = {
         choices: [{
           message: {
-            content: text,
+            content: result.text,
             role: 'assistant'
           },
           finish_reason: 'stop'
