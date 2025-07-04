@@ -1,5 +1,6 @@
 import Together from "together-ai";
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 
@@ -53,11 +54,13 @@ export const generateAIResponse = async ({
 }) => {
   try {
     let completion;
+
     if (isN8N) {
       provider = 'TogetherAI';
       model = DEFAULT_MODEL;
       token = process.env.TOGETHER_API_KEY;
     }
+    
     if (provider === 'OpenAI') {
       const openai = new OpenAI({
         apiKey: token,
@@ -67,6 +70,58 @@ export const generateAIResponse = async ({
         messages,
         response_format: responseFormat ? zodResponseFormat(responseFormat, 'responseFormat') : null
       });
+    } else if (provider === 'GoogleAI') {
+      const genAI = new GoogleGenerativeAI(token || process.env.GOOGLE_AI_API_KEY);
+      const genModel = genAI.getGenerativeModel({ model: model || 'gemini-1.5-flash' });
+      
+      // Convert OpenAI messages format to Google AI format
+      let prompt = '';
+      const systemMessage = messages.find(msg => msg.role === 'system');
+      
+      if (systemMessage) {
+        prompt += systemMessage.content + '\n\n';
+      }
+      
+      // Combine user and assistant messages into a conversation format
+      const conversationHistory = [];
+      for (let i = 0; i < messages.length; i++) {
+        const message = messages[i];
+        if (message.role === 'user') {
+          conversationHistory.push(`User: ${message.content}`);
+        } else if (message.role === 'assistant') {
+          conversationHistory.push(`Assistant: ${message.content}`);
+        }
+      }
+      
+      prompt += conversationHistory.join('\n');
+      
+      // Handle response format for Google AI
+      if (responseFormat) {
+        const responseFormatJson = zodSchemaToJson(responseFormat);
+        if (responseFormatJson) {
+          prompt += `\n\nYou must respond in the following JSON format: ${JSON.stringify(responseFormatJson, null, 2)} and you should not include any other text or comments`;
+        }
+      }
+      
+      const result = await genModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Format response to match OpenAI structure
+      completion = {
+        choices: [{
+          message: {
+            content: text,
+            role: 'assistant'
+          },
+          finish_reason: 'stop'
+        }],
+        usage: {
+          prompt_tokens: 0, // Google AI doesn't provide token counts in the same way
+          completion_tokens: 0,
+          total_tokens: 0
+        }
+      };
     } else if (provider === 'TogetherAI') {
       const together = new Together({
         apiKey: token,
@@ -113,6 +168,10 @@ export const streamAIResponse = async function* ({
   config = {}
 }) {
   try {
+    const together = new Together({
+      apiKey: process.env.TOGETHER_API_KEY,
+    });
+    
     const stream = await together.chat.completions.create({
       model,
       messages,
