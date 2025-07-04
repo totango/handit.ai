@@ -1,6 +1,6 @@
 import Together from "together-ai";
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 
@@ -71,8 +71,7 @@ export const generateAIResponse = async ({
         response_format: responseFormat ? zodResponseFormat(responseFormat, 'responseFormat') : null
       });
     } else if (provider === 'GoogleAI') {
-      const genAI = new GoogleGenerativeAI(token || process.env.GOOGLE_AI_API_KEY);
-      const genModel = genAI.getGenerativeModel({ model: model || 'gemini-1.5-flash' });
+      const genAI = new GoogleGenAI({apiKey: token || process.env.GOOGLE_AI_API_KEY});
       
       // Convert OpenAI messages format to Google AI format
       let prompt = '';
@@ -103,7 +102,10 @@ export const generateAIResponse = async ({
         }
       }
       
-      const result = await genModel.generateContent(prompt);
+      const result = await genAI.models.generateContent({
+        model: model || 'gemini-1.5-flash',
+        contents: prompt,
+      });
       const response = await result.response;
       const text = response.text();
       
