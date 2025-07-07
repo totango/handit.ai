@@ -91,7 +91,7 @@ export const AgentMonitoring = ({
     if (node.data.type === 'model') {
       // Get last daily metric where sum/count > 0
       const day = Object.keys(nodeMetrics).find(key => nodeMetrics[key].count > 0);
-      value = nodeMetrics[day].sum / nodeMetrics[day].count;
+      value = nodeMetrics[day]?.count > 0 ? nodeMetrics[day]?.sum / nodeMetrics[day]?.count : 0;
     }
     if (node.data.type === 'tool') {
       const day = Object.keys(nodeMetrics).find(key => (nodeMetrics[key].success_count + nodeMetrics[key].error_count) > 0);
