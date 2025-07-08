@@ -31,7 +31,7 @@ export const bulkTrack = async (req, res) => {
     const { environment, company } = companyAuth;
     const agentName = req.body.agentName;
     const agentSlug = agentName ? generateSlug(agentName) : null;
-    let agent = await Agent.findOne({ where: { slug: agentSlug } });
+    let agent = await Agent.findOne({ where: { slug: agentSlug, companyId: company.id } });
     if (!agent) {
       agent = await createAgentFromConfig({
         agent: {
