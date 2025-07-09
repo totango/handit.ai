@@ -33,17 +33,22 @@ export default (sequelize, DataTypes) => {
       });
       Model.hasMany(models.AgentNode, {
         foreignKey: 'model_id',
-        as: 'AgentNodes'
+        as: 'AgentNodes',
       });
-      Model.hasMany(models.ModelDeployHistory, { foreignKey: 'modelId', as: 'deployHistories' });
-      Model.hasMany(models.ModelEvaluationPrompt, { foreignKey: 'modelId', as: 'evaluationPrompts' });
+      Model.hasMany(models.ModelDeployHistory, {
+        foreignKey: 'modelId',
+        as: 'deployHistories',
+      });
+      Model.hasMany(models.ModelEvaluationPrompt, {
+        foreignKey: 'modelId',
+        as: 'evaluationPrompts',
+      });
     }
-
 
     async evaluationPrompts() {
       // check if model is optimzied get prompts of parent model
       let modelId = this.id;
-      const originalModel =  await sequelize.models.ABTestModels.findOne({
+      const originalModel = await sequelize.models.ABTestModels.findOne({
         where: {
           optimizedModelId: this.id,
         },
@@ -52,45 +57,46 @@ export default (sequelize, DataTypes) => {
         modelId = originalModel.id;
       }
 
-      const evaluationPrompts = await sequelize.models.ModelEvaluationPrompt.findAll({
-        where: {
-          modelId,
-        },
-        include: [
-          {
-            model: sequelize.models.EvaluationPrompt,
-            as: 'evaluationPrompt',
-            attributes: ['id', 'name', 'prompt', 'defaultProviderModel'],
-            include: [
-              {
-                model: sequelize.models.IntegrationToken,
-                as: 'defaultIntegrationToken',
-                attributes: ['id', 'name', 'providerId', 'token'],
-                include: [
-                  {
-                    model: sequelize.models.Provider,
-                    as: 'provider',
-                    attributes: ['id', 'name'],
-                  },
-                ],
-              },
-            ],
+      const evaluationPrompts =
+        await sequelize.models.ModelEvaluationPrompt.findAll({
+          where: {
+            modelId,
           },
-          {
-            model: sequelize.models.IntegrationToken,
-            as: 'integrationToken',
-            attributes: ['id', 'name', 'providerId'],
-            include: [
-              {
-                model: sequelize.models.Provider,
-                as: 'provider',
-                attributes: ['id', 'name'],
-              },
-            ],
-          },
-        ],
-      });
-  
+          include: [
+            {
+              model: sequelize.models.EvaluationPrompt,
+              as: 'evaluationPrompt',
+              attributes: ['id', 'name', 'prompt', 'defaultProviderModel'],
+              include: [
+                {
+                  model: sequelize.models.IntegrationToken,
+                  as: 'defaultIntegrationToken',
+                  attributes: ['id', 'name', 'providerId', 'token'],
+                  include: [
+                    {
+                      model: sequelize.models.Provider,
+                      as: 'provider',
+                      attributes: ['id', 'name'],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: sequelize.models.IntegrationToken,
+              as: 'integrationToken',
+              attributes: ['id', 'name', 'providerId'],
+              include: [
+                {
+                  model: sequelize.models.Provider,
+                  as: 'provider',
+                  attributes: ['id', 'name'],
+                },
+              ],
+            },
+          ],
+        });
+
       return evaluationPrompts;
     }
 
@@ -143,7 +149,9 @@ export default (sequelize, DataTypes) => {
       } catch (error) {
         // Log and rethrow with context
         console.error('Error in releasePromptVersion:', error);
-        throw new Error(`Failed to release prompt version ${version}: ${error.message}`);
+        throw new Error(
+          `Failed to release prompt version ${version}: ${error.message}`
+        );
       }
     }
 
@@ -201,8 +209,6 @@ export default (sequelize, DataTypes) => {
       return newVersion;
     }
 
-
-
     async getModelMetrics() {
       const metrics = await sequelize.models.ModelMetric.findAll({
         where: {
@@ -215,7 +221,7 @@ export default (sequelize, DataTypes) => {
     async updateOptimizedPrompt(prompt) {
       const optimizedModel = await this.getPrincipalABTestModel();
       if (optimizedModel) {
-        const lastVersion = await sequelize.models.ModelVersions.findOne({   
+        const lastVersion = await sequelize.models.ModelVersions.findOne({
           where: {
             modelId: optimizedModel.id,
           },
@@ -318,11 +324,7 @@ export default (sequelize, DataTypes) => {
       return logs;
     }
 
-    async createModelVersion({
-      prompt,
-      version = '1',
-      activeVersion = true,
-    }) {
+    async createModelVersion({ prompt, version = '1', activeVersion = true }) {
       await sequelize.models.ModelVersions.create({
         modelId: this.id,
         version: version,
@@ -457,7 +459,10 @@ export default (sequelize, DataTypes) => {
     async saveABCorrectEntriesByDayInCache() {
       const cacheKey = `ab-correct-entries:${this.id}`;
 
-      const correctEntries = await getModelCorrectEntriesByDay(this.id, sequelize);
+      const correctEntries = await getModelCorrectEntriesByDay(
+        this.id,
+        sequelize
+      );
       const optimizedModel = await this.getPrincipalABTestModel();
       let optimizedModelCorrectEntries = {};
       if (optimizedModel) {
@@ -480,7 +485,10 @@ export default (sequelize, DataTypes) => {
       const cacheKey = `ab-metrics:${this.id}`;
 
       const optimizedModel = await this.getPrincipalABTestModel();
-      const baseModelMetric = await getModelMetricsOfModelById(this.id, sequelize);
+      const baseModelMetric = await getModelMetricsOfModelById(
+        this.id,
+        sequelize
+      );
 
       let optimizedModelMetric = {};
       if (optimizedModel) {
@@ -499,7 +507,10 @@ export default (sequelize, DataTypes) => {
 
     async saveModelMetricsInCache() {
       const cacheKey = `model-metrics-detail:${this.id}`;
-      const companyMetric = await getModelMetricsOfModelById(this.id, sequelize);
+      const companyMetric = await getModelMetricsOfModelById(
+        this.id,
+        sequelize
+      );
       await redisService.set(cacheKey, companyMetric);
       return companyMetric;
     }
@@ -510,7 +521,7 @@ export default (sequelize, DataTypes) => {
       await redisService.set(cacheKey, modelMetrics);
       return modelMetrics;
     }
-    
+
     async getSecondABTestModel() {
       const abTests = await sequelize.models.ABTestModels.findAll({
         where: {
@@ -569,7 +580,7 @@ export default (sequelize, DataTypes) => {
       });
 
       optimizedMetrics.lastMetricLogs = lastMetricLogs;
-      
+
       const response = {
         baseModelMetric: metrics,
         optimizedModelMetric: optimizedMetrics,
@@ -596,58 +607,53 @@ export default (sequelize, DataTypes) => {
       });
       return logs;
     }
-    
+
     async generateInsights() {
       const modelLogs = await this.getMetricProcessedLogs();
       const randomModelLogs = modelLogs.sort(() => Math.random() - 0.5);
       const insights = [];
       for (let i = 0; i < randomModelLogs.length; i++) {
-        console.log('Generating insights for model', this.id, 'log', i);
         const modelLog = modelLogs[i];
         if (!isCorrect(modelLog) && insights.length < 5) {
-          const percentage = 100;
-          const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
-          if (randomNumberFrom0To100 <= percentage) {
-            console.log('Generating insights for model', this.id, 'log', i, 'randomNumberFrom0To100', randomNumberFrom0To100);
-            const modelGroup = await this.getModelGroup();
-            const company = await modelGroup.getCompany();
-            let optimizationToken;
-            let defaultModel;
-            let provider;
-            if (this.flags?.isN8N) {
-              optimizationToken = process.env.TOGETHER_API_KEY;
-              defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'; // TODO: change to the default model of the company
-              provider = 'TogetherAI';
-            } else {
-              const token = await company.getOptimizationToken();
-              optimizationToken = token.token;
-              defaultModel = company.optimizationModel;
-              provider = token.provider.name;
-              if (!defaultModel) {
-                if (provider === 'OpenAI') {
-                  defaultModel = 'gpt-4o-mini';
-                } else if (provider === 'TogetherAI') {
-                  defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
-                }
+          const modelGroup = await this.getModelGroup();
+          const company = await modelGroup.getCompany();
+          let optimizationToken;
+          let defaultModel;
+          let provider;
+          if (this.flags?.isN8N) {
+            optimizationToken = process.env.TOGETHER_API_KEY;
+            defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'; // TODO: change to the default model of the company
+            provider = 'TogetherAI';
+          } else {
+            const token = await company.getOptimizationToken();
+            optimizationToken = token.token;
+            defaultModel = company.optimizationModel;
+            provider = token.provider.name;
+            if (!defaultModel) {
+              if (provider === 'OpenAI') {
+                defaultModel = 'gpt-4o-mini';
+              } else if (provider === 'TogetherAI') {
+                defaultModel =
+                  'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
               }
             }
+          }
 
-            try {
-              await runReview(
-                modelLog,
-                null,
-                sequelize.models.ModelLog,
-                sequelize.models.Insights,
-                this.problemType,
-                this.version,
-                this.id,
-                optimizationToken,
-                provider,
-                defaultModel
-              );
-            } catch (error) {
-              console.error('error', error);
-            }
+          try {
+            await runReview(
+              modelLog,
+              null,
+              sequelize.models.ModelLog,
+              sequelize.models.Insights,
+              this.problemType,
+              this.version,
+              this.id,
+              optimizationToken,
+              provider,
+              defaultModel
+            );
+          } catch (error) {
+            console.error('error', error);
           }
         }
       }
@@ -681,14 +687,15 @@ export default (sequelize, DataTypes) => {
         });
       }
 
-
       if (version) {
         const version = versions.find((v) => v.id === version);
         return version;
       }
 
       const allVersions = [...versions, ...abTestVersions];
-      const activeVersion = allVersions.find((v) => v.parameters.prompt && v.activeVersion);
+      const activeVersion = allVersions.find(
+        (v) => v.parameters.prompt && v.activeVersion
+      );
 
       if (activeVersion) {
         return activeVersion;
@@ -788,7 +795,13 @@ export default (sequelize, DataTypes) => {
         }
       }
 
-      const enhancedPromptResult = await enhancePrompt(prompt, suggestions, token, provider, defaultModel);
+      const enhancedPromptResult = await enhancePrompt(
+        prompt,
+        suggestions,
+        token,
+        provider,
+        defaultModel
+      );
       return enhancedPromptResult;
     }
 
@@ -996,29 +1009,30 @@ export default (sequelize, DataTypes) => {
 
     async getUnprocessedLogs(limit = 5) {
       try {
-      const yesterday = new Date(new Date().setDate(new Date().getDate() - 3));
-      const yesterdayAt4pm = new Date(yesterday);
-      yesterdayAt4pm.setHours(16, 0, 0, 0);
+        const yesterday = new Date(
+          new Date().setDate(new Date().getDate() - 3)
+        );
+        const yesterdayAt4pm = new Date(yesterday);
+        yesterdayAt4pm.setHours(16, 0, 0, 0);
 
-      const nowAt4pm = new Date(new Date().setDate(new Date().getDate() + 2));
-      nowAt4pm.setHours(16, 0, 0, 0);
+        const nowAt4pm = new Date(new Date().setDate(new Date().getDate() + 2));
+        nowAt4pm.setHours(16, 0, 0, 0);
 
-      
-      const modelLogs = await sequelize.models.ModelLog.findAll({
-        where: {
-          modelId: this.id,
-          environment: 'production',
-          actual: null,
-          createdAt: {
-            // yesterday after 4pm gtm -5
-            [Op.gte]: yesterdayAt4pm,
-            [Op.lte]: nowAt4pm
+        const modelLogs = await sequelize.models.ModelLog.findAll({
+          where: {
+            modelId: this.id,
+            environment: 'production',
+            actual: null,
+            createdAt: {
+              // yesterday after 4pm gtm -5
+              [Op.gte]: yesterdayAt4pm,
+              [Op.lte]: nowAt4pm,
+            },
           },
-        },
-        limit: limit,
-        order: [['createdAt', 'DESC']],
-      });
-      return modelLogs;
+          limit: limit,
+          order: [['createdAt', 'DESC']],
+        });
+        return modelLogs;
       } catch (error) {
         console.log('error', error);
         return [];
@@ -1127,11 +1141,14 @@ export default (sequelize, DataTypes) => {
       return transformedModelMetricLogsByModelMetricId;
     }
 
-    async getAvgModelMetricsLast30Days(date = new Date(), modelMetricLogs = null) {
+    async getAvgModelMetricsLast30Days(
+      date = new Date(),
+      modelMetricLogs = null
+    ) {
       // First check if we're in test mode by getting the company through the model group
       const modelGroup = await this.getModelGroup();
       const company = await modelGroup.getCompany();
-      
+
       if (company?.testMode) {
         return this.generateMockMetricsForDate(date);
       }
@@ -1167,7 +1184,9 @@ export default (sequelize, DataTypes) => {
       );
 
       const avgModelMetricLogsByModelMetricId = {};
-      for (const [key, value] of Object.entries(modelMetricLogsByModelMetricId)) {
+      for (const [key, value] of Object.entries(
+        modelMetricLogsByModelMetricId
+      )) {
         const avg = value.reduce((acc, modelMetricLog) => {
           return acc + modelMetricLog.value;
         }, 0);
@@ -1188,18 +1207,20 @@ export default (sequelize, DataTypes) => {
 
       const mockMetrics = {};
       const now = new Date();
-      const isCurrentMonth = date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      
+      const isCurrentMonth =
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
+
       // Base improvement factor - current month should be better than previous
       const improvementFactor = isCurrentMonth ? 1.15 : 1.0; // 15% better for current month
 
       for (const metric of modelMetrics) {
         const metricId = metric.id;
         const metricName = metric.name.toLowerCase();
-        
+
         // Base value depends on metric type
         let baseValue;
-        switch(metricName) {
+        switch (metricName) {
           case 'accuracy':
           case 'precision':
           case 'f1':
@@ -1211,10 +1232,14 @@ export default (sequelize, DataTypes) => {
             baseValue = 80 + Math.random() * 5; // 80-85% base
             break;
           case 'responsetime':
-            baseValue = isCurrentMonth ? 150 + Math.random() * 30 : 200 + Math.random() * 50; // Lower is better
+            baseValue = isCurrentMonth
+              ? 150 + Math.random() * 30
+              : 200 + Math.random() * 50; // Lower is better
             break;
           case 'tokenusage':
-            baseValue = isCurrentMonth ? 900 + Math.random() * 100 : 1100 + Math.random() * 200; // Lower is better
+            baseValue = isCurrentMonth
+              ? 900 + Math.random() * 100
+              : 1100 + Math.random() * 200; // Lower is better
             break;
           default:
             baseValue = 80 + Math.random() * 5; // Default 80-85% base
@@ -1231,11 +1256,11 @@ export default (sequelize, DataTypes) => {
         }
 
         // Add small random variation (±2%)
-        finalValue *= (0.98 + Math.random() * 0.04);
-        
+        finalValue *= 0.98 + Math.random() * 0.04;
+
         // Ensure values stay within reasonable bounds
         finalValue = Math.min(99.9, Math.max(0, finalValue));
-        
+
         // Round to 2 decimal places
         mockMetrics[metricId] = Math.round(finalValue * 100) / 100;
       }
@@ -1414,7 +1439,9 @@ export default (sequelize, DataTypes) => {
         date.setHours(0);
         date.setMinutes(0);
         date.setSeconds(0);
-        incorrectEntriesByDay[date.toISOString().split('T')[0] + 'T00:00:00.000Z'] = 0;
+        incorrectEntriesByDay[
+          date.toISOString().split('T')[0] + 'T00:00:00.000Z'
+        ] = 0;
       }
 
       // Modified SQL query to handle boolean and numeric values safely
@@ -1440,7 +1467,8 @@ export default (sequelize, DataTypes) => {
 
       // Populate results
       results.forEach((row) => {
-        const dayStr = new Date(row.day).toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const dayStr =
+          new Date(row.day).toISOString().split('T')[0] + 'T00:00:00.000Z';
         if (Object.keys(incorrectEntriesByDay).includes(dayStr)) {
           incorrectEntriesByDay[dayStr] = parseInt(row.count);
         }
@@ -1513,7 +1541,9 @@ export default (sequelize, DataTypes) => {
         date.setHours(0);
         date.setMinutes(0);
         date.setSeconds(0);
-        correctEntriesByDay[date.toISOString().split('T')[0] + 'T00:00:00.000Z'] = 0;
+        correctEntriesByDay[
+          date.toISOString().split('T')[0] + 'T00:00:00.000Z'
+        ] = 0;
       }
 
       // Modified SQL query to handle boolean and numeric values safely
@@ -1537,10 +1567,10 @@ export default (sequelize, DataTypes) => {
         }
       );
 
-
       // Populate results
       results.forEach((row) => {
-        const dayStr = new Date(row.day).toISOString().split('T')[0] + 'T00:00:00.000Z';
+        const dayStr =
+          new Date(row.day).toISOString().split('T')[0] + 'T00:00:00.000Z';
         if (Object.keys(correctEntriesByDay).includes(dayStr)) {
           correctEntriesByDay[dayStr] = parseInt(row.count);
         }
@@ -1559,7 +1589,6 @@ export default (sequelize, DataTypes) => {
         evaluationPercentage: 50,
       });
     }
-
 
     async getLastMetricLogsFromDateDayByDay(date, modelMetricLogs = null) {
       const modelMetrics = await sequelize.models.ModelMetric.findAll({
@@ -1736,13 +1765,14 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: null,
-        comment: 'JSON field for storing logic-related flags and metadata'
+        comment: 'JSON field for storing logic-related flags and metadata',
       },
       systemPromptStructure: {
         type: DataTypes.JSON,
         allowNull: true,
         field: 'system_prompt_structure',
-        comment: 'JSON field storing the detected structure for system prompt location in input data'
+        comment:
+          'JSON field storing the detected structure for system prompt location in input data',
       },
       modelGroupId: {
         type: DataTypes.INTEGER,
@@ -1754,7 +1784,7 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'other',
         field: 'model_category',
-        comment: 'Category of the model indicating its primary function'
+        comment: 'Category of the model indicating its primary function',
       },
       type: {
         type: DataTypes.STRING,
@@ -1813,7 +1843,9 @@ export default (sequelize, DataTypes) => {
                 if (index === 0) {
                   return word.toLowerCase();
                 }
-                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                return (
+                  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
               })
               .join('');
 
