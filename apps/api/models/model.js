@@ -602,11 +602,13 @@ export default (sequelize, DataTypes) => {
       const randomModelLogs = modelLogs.sort(() => Math.random() - 0.5);
       const insights = [];
       for (let i = 0; i < randomModelLogs.length; i++) {
+        console.log('Generating insights for model', this.id, 'log', i);
         const modelLog = modelLogs[i];
         if (!isCorrect(modelLog) && insights.length < 5) {
           const percentage = 100;
           const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
           if (randomNumberFrom0To100 <= percentage) {
+            console.log('Generating insights for model', this.id, 'log', i, 'randomNumberFrom0To100', randomNumberFrom0To100);
             const modelGroup = await this.getModelGroup();
             const company = await modelGroup.getCompany();
             let optimizationToken;
