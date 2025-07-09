@@ -31,7 +31,7 @@ export const runReview = async (
   optimizationProvider = null,
   optimizationModel = null
 ) => {
-  
+  console.log('Generating insights for model', modelId, 'log', version);
   const review = await reviewEntry(
     entry,
     reviewer,
@@ -50,6 +50,8 @@ export const runReview = async (
     data: { description: review.description, entry: entry.dataValues },
     version: modelId ? `${modelId}-${version}` : version,
   }));
+
+  console.log('newInsights', newInsights);
 
   await Insights.bulkCreate(newInsights);
 };
