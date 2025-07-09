@@ -327,7 +327,7 @@ export default (sequelize, DataTypes) => {
               }
 
               const random = Math.floor(Math.random() * 101);
-              if (random <= 20) {
+              if (random <= 100) {
                 await model.generateInsights();
                 const newPrompt = await model.applySuggestions();
                 if (newPrompt) {
