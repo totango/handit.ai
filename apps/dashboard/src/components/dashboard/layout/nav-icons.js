@@ -1,4 +1,4 @@
-import { ChartLineUp, Circuitry, Gauge, Graph, Plugs, RocketLaunch, TestTubes } from '@phosphor-icons/react';
+import { ChartLineUp, Circuitry, Gauge, Graph, Plugs, RocketLaunch } from '@phosphor-icons/react';
 import { Check, CheckSquareOffset, CloudCheck, CodesandboxLogo } from '@phosphor-icons/react/dist/ssr';
 import { AddressBook as AddressBookIcon } from '@phosphor-icons/react/dist/ssr/AddressBook';
 import { AlignLeft as AlignLeftIcon } from '@phosphor-icons/react/dist/ssr/AlignLeft';
@@ -69,5 +69,4 @@ export const icons = {
   upload: UploadIcon,
   gear: GearIcon,
   users: UsersIcon,
-  'test-tubes': TestTubes,
 };

@@ -1,0 +1,698 @@
+{
+  "tourConfig": {
+    "version": "1.0.0",
+    "defaultSettings": {
+      "theme": {
+        "primaryColor": "#6366f1",
+        "secondaryColor": "#f8fafc",
+        "textColor": "#1e293b",
+        "backgroundColor": "rgba(0, 0, 0, 0.7)",
+        "borderRadius": "12px",
+        "fontSize": "16px",
+        "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+      },
+      "animation": {
+        "duration": 300,
+        "easing": "ease-in-out",
+        "highlightPulse": true
+      },
+      "positioning": {
+        "offset": 10,
+        "zIndex": 10000
+      }
+    },
+    "triggers": {
+      "firstLogin": {
+        "condition": "user.loginCount === 1 && user.signupCompleted === true",
+        "tourId": "welcome-concept-walkthrough"
+      },
+      "wizardSetup": {
+        "condition": "user.hasSkippedWalkthrough === true || user.hasCompletedWalkthrough === true",
+        "tourId": "wizard-guided-setup"
+      },
+      "firstTrace": {
+        "condition": "user.hasIntegratedSDK === true && events.firstTrace === true",
+        "tourId": "evaluator-wizard"
+      }
+    },
+    "tours": [
+      {
+        "id": "welcome-concept-walkthrough",
+        "name": "Welcome & Concept Walkthrough",
+        "description": "Interactive dashboard walkthrough with assistant guidance",
+        "type": "guided",
+        "settings": {
+          "canSkip": true,
+          "showOnlyOnce": true,
+          "canReplay": true,
+          "showProgress": true,
+          "showAssistant": true,
+          "assistantPosition": "bottom-center",
+          "backdrop": false,
+          "escapeToClose": true,
+          "clickOutsideToClose": false
+        },
+        "analytics": {
+          "trackSteps": true,
+          "trackCompletions": true,
+          "trackSkips": true,
+          "trackTimeSpent": true
+        },
+                 "steps": [
+           {
+             "stepNumber": 1,
+             "id": "welcome-banner",
+             "type": "banner",
+             "title": "Welcome to HandIt",
+             "target": "body",
+             "placement": "center",
+             "content": {
+               "heading": "Welcome to HandIt! 👋",
+               "description": "The engine that makes your AI agents improve themselves automatically. Let's explore how HandIt traces, evaluates, and optimizes your AI agents.",
+               "variant": "welcome",
+               "showCloseButton": false,
+               "autoHide": false,
+               "icon": "🚀"
+             },
+             "actions": [
+               {
+                 "text": "Start Exploring",
+                 "type": "secondary",
+                 "action": "nextStep",
+                 "analytics": "welcome_start_dashboard_tour"
+               }
+             ],
+             "duration": null,
+             "autoAdvance": false
+           },
+           {
+            "stepNumber": 2,
+            "id": "dashboard-tracing-guide",
+            "type": "cursor-only",
+            "title": "Explore Traces",
+            "target": "[data-nav-item='Tracing']",
+            "placement": "right",
+            "content": {
+              "heading": "Click on Tracing to Continue",
+              "description": "This section shows you all your agent executions in real time"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-nav-item='Tracing']",
+              "description": "Click on the Tracing menu item to proceed"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 500,
+              "steps": [
+                {
+                  "target": "[data-nav-item='Tracing']",
+                  "targetText": "Tracing",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
+                  "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on Tracing",
+                    "description": "This section shows you all your agent executions in real time. Here you can see inputs, outputs, errors and performance metrics.",
+                    "tip": "Complete observability for debugging and understanding your AI agent's behavior",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 100
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 3,
+            "id": "evaluation-suite-guide",
+            "type": "cursor-only",
+            "title": "Explore Evaluation Suite",
+            "target": "[data-nav-item='Evaluation Suite']",
+            "placement": "right",
+            "content": {
+              "heading": "Click on Evaluation Suite to Continue",
+              "description": "This is where you set up automated quality checks for your AI agent"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-nav-item='Evaluation Suite']",
+              "description": "Click on the Evaluation Suite menu item to proceed"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 500,
+              "steps": [
+                {
+                  "target": "[data-nav-item='Evaluation Suite']",
+                  "targetText": "Evaluation Suite",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on Evaluation Suite",
+                    "description": "Set up automated quality checks to continuously monitor your agent's performance and catch issues before they impact users.",
+                    "tip": "Create custom evaluators for accuracy, completeness, tone, compliance, and more",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 100
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 4,
+            "id": "release-hub-guide",
+            "type": "cursor-only",
+            "title": "Explore Release Hub",
+            "target": "[data-nav-item='Release Hub']",
+            "placement": "right",
+            "content": {
+              "heading": "Click on Release Hub to Continue",
+              "description": "This is HandIt's AI improvement engine - where your agent evolves automatically"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-nav-item='Release Hub']",
+              "description": "Click on the Release Hub menu item to proceed"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 500,
+              "steps": [
+                {
+                  "target": "[data-nav-item='Release Hub']",
+                  "targetText": "Release Hub",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on Release Hub",
+                    "description": "HandIt's AI optimization engine automatically improves your agent. It analyzes performance, generates better prompts, tests improvements, and provides safe deployment recommendations.",
+                    "tip": "Transform your AI from static to self-improving with automated optimization",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 100
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 5,
+            "id": "tour-complete",
+            "type": "banner",
+            "title": "Tour Complete",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🎉 Great Job!",
+              "description": "You've explored HandIt's core features: Tracing for observability, Evaluation Suite for quality monitoring, and Release Hub for continuous improvement. Ready to connect your agent?",
+              "variant": "success",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🎉"
+            },
+            "actions": [
+              {
+                "text": "Start Setup",
+                "type": "primary", 
+                "action": "nextTour",
+                "nextTourId": "wizard-guided-setup",
+                "analytics": "tour_complete_setup"
+              },
+              {
+                "text": "Finish Tour",
+                "type": "secondary",
+                "action": "finishTour",
+                "analytics": "walkthrough_complete"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          }
+        ]
+      },
+      {
+        "id": "wizard-guided-setup",
+        "name": "Wizard-Guided Setup",
+        "description": "Real integration setup with floating stepper",
+        "type": "overlay",
+        "settings": {
+          "canSkip": false,
+          "showProgress": true,
+          "position": "top-left",
+          "floating": true,
+          "persistent": true
+        },
+        "steps": [
+                     {
+             "id": "agent-type-selection",
+             "type": "modal",
+             "title": "What are you building?",
+             "target": "body",
+             "placement": "center",
+             "content": {
+               "heading": "What are you building?",
+               "description": "This helps us personalize your experience with relevant templates and examples.",
+               "form": {
+                 "type": "multiple-choice",
+                 "field": "agentType",
+                 "options": [
+                   {
+                     "value": "document-ai",
+                     "label": "🧾 Document AI",
+                     "description": "Invoice processing, contract analysis, form extraction",
+                     "default": true,
+                     "examples": ["Invoice extraction", "Contract review", "Form processing"]
+                   },
+                   {
+                     "value": "custom-agent",
+                     "label": "🤖 Custom Agent", 
+                     "description": "Customer support, sales assistant, content generation",
+                     "examples": ["Customer support bot", "Sales assistant", "Content writer"]
+                   },
+                   {
+                     "value": "langchain-rag",
+                     "label": "🛠️ LangChain / RAG",
+                     "description": "Knowledge base search, document Q&A, research assistant",
+                     "examples": ["Knowledge base", "Document Q&A", "Research assistant"]
+                   }
+                 ],
+                 "additionalFields": [
+                   {
+                     "name": "agentName",
+                     "type": "text",
+                     "label": "Agent Name",
+                     "placeholder": "e.g., Invoice Processor",
+                     "required": true
+                   },
+                   {
+                     "name": "keyFunctions",
+                     "type": "textarea",
+                     "label": "Key Functions",
+                     "placeholder": "What are the most important functions for your agent?",
+                     "required": false
+                   }
+                 ]
+               }
+             },
+             "actions": [
+               {
+                 "text": "Continue",
+                 "type": "primary",
+                 "action": "nextStep",
+                 "analytics": "agent_type_selected",
+                 "validation": ["agentType", "agentName"]
+               }
+             ],
+             "duration": null,
+             "autoAdvance": false,
+             "cursorGuidance": {
+               "enabled": true,
+               "delay": 1000,
+               "steps": [
+                 {
+                   "target": ".agent-option[data-value='document-ai']",
+                   "highlight": { "style": "pulse", "intensity": "medium", "duration": 2500 },
+                   "animation": { "duration": 800, "easing": "ease-out", "path": "direct" },
+                   "action": { "type": "hover" },
+                   "instruction": {
+                     "title": "Explore the options",
+                     "description": "Each option is optimized for different types of AI agents",
+                     "tip": "Read the descriptions to choose the best option for your case"
+                   },
+                   "delay": 1000
+                 },
+                 {
+                   "target": "input[name='agentName']",
+                   "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
+                   "animation": { "duration": 1000, "easing": "ease-in-out", "path": "curved" },
+                   "action": { "type": "click" },
+                   "instruction": {
+                     "title": "Name your agent",
+                     "description": "Choose a descriptive name that identifies the main function",
+                     "tip": "Examples: 'Invoice Processor', 'Sales Assistant', 'Document Analyzer'"
+                   },
+                   "delay": 2000
+                 },
+                 {
+                   "target": "textarea[name='keyFunctions']",
+                   "highlight": { "style": "shake", "intensity": "medium", "duration": 2000 },
+                   "animation": { "duration": 1200, "easing": "bounce", "path": "curved" },
+                   "action": { "type": "type", "text": "Extract key data from documents, validate information, generate summaries..." },
+                   "instruction": {
+                     "title": "Describe the functions",
+                     "description": "This helps us personalize recommendations and evaluators",
+                     "tip": "Be specific about what your agent does and what results you expect"
+                   },
+                   "delay": 1500
+                 },
+                 {
+                   "target": ".primary-action",
+                   "highlight": { "style": "glow", "intensity": "high", "duration": 2000 },
+                   "animation": { "duration": 1000, "easing": "ease-out", "path": "direct" },
+                   "action": { "type": "hover" },
+                   "instruction": {
+                     "title": "Ready to continue!",
+                     "description": "Once the form is completed, continue to SDK integration",
+                     "tip": "The information you provide will improve your personalized experience"
+                   },
+                   "delay": 2000
+                 }
+               ]
+             }
+           },
+          {
+            "id": "sdk-integration",
+            "type": "tooltip",
+            "title": "Add HandIt to Your Code",
+            "target": ".dashboard-main",
+            "placement": "center",
+            "content": {
+              "heading": "Install the HandIt SDK",
+              "description": "Add these lines to start tracing your agent immediately.",
+              "codeSnippet": {
+                "language": "python",
+                "tabs": [
+                  {
+                    "name": "Install",
+                    "content": "pip install handit-sdk"
+                  },
+                  {
+                    "name": "handit_service.py",
+                    "content": "from handit_sdk import HandItTracer\n\n# Initialize with your token\ntracer = HandItTracer(token=\"{{user.integrationToken}}\")\n\n# Wrap your agent function\n@tracer.trace_agent(name=\"{{user.agentName}}\")\ndef your_agent_function(input_data):\n    # Your existing agent code\n    result = process_document(input_data)\n    return result\n\n# Start tracing\ntracer.start_tracing()"
+                  },
+                  {
+                    "name": "Integration",
+                    "content": "import handit_service\n\n# In your main application\ndef main():\n    # Your agent will now be traced automatically\n    result = handit_service.your_agent_function(document)\n    return result"
+                  }
+                ]
+              },
+              "copyButton": true,
+              "tokenDisplay": {
+                "label": "Your Integration Token:",
+                "value": "{{user.integrationToken}}",
+                "masked": true,
+                "copyable": true
+              }
+            },
+            "actions": [
+              {
+                "text": "I've added this",
+                "type": "primary",
+                "action": "waitForTrace",
+                "analytics": "sdk_integration_completed"
+              },
+              {
+                "text": "Copy Code",
+                "type": "secondary",
+                "action": "copyToClipboard",
+                "analytics": "sdk_code_copied"
+              }
+            ],
+            "waitCondition": {
+              "type": "event",
+              "event": "firstTrace",
+              "timeout": 300000,
+              "loadingMessage": "Waiting for your first agent trace...",
+              "helpText": "Run your agent with the HandIt integration to continue."
+            }
+          },
+          {
+            "id": "first-trace-confirmation",
+            "type": "tooltip",
+            "title": "Great! Your Agent is Connected",
+            "target": ".traces-section",
+            "placement": "bottom",
+            "content": {
+              "heading": "✅ Nice! Your agent is now observable.",
+              "description": "We received your first trace. You can now see exactly what your agent is doing.",
+              "visual": {
+                "type": "success-animation",
+                "icon": "check-circle",
+                "color": "#10b981"
+              },
+              "tracePreview": {
+                "runId": "{{latestTrace.id}}",
+                "duration": "{{latestTrace.duration}}",
+                "status": "{{latestTrace.status}}",
+                "steps": "{{latestTrace.stepCount}}"
+              }
+            },
+            "actions": [
+              {
+                "text": "Make your agent audit itself",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "first_trace_confirmed"
+              },
+              {
+                "text": "View Trace Details",
+                "type": "secondary", 
+                "action": "openTrace",
+                "analytics": "view_trace_details"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          }
+        ]
+      },
+      {
+        "id": "evaluator-wizard",
+        "name": "Evaluator Setup Wizard",
+        "description": "Set up automatic evaluation for agent quality",
+        "type": "overlay",
+        "settings": {
+          "canSkip": false,
+          "showProgress": true,
+          "position": "center"
+        },
+        "steps": [
+          {
+            "id": "recommended-evaluator",
+            "type": "modal",
+            "title": "Set Up Quality Evaluation",
+            "content": {
+              "heading": "Recommended Evaluator",
+              "description": "Based on your agent type ({{user.agentType}}), we recommend this evaluator:",
+              "evaluatorCard": {
+                "name": "{{recommendedEvaluator.name}}",
+                "description": "{{recommendedEvaluator.description}}",
+                "icon": "{{recommendedEvaluator.icon}}",
+                "benefits": "{{recommendedEvaluator.benefits}}",
+                "examples": "{{recommendedEvaluator.examples}}"
+              },
+              "customization": {
+                "enabled": true,
+                "fields": [
+                  {
+                    "name": "evaluationCriteria",
+                    "type": "textarea",
+                    "label": "Evaluation Criteria",
+                    "placeholder": "What should we check for in your agent's responses?",
+                    "value": "{{recommendedEvaluator.defaultCriteria}}"
+                  },
+                  {
+                    "name": "scoreThreshold",
+                    "type": "slider",
+                    "label": "Pass Score Threshold",
+                    "min": 1,
+                    "max": 10,
+                    "value": 7,
+                    "description": "Responses scoring below this will be flagged for optimization"
+                  }
+                ]
+              }
+            },
+            "actions": [
+              {
+                "text": "Create Evaluator",
+                "type": "primary",
+                "action": "createEvaluator",
+                "analytics": "evaluator_created"
+              },
+              {
+                "text": "Customize Further",
+                "type": "secondary",
+                "action": "openCustomization",
+                "analytics": "evaluator_customize"
+              }
+            ],
+            "autoAttachment": {
+              "enabled": true,
+              "condition": "nodeNameMatches(['response_generator', 'document_processor', 'main_agent'])",
+              "message": "✅ Auto-attached to matching nodes in your trace"
+            }
+          },
+          {
+            "id": "evaluator-success",
+            "type": "tooltip",
+            "title": "Evaluator Created!",
+            "target": ".evaluators-section",
+            "placement": "bottom",
+            "content": {
+              "heading": "🎉 Your evaluator is now active",
+              "description": "Every trace will now be automatically evaluated for quality. You'll see results in real-time.",
+              "nextSteps": [
+                "Run your agent a few more times",
+                "Check the evaluation scores in the dashboard", 
+                "HandIt will suggest optimizations automatically"
+              ],
+              "visual": {
+                "type": "progress-animation",
+                "steps": ["Trace", "Evaluate", "Optimize", "Deploy"]
+              }
+            },
+            "actions": [
+              {
+                "text": "Run My Agent Again",
+                "type": "primary",
+                "action": "encourageMoreTraces",
+                "analytics": "evaluator_success_run_agent"
+              },
+              {
+                "text": "See Evaluation Results",
+                "type": "secondary",
+                "action": "viewEvaluations",
+                "analytics": "evaluator_success_view_results"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "first-optimization",
+        "name": "First Optimization Experience",
+        "description": "Guide through the first automatic optimization",
+        "type": "contextual",
+        "trigger": {
+          "condition": "evaluations.count >= 3 && evaluations.lowScoreCount >= 1",
+          "autoStart": true
+        },
+        "steps": [
+          {
+            "id": "optimization-available",
+            "type": "notification",
+            "title": "🚀 Optimization Ready!",
+            "target": ".optimizations-section",
+            "placement": "top",
+            "content": {
+              "heading": "HandIt found optimization opportunities",
+              "description": "Based on your evaluation results, we've generated improvements for your agent.",
+              "preview": {
+                "improvementPercentage": "{{optimization.improvementPercentage}}",
+                "metric": "{{optimization.primaryMetric}}",
+                "issuesFixed": "{{optimization.issuesFixed}}"
+              }
+            },
+            "actions": [
+              {
+                "text": "Review Optimization",
+                "type": "primary",
+                "action": "openOptimization",
+                "analytics": "first_optimization_review"
+              },
+              {
+                "text": "Not Now",
+                "type": "ghost",
+                "action": "dismissOptimization",
+                "analytics": "first_optimization_dismiss"
+              }
+            ],
+            "persistence": {
+              "showUntilInteraction": true,
+              "maxShowCount": 3
+            }
+          }
+        ]
+      }
+    ],
+    "dynamicContent": {
+      "recommendedEvaluators": {
+        "document-ai": {
+          "name": "Completeness Evaluator",
+          "description": "Ensures all required fields are extracted from documents",
+          "icon": "document-check",
+          "benefits": ["Catches missing data", "Improves extraction accuracy", "Reduces manual review"],
+          "examples": ["Invoice amounts", "Contract dates", "Form fields"],
+          "defaultCriteria": "Check that all key fields are extracted: amounts, dates, names, and contact information. Verify that numerical values are properly formatted and dates are correctly parsed."
+        },
+        "custom-agent": {
+          "name": "Factual Accuracy Evaluator", 
+          "description": "Verifies that responses are accurate and helpful",
+          "icon": "shield-check",
+          "benefits": ["Prevents hallucinations", "Improves user trust", "Reduces errors"],
+          "examples": ["Fact verification", "Source accuracy", "Response relevance"],
+          "defaultCriteria": "Verify that responses are factually correct, relevant to the user's question, and based on reliable sources. Check for any contradictions or unsupported claims."
+        },
+        "langchain-rag": {
+          "name": "Relevance & Citation Evaluator",
+          "description": "Ensures responses are relevant and properly cite sources",
+          "icon": "book-open",
+          "benefits": ["Better source usage", "Improved relevance", "Proper citations"],
+          "examples": ["Source relevance", "Citation accuracy", "Answer completeness"],
+          "defaultCriteria": "Check that responses are relevant to the query, properly cite sources, and provide comprehensive answers based on the retrieved documents."
+        }
+      }
+    },
+    "analytics": {
+      "events": {
+        "tour_started": ["tourId", "userId", "timestamp"],
+        "step_completed": ["tourId", "stepId", "userId", "timeSpent", "timestamp"],
+        "tour_completed": ["tourId", "userId", "totalTime", "timestamp"],
+        "tour_skipped": ["tourId", "stepId", "userId", "reason", "timestamp"],
+        "action_clicked": ["tourId", "stepId", "actionType", "actionText", "userId", "timestamp"],
+        "integration_completed": ["userId", "agentType", "timestamp"],
+        "first_trace_received": ["userId", "traceId", "timestamp"],
+        "evaluator_created": ["userId", "evaluatorType", "timestamp"],
+        "optimization_generated": ["userId", "improvementPercentage", "timestamp"]
+      }
+    },
+    "personalizations": {
+      "agentType": {
+        "document-ai": {
+          "terminology": {
+            "agent": "document processor",
+            "inputs": "documents",
+            "outputs": "extracted data"
+          },
+          "examples": {
+            "inputExample": "invoice_2024.pdf",
+            "outputExample": "Extracted 12 fields including amount, vendor, due date"
+          }
+        },
+        "custom-agent": {
+          "terminology": {
+            "agent": "AI assistant", 
+            "inputs": "user queries",
+            "outputs": "responses"
+          },
+          "examples": {
+            "inputExample": "How can I reset my password?",
+            "outputExample": "Step-by-step password reset instructions"
+          }
+        },
+        "langchain-rag": {
+          "terminology": {
+            "agent": "knowledge assistant",
+            "inputs": "questions",
+            "outputs": "answers with sources"
+          },
+          "examples": {
+            "inputExample": "What is our refund policy?",
+            "outputExample": "Based on company policy document: 30-day returns..."
+          }
+        }
+      }
+    }
+  }
+} 
