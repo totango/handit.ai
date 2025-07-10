@@ -231,37 +231,37 @@ export const MonitoringNode = React.memo(({ id, data, isConnectable }) => {
       }
     } else {
       // Original logic for cycles enabled
-      const index = selectedCycle?.steps?.findIndex(step => steps.includes(step));
-      const title = selectedCycle?.steps?.[index];
+    const index = selectedCycle?.steps?.findIndex(step => steps.includes(step));
+    const title = selectedCycle?.steps?.[index];
 
-      if (!title) return null;
-      return (
-        <Button
-          sx={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            minWidth: '24px',
-            width: '24px',
-            height: '24px',
-            p: 0,
+    if (!title) return null;
+    return (
+      <Button
+        sx={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          minWidth: '24px',
+          width: '24px',
+          height: '24px',
+          p: 0,
+          background: '#1976d2',
+          color: 'white',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '12px',
+          transition: 'all 0.2s ease',
+          transform: 'scale(1.1)',
+          boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.3)',
+          '&:hover': {
             background: '#1976d2',
-            color: 'white',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            transition: 'all 0.2s ease',
-            transform: 'scale(1.1)',
-            boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.3)',
-            '&:hover': {
-              background: '#1976d2',
-            },
-          }}
-        >
-          {title}
-        </Button>
+          },
+        }}
+      >
+        {title}
+      </Button>
       );
     }
   };

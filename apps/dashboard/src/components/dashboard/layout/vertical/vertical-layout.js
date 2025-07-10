@@ -17,10 +17,30 @@ import { layoutConfig } from '../config';
 import { MainNav } from './main-nav';
 import { SideNav } from './side-nav';
 
-export function VerticalLayout({ children }) {
+export function VerticalLayout({ children, forceNavOpen = false }) {
   const { settings } = useSettings();
   const pathname = usePathname();
   const [sideNavOpen, setSideNavOpen] = React.useState(false);
+  const [onboardingActive, setOnboardingActive] = React.useState(false);
+
+  // Listen for onboarding state changes
+  React.useEffect(() => {
+    const handleOnboardingStateChange = (event) => {
+      setOnboardingActive(event.detail.active);
+    };
+
+    // Check initial state
+    if (typeof window !== 'undefined' && window.__onboardingActive) {
+      setOnboardingActive(true);
+    }
+
+    // Listen for changes
+    window.addEventListener('onboardingStateChange', handleOnboardingStateChange);
+
+    return () => {
+      window.removeEventListener('onboardingStateChange', handleOnboardingStateChange);
+    };
+  }, []);
   let modelLogs = null;
   if (isSandboxPage(window)) {
     modelLogs = { count: 1 };
@@ -29,7 +49,7 @@ export function VerticalLayout({ children }) {
     modelLogs = data;
   }
 
-  const sideNavWidth = sideNavOpen ? '280px' : '64px';
+  const sideNavWidth = (sideNavOpen || onboardingActive) ? '280px' : '64px';
 
   return (
     <React.Fragment>
@@ -54,7 +74,7 @@ export function VerticalLayout({ children }) {
           minHeight: '100%',
         }}
       >
-        {pathname !== '/smart-review-tool' && <SideNav color={settings.navColor} items={layoutConfig.navItems} open={sideNavOpen} setOpen={setSideNavOpen} />}
+        {pathname !== '/smart-review-tool' && <SideNav color={settings.navColor} items={layoutConfig.navItems} open={sideNavOpen} setOpen={setSideNavOpen} forceOpen={forceNavOpen || onboardingActive} />}
         <Box
           sx={{
             display: 'flex',
