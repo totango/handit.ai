@@ -414,6 +414,7 @@ export function MainNav({ items, title, onNewEvaluator }) {
                 color="primary"
                 onClick={() => setConnectDialogOpen(true)}
                 startIcon={<TerminalWindow size={16} />}
+                data-testid="connect-agent-button"
                 sx={{
                   borderColor: 'transparent',
                   color: 'primary.main',

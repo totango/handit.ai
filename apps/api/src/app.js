@@ -93,6 +93,7 @@ app.use('/api/agent-structure', validateApiToken, agentStructureRoutes);
 // Apply JWT authentication middleware to all routes except auth routes
 app.use(authenticateJWT);
 app.use('/api/prompts', promptRoutes);
+app.use('/api/setup-assistant', setupRouter);
 
 app.use('/api/evaluator', evaluatorRoutes);
 app.use('/api/automatic-optimization', automaticOptimizationRoutes);
