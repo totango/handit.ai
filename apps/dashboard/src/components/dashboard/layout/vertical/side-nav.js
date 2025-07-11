@@ -9,7 +9,7 @@ import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { CaretRight as CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight';
 import { CaretLeft as CaretLeftIcon } from '@phosphor-icons/react';
-import { Rocket } from '@phosphor-icons/react/dist/ssr/Rocket';
+import { Question } from '@phosphor-icons/react/dist/ssr/Question';
 
 import { paths } from '@/paths';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
@@ -131,8 +131,8 @@ export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpe
           tabIndex={0}
         >
           <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', flex: '0 0 auto' }}>
-            <Rocket
-              fill="var(--NavItem-icon-color)"
+            <Question
+              fill="var(--NavItem-color)"
               fontSize="var(--icon-fontSize-md)"
             />
           </Box>
@@ -147,7 +147,7 @@ export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpe
                   lineHeight: '28px' 
                 }}
               >
-                Start Tour
+                Need Help?
               </Typography>
             </Box>
           )}

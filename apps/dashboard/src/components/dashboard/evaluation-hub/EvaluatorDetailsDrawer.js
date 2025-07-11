@@ -47,6 +47,13 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
   const [newTokenValue, setNewTokenValue] = useState('');
   const [tokenModelId, setTokenModelId] = useState(null);
   const [tokenProviderId, setTokenProviderId] = useState(null);
+  
+  // Token form state (similar to settings)
+  const [tokenForm, setTokenForm] = useState({
+    providerId: '',
+    name: '',
+    token: ''
+  });
   const [creatingMetric, setCreatingMetric] = useState(false);
   const [creatingToken, setCreatingToken] = useState(false);
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
@@ -100,6 +107,7 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
       setNewTokenValue('');
       setTokenModelId(null);
       setTokenProviderId(null);
+      setTokenForm({ providerId: '', name: '', token: '' });
       setCreatingMetric(false);
       setCreatingToken(false);
       setIsEditingPrompt(false);
@@ -131,6 +139,7 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
       setNewTokenValue('');
       setTokenModelId(null);
       setTokenProviderId(null);
+      setTokenForm({ providerId: '', name: '', token: '' });
       setCreatingMetric(false);
       setCreatingToken(false);
       setIsEditingPrompt(false);
@@ -147,18 +156,40 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
   const associatedModelIds = associations.map(a => a.modelId);
   const availableModels = models.filter(m => !associatedModelIds.includes(m.id));
 
+  // Token form handlers (similar to settings)
+  const handleTokenFormChange = (field, value) => {
+    setTokenForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCloseTokenDialog = () => {
+    setTokenDialogOpen(false);
+    setTokenForm({ providerId: '', name: '', token: '' });
+  };
+
   // ... (reuse the same association logic as in NewEvaluatorDrawer) ...
 
   // Add handleCreateToken logic
   const handleCreateToken = async () => {
-    if (!newTokenName || !newTokenValue || !tokenProviderId) return;
+    if (!tokenForm.name || !tokenForm.token || !tokenForm.providerId) return;
     setCreatingToken(true);
     try {
       const token = await createToken({
-        name: newTokenName,
-        token: newTokenValue,
-        providerId: tokenProviderId,
+        name: tokenForm.name,
+        token: tokenForm.token,
+        providerId: tokenForm.providerId,
       }).unwrap();
+      
+      // Find the provider and get the first available model
+      const selectedProvider = providers?.data?.find(p => p.id === tokenForm.providerId);
+      const firstModel = selectedProvider?.config?.models?.[0];
+      
+      // Set the newly created token as the default token along with provider and first model
+      setDefaultTokenId(token.id);
+      setDefaultProviderId(tokenForm.providerId);
+      if (firstModel) {
+        setDefaultProviderModel(firstModel);
+      }
+      
       // If adding a new association
       if (addAssocOpen && tokenModelId) {
         setAssocTokenId(token.id);
@@ -167,11 +198,8 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
       if (editingAssocModelId && tokenModelId === editingAssocModelId) {
         setEditTokenId(token.id);
       }
-      setTokenDialogOpen(false);
-      setNewTokenName('');
-      setNewTokenValue('');
-      setTokenModelId(null);
-      setTokenProviderId(null);
+      
+      handleCloseTokenDialog();
     } finally {
       setCreatingToken(false);
     }
@@ -296,9 +324,20 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
         </Box>
         {/* Associations */}
         <Box>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Default Provider, Model & Token
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+            <Typography variant="subtitle1">
+              Default Provider, Model & Token
+            </Typography>
+            <Button
+              startIcon={<Plus />}
+              onClick={() => setTokenDialogOpen(true)}
+              size="small"
+              variant="outlined"
+              data-testid="add-token-button"
+            >
+              Add Token
+            </Button>
+          </Box>
           <Stack direction="row" spacing={2}>
             <TextField
               select
@@ -348,7 +387,7 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
           </Typography>
           <Button
               onClick={() => setAddAssocOpen(true)}
-              disabled={availableModels.length === 0}
+              data-testid="associate-new-llm-node-button"
             >
               Associate New LLM Node
             </Button>
@@ -535,6 +574,7 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
                     }}
                     variant="contained"
                     disabled={!assocModelId}
+                    data-testid="save-association-button"
                     sx={{
                       backgroundImage: 'none',
                       backgroundColor: 'primary.main',
@@ -596,27 +636,42 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
             </Button>
         )}
       </Stack>
-      <Dialog open={tokenDialogOpen} onClose={() => setTokenDialogOpen(false)}>
-        <DialogTitle>Create New Token</DialogTitle>
+      <Dialog open={tokenDialogOpen} onClose={handleCloseTokenDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Add Token</DialogTitle>
         <DialogContent>
-          <TextField
-            label="Token Name"
-            value={newTokenName}
-            onChange={e => setNewTokenName(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            label="Token Value"
-            value={newTokenValue}
-            onChange={e => setNewTokenValue(e.target.value)}
-            fullWidth
-          />
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField 
+              select 
+              label="Provider" 
+              value={tokenForm.providerId} 
+              onChange={e => handleTokenFormChange('providerId', e.target.value)} 
+              fullWidth
+            >
+              {providers?.data?.map(p => <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>)}
+            </TextField>
+            <TextField 
+              label="Name" 
+              value={tokenForm.name} 
+              onChange={e => handleTokenFormChange('name', e.target.value)} 
+              fullWidth 
+            />
+            <TextField 
+              label="Token" 
+              value={tokenForm.token} 
+              onChange={e => handleTokenFormChange('token', e.target.value)} 
+              fullWidth 
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTokenDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCreateToken} disabled={!newTokenName || !newTokenValue || creatingToken} variant="contained">
-            {creatingToken ? 'Creating...' : 'Create'}
+          <Button onClick={handleCloseTokenDialog}>Cancel</Button>
+          <Button 
+            onClick={handleCreateToken} 
+            disabled={!tokenForm.name || !tokenForm.token || !tokenForm.providerId || creatingToken} 
+            variant="contained"
+            data-testid="save-token-button"
+          >
+            {creatingToken ? 'Creating...' : 'Save'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -8,7 +8,7 @@ const InvisibleMouse = ({
   type = 'pointer', // 'pointer', 'click', 'hand'
   size = 24,
   color = '#42a5f5',
-  animationDuration = 300,
+  animationDuration = 150,
   trail = false,
   pulsing = false
 }) => {
@@ -206,7 +206,7 @@ export const useInvisibleMouse = () => {
         type: 'pointer',
         pulsing: false,
       }));
-    }, 500);
+    }, 200);
   };
 
   const moveToElement = (selector, offset = { x: 0, y: 0 }) => {
@@ -223,7 +223,7 @@ export const useInvisibleMouse = () => {
 
   const animateToElement = (selector, options = {}) => {
     const {
-      duration = 2000,
+      duration = 800,
       startFromCenter = true,
       offset = { x: 0, y: 0 },
       onComplete
@@ -318,7 +318,7 @@ export const useInvisibleMouse = () => {
     };
 
     // Start animation after a brief delay
-    setTimeout(animate, 100);
+    setTimeout(animate, 50);
     
     return { x: targetX, y: targetY };
   };
@@ -333,7 +333,7 @@ export const useInvisibleMouse = () => {
     if (position) {
       setTimeout(() => {
         clickAt(position.x, position.y, callback);
-      }, 300);
+      }, 100);
     }
   };
 

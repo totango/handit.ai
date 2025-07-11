@@ -15,6 +15,47 @@ import {
   EyeSlash,
 } from '@phosphor-icons/react';
 
+  // Custom hook for typing animation
+  const useTypingAnimation = (text, speed = 30, startDelay = 0) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    if (!text) {
+      setDisplayedText('');
+      setIsComplete(true);
+      return;
+    }
+
+    setDisplayedText('');
+    setIsTyping(false);
+    setIsComplete(false);
+
+    const startTimer = setTimeout(() => {
+      setIsTyping(true);
+      let index = 0;
+      
+      const timer = setInterval(() => {
+        if (index < text.length) {
+          setDisplayedText(text.substring(0, index + 1));
+          index++;
+        } else {
+          setIsTyping(false);
+          setIsComplete(true);
+          clearInterval(timer);
+        }
+      }, speed);
+
+      return () => clearInterval(timer);
+    }, startDelay);
+
+    return () => clearTimeout(startTimer);
+  }, [text, speed, startDelay]);
+
+  return { displayedText, isTyping, isComplete };
+};
+
 const OnboardingBanner = ({ 
   open,
   onClose,
@@ -28,21 +69,26 @@ const OnboardingBanner = ({
   actions = [], // Array of action buttons
   showCloseButton = true,
   icon,
+  typingSpeed = 30, // Speed of typing animation in milliseconds
 }) => {
   const [visible, setVisible] = useState(open);
+  
+  // Typing animations for title and message
+  const titleTyping = useTypingAnimation(title, typingSpeed, 0);
+  const messageTyping = useTypingAnimation(message, typingSpeed, title ? 150 : 0); // Delay message if title exists
 
   useEffect(() => {
     setVisible(open);
   }, [open]);
 
   useEffect(() => {
-    if (autoHide && visible) {
+    if (autoHide && visible && messageTyping.isComplete) {
       const timer = setTimeout(() => {
         handleClose();
       }, autoHideDelay);
       return () => clearTimeout(timer);
     }
-  }, [visible, autoHide, autoHideDelay]);
+  }, [visible, autoHide, autoHideDelay, messageTyping.isComplete]);
 
   const handleClose = () => {
     setVisible(false);
@@ -163,7 +209,6 @@ const OnboardingBanner = ({
             sx={{
               ...variantStyles,
               borderRadius: 2,
-              border: `1px solid ${variantStyles.borderColor}`,
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               overflow: 'hidden',
               position: 'relative',
@@ -173,14 +218,26 @@ const OnboardingBanner = ({
             <Box sx={{ p: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                  {icon && (
-                    <Box sx={{ mr: 1, fontSize: '1.2rem' }}>
-                      {icon}
-                    </Box>
-                  )}
                   {title && (
                     <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 600 }}>
-                      {title}
+                      {titleTyping.displayedText}
+                      {titleTyping.isTyping && (
+                        <Box
+                          component="span"
+                          sx={{
+                            display: 'inline-block',
+                            width: '2px',
+                            height: '1.2em',
+                            backgroundColor: 'white',
+                            marginLeft: '2px',
+                            animation: 'blink 1s infinite',
+                            '@keyframes blink': {
+                              '0%, 50%': { opacity: 1 },
+                              '51%, 100%': { opacity: 0 }
+                            }
+                          }}
+                        />
+                      )}
                     </Typography>
                   )}
                 </Box>
@@ -203,35 +260,50 @@ const OnboardingBanner = ({
               </Box>
               
               <Typography variant="body2" sx={{ color: '#ccc', lineHeight: 1.4, mb: actions.length > 0 ? 2 : 0 }}>
-                {message}
+                {messageTyping.displayedText}
+                {messageTyping.isTyping && (
+                  <Box
+                    component="span"
+                    sx={{
+                      display: 'inline-block',
+                      width: '2px',
+                      height: '1.2em',
+                      backgroundColor: '#ccc',
+                      marginLeft: '2px',
+                      animation: 'blink 1s infinite',
+                      '@keyframes blink': {
+                        '0%, 50%': { opacity: 1 },
+                        '51%, 100%': { opacity: 0 }
+                      }
+                    }}
+                  />
+                )}
               </Typography>
 
-              {/* Action Buttons */}
-              {actions.length > 0 && (
+              {/* Action Buttons - Only show when message typing is complete */}
+              {actions.length > 0 && messageTyping.isComplete && (
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   {actions.map((action, index) => (
                     <Button
                       key={index}
-                      variant={action.type === 'primary' ? 'contained' : 'outlined'}
+                      variant="text"
                       size="small"
                       onClick={action.onClick}
                       sx={{
                         textTransform: 'none',
                         fontSize: '0.875rem',
-                        ...(action.type === 'primary' ? {
-                          bgcolor: '#42a5f5',
-                          color: 'white',
-                          '&:hover': {
-                            bgcolor: '#1976d2'
-                          }
-                        } : {
-                          color: '#42a5f5',
-                          borderColor: '#42a5f5',
-                          '&:hover': {
-                            bgcolor: 'rgba(66, 165, 245, 0.1)',
-                            borderColor: '#1976d2'
-                          }
-                        })
+                        color: 'white',
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        px: 2,
+                        py: 0.5,
+                        '&:hover': {
+                          bgcolor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'white'
+                        },
+                        '&:focus': {
+                          bgcolor: 'rgba(255, 255, 255, 0.15)'
+                        }
                       }}
                     >
                       {action.text}

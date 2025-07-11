@@ -1,33 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Box,
+  Button,
+  Card,
   Dialog,
   DialogContent,
-  Typography,
-  Button,
-  TextField,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Card,
-  RadioGroup,
   FormControlLabel,
   Radio,
-  Slider,
+  RadioGroup,
   Stack,
-  Chip,
-  IconButton,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { X as CloseIcon, ArrowLeft, ArrowRight } from '@phosphor-icons/react';
 
-import { 
-  OnboardingMenu, 
-  OnboardingAssistant, 
-  useOnboardingBanners, 
-  useInvisibleMouse 
-} from './index';
 import onboardingService from '../../services/onboarding/onboardingService';
+import userService from '../../services/userService';
+import { OnboardingAssistant, OnboardingMenu, useInvisibleMouse, useOnboardingBanners } from './index';
 
 const OnboardingOrchestrator = ({ 
   autoStart = false, 
@@ -48,11 +37,25 @@ const OnboardingOrchestrator = ({
   const banners = useOnboardingBanners();
   const mouse = useInvisibleMouse();
 
+  // Ref to track if we've already started onboarding for a new user
+  const hasStartedNewUserOnboarding = useRef(false);
+
+  // Debug logging for userState changes
+  useEffect(() => {
+    console.log('OnboardingOrchestrator: userState updated:', {
+      onboardingCurrentTour: userState.onboardingCurrentTour,
+      userId: userState.userId,
+      email: userState.email
+    });
+  }, [userState]);
+
   // Trigger highlighting when mouse targets a menu item
   const highlightMenuItem = (menuTitle) => {
-    window.dispatchEvent(new CustomEvent('onboardingMouseTarget', {
-      detail: { menuTitle }
-    }));
+    window.dispatchEvent(
+      new CustomEvent('onboardingMouseTarget', {
+        detail: { menuTitle },
+      })
+    );
   };
 
   // Remove highlighting when mouse leaves a menu item
@@ -67,23 +70,85 @@ const OnboardingOrchestrator = ({
     setCurrentStep(null);
     setTourInfo(null);
     setAssistantVisible(false);
-    
+
     // Remove any highlighting
     unhighlightMenuItem();
-    
+
     // Hide mouse and banners
     mouse.hideMouse();
     banners.hideAllBanners();
-    
+
     // Clear global onboarding flag and localStorage
     window.__onboardingActive = false;
     localStorage.removeItem('onboardingState');
-    window.dispatchEvent(new CustomEvent('onboardingStateChange', {
-      detail: { active: false }
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent('onboardingStateChange', {
+        detail: { active: false },
+      })
+    );
+
     onComplete();
   }, [mouse, banners, onComplete]);
+
+  // Helper function to handle tour completion with next tour checking
+  const handleTourEndWithNextTourCheck = useCallback(() => {
+    // Check if there are more steps in current tour
+    if (onboardingService.getCurrentStep()) {
+      // Still have steps, don't complete
+      return;
+    }
+
+    // No more steps in current tour, check if there's a next tour
+    const currentTourId = tourInfo?.tourId;
+    let nextTourId = null;
+
+    // Define the tour progression order
+    const tourOrder = {
+      'welcome-concept-walkthrough': 'agent-connection-flow',
+      'agent-connection-flow': 'evaluation-suite-navigation',
+      'evaluation-suite-navigation': null, // No next tour, finish
+    };
+
+    nextTourId = tourOrder[currentTourId];
+
+    if (nextTourId) {
+      // There's a next tour, advance to it
+      onboardingService.transitionTour();
+      const nextStep = onboardingService.startTour(nextTourId);
+      if (nextStep) {
+        setCurrentStep(nextStep);
+        const tourInfo = onboardingService.getCurrentTourInfo();
+        setTourInfo(tourInfo);
+
+        // Show assistant if tour settings specify it
+        if (tourInfo?.settings?.showAssistant) {
+          setAssistantVisible(true);
+        }
+
+        // Update user's onboarding progress in database
+        userService
+          .updateOnboardingProgress(nextTourId)
+          .then(() => {
+            console.log('Onboarding progress updated to next tour:', nextTourId);
+          })
+          .catch((error) => {
+            console.error('Failed to update onboarding progress:', error);
+          });
+
+        // Update localStorage with new tour state
+        const onboardingState = {
+          isActive: true,
+          tourId: nextTourId,
+          currentStepId: nextStep.id,
+          assistantVisible: tourInfo?.settings?.showAssistant || false,
+        };
+        localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
+      }
+    } else {
+      // No more tours, complete all tours
+      handleTourComplete();
+    }
+  }, [tourInfo, handleTourComplete, userService]);
 
   // Tour skip handler
   const handleTourSkip = useCallback(() => {
@@ -92,55 +157,67 @@ const OnboardingOrchestrator = ({
     setCurrentStep(null);
     setTourInfo(null);
     setAssistantVisible(false);
-    
+
     // Remove any highlighting
     unhighlightMenuItem();
-    
+
     // Hide mouse and banners
     mouse.hideMouse();
     banners.hideAllBanners();
-    
+
     // Clear global onboarding flag and localStorage
     window.__onboardingActive = false;
     localStorage.removeItem('onboardingState');
-    window.dispatchEvent(new CustomEvent('onboardingStateChange', {
-      detail: { active: false }
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent('onboardingStateChange', {
+        detail: { active: false },
+      })
+    );
+
     onSkip();
   }, [mouse, banners, onSkip]);
 
   // Start onboarding flow
-  const startOnboarding = useCallback((tourId = 'dashboard-tour') => {
-    console.log('Starting onboarding with tour:', tourId);
-    
+  const startOnboarding = useCallback((tourId = 'welcome-concept-walkthrough') => {
     const step = onboardingService.startTour(tourId);
-    
+
     if (step) {
       setCurrentStep(step);
       const tourInfo = onboardingService.getCurrentTourInfo();
       setTourInfo(tourInfo);
       setIsActive(true);
-      
+
       // Show assistant if tour settings specify it
       if (tourInfo?.settings?.showAssistant) {
         setAssistantVisible(true);
       }
-      
+
+      // Update user's onboarding progress in database
+      userService
+        .updateOnboardingProgress(tourId)
+        .then(() => {
+          console.log('Onboarding progress updated to:', tourId);
+        })
+        .catch((error) => {
+          console.error('Failed to update onboarding progress:', error);
+        });
+
       // Persist onboarding state to localStorage
       const onboardingState = {
         isActive: true,
         tourId: tourId,
         currentStepId: step.id,
-        assistantVisible: tourInfo?.settings?.showAssistant || false
+        assistantVisible: tourInfo?.settings?.showAssistant || false,
       };
       localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
-      
+
       // Set global onboarding flag for layout components
       window.__onboardingActive = true;
-      window.dispatchEvent(new CustomEvent('onboardingStateChange', {
-        detail: { active: true }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('onboardingStateChange', {
+          detail: { active: true },
+        })
+      );
     }
   }, []);
 
@@ -151,7 +228,7 @@ const OnboardingOrchestrator = ({
         isActive: true,
         tourId: tourInfo?.id,
         currentStepId: currentStep.id,
-        assistantVisible: assistantVisible
+        assistantVisible: assistantVisible,
       };
       localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
     }
@@ -176,20 +253,22 @@ const OnboardingOrchestrator = ({
                 currentStepInService = onboardingService.getCurrentStep();
                 if (!currentStepInService || currentStepInService.id === step.id) break;
               }
-              
+
               const restoredStep = onboardingService.getCurrentStep();
               if (restoredStep) {
                 setCurrentStep(restoredStep);
                 setTourInfo(onboardingService.getCurrentTourInfo());
                 setIsActive(true);
                 setAssistantVisible(state.assistantVisible);
-                
+
                 // Set global flag
                 window.__onboardingActive = true;
-                window.dispatchEvent(new CustomEvent('onboardingStateChange', {
-                  detail: { active: true }
-                }));
-                
+                window.dispatchEvent(
+                  new CustomEvent('onboardingStateChange', {
+                    detail: { active: true },
+                  })
+                );
+
                 console.log('Onboarding state restored:', restoredStep.id);
               }
             }
@@ -224,18 +303,20 @@ const OnboardingOrchestrator = ({
                     currentStepInService = onboardingService.getCurrentStep();
                     if (!currentStepInService) break;
                   }
-                  
+
                   const finalStep = onboardingService.getCurrentStep();
                   if (finalStep) {
                     setCurrentStep(finalStep);
                     setTourInfo(onboardingService.getCurrentTourInfo());
                     setIsActive(true);
                     setAssistantVisible(state.assistantVisible);
-                    
+
                     window.__onboardingActive = true;
-                    window.dispatchEvent(new CustomEvent('onboardingStateChange', {
-                      detail: { active: true }
-                    }));
+                    window.dispatchEvent(
+                      new CustomEvent('onboardingStateChange', {
+                        detail: { active: true },
+                      })
+                    );
                   }
                 }
               }
@@ -253,64 +334,69 @@ const OnboardingOrchestrator = ({
     if (typeof window !== 'undefined') {
       const showAssistant = assistantVisible || (currentStep && isActive);
       window.__onboardingActive = showAssistant;
-      
+
       // Trigger a custom event so layout can listen for changes
-      window.dispatchEvent(new CustomEvent('onboardingStateChange', { 
-        detail: { active: showAssistant } 
-      }));
+      window.dispatchEvent(
+        new CustomEvent('onboardingStateChange', {
+          detail: { active: showAssistant },
+        })
+      );
     }
-    
+
     return () => {
       if (typeof window !== 'undefined') {
         window.__onboardingActive = false;
-        window.dispatchEvent(new CustomEvent('onboardingStateChange', { 
-          detail: { active: false } 
-        }));
+        window.dispatchEvent(
+          new CustomEvent('onboardingStateChange', {
+            detail: { active: false },
+          })
+        );
       }
     };
   }, [assistantVisible, currentStep, isActive]);
 
   // Handle connection success event
-  const handleConnectionSuccess = useCallback((event) => {
-    console.log('Connection success event received:', event.detail);
-    
-    // Only advance if we're on the test-connection-button step and connection was successful
-    if (currentStep?.id === 'test-connection-button' && event.detail?.success) {
-      // Remove highlighting
-      unhighlightMenuItem();
-      
-      // Hide instruction banners
-      banners.hideAllBanners();
-      
-      // Advance to next step
-      onboardingService.nextStep();
-      const nextStep = onboardingService.getCurrentStep();
-      
-      if (nextStep) {
-        // Update state and localStorage for the next step
-        setCurrentStep(nextStep);
-        setTourInfo(onboardingService.getCurrentTourInfo());
-        
-        const onboardingState = {
-          isActive: true,
-          tourId: tourInfo?.id,
-          currentStepId: nextStep.id,
-          assistantVisible: assistantVisible
-        };
-        localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
-      } else {
-        // No more steps, complete tour
-        handleTourComplete();
+  const handleConnectionSuccess = useCallback(
+    (event) => {
+      // Only advance if we're on the test-connection-button step and connection was successful
+      if (currentStep?.id === 'test-connection-button' && event.detail?.success) {
+        // Remove highlighting
+        unhighlightMenuItem();
+
+        // Hide instruction banners
+        banners.hideAllBanners();
+
+        // Advance to next step
+        onboardingService.nextStep();
+        const nextStep = onboardingService.getCurrentStep();
+
+        if (nextStep) {
+          // Update state and localStorage for the next step
+          setCurrentStep(nextStep);
+          setTourInfo(onboardingService.getCurrentTourInfo());
+
+          const onboardingState = {
+            isActive: true,
+            tourId: tourInfo?.id,
+            currentStepId: nextStep.id,
+            assistantVisible: assistantVisible,
+          };
+          localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
+        } else {
+          // No more steps, complete tour
+          handleTourEndWithNextTourCheck();
+        }
       }
-    }
-  }, [currentStep, tourInfo, assistantVisible, banners, handleTourComplete]);
+    },
+    [currentStep, tourInfo, assistantVisible, banners, handleTourEndWithNextTourCheck]
+  );
 
   // Initialize service
   useEffect(() => {
     onboardingService.init(userState);
 
     // Listen for tour events
-    onboardingService.on('tourCompleted', handleTourComplete);
+    onboardingService.on('tourCompleted', handleTourEndWithNextTourCheck);
     onboardingService.on('tourSkipped', handleTourSkip);
 
     // Listen for onboarding menu trigger from sidebar
@@ -321,6 +407,16 @@ const OnboardingOrchestrator = ({
 
     window.addEventListener('openOnboardingMenu', handleOpenOnboardingMenu);
     window.addEventListener('onboarding:connection-success', handleConnectionSuccess);
+
+    // Check if user is new (onboardingCurrentTour is null) and start onboarding immediately
+    // Only start if we haven't already started onboarding for this new user
+    console.log('userState.onboardingCurrentTour', userState);
+    if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current) {
+      console.log('New user detected (onboardingCurrentTour is null), starting onboarding automatically');
+      hasStartedNewUserOnboarding.current = true;
+      startOnboarding('welcome-concept-walkthrough');
+      return;
+    }
 
     // Auto-trigger if enabled
     if (triggerOnMount) {
@@ -345,27 +441,25 @@ const OnboardingOrchestrator = ({
       window.removeEventListener('onboarding:connection-success', handleConnectionSuccess);
     };
   }, [userState, autoStart, triggerOnMount, handleConnectionSuccess]);
-
   // Navigation functions
   const handleNext = useCallback(() => {
     // Clear any existing banners and highlighting before advancing
     banners.hideAllBanners();
     unhighlightMenuItem();
-    
+
     onboardingService.nextStep();
     setCurrentStep(onboardingService.getCurrentStep());
     setTourInfo(onboardingService.getCurrentTourInfo());
-    
-    if (!onboardingService.getCurrentStep()) {
-      handleTourComplete();
-    }
-  }, [handleTourComplete, banners]);
+
+    // Use the helper function to handle tour completion with next tour checking
+    handleTourEndWithNextTourCheck();
+  }, [banners, handleTourEndWithNextTourCheck]);
 
   const handlePrevious = useCallback(() => {
     // Clear any existing banners and highlighting before going back
     banners.hideAllBanners();
     unhighlightMenuItem();
-    
+
     onboardingService.previousStep();
     setCurrentStep(onboardingService.getCurrentStep());
     setTourInfo(onboardingService.getCurrentTourInfo());
@@ -378,16 +472,19 @@ const OnboardingOrchestrator = ({
 
   const handleFinish = useCallback(() => {
     onboardingService.completeTour('tour_complete');
-    handleTourComplete();
-  }, [handleTourComplete]);
+    handleTourEndWithNextTourCheck();
+  }, [handleTourEndWithNextTourCheck]);
 
   // Form handling
-  const handleFormSubmit = useCallback((stepId, data) => {
-    const nextStep = onboardingService.submitForm(stepId, data);
-    setCurrentStep(nextStep);
-    setTourInfo(onboardingService.getCurrentTourInfo());
-    setFormData({ ...formData, ...data });
-  }, [formData]);
+  const handleFormSubmit = useCallback(
+    (stepId, data) => {
+      const nextStep = onboardingService.submitForm(stepId, data);
+      setCurrentStep(nextStep);
+      setTourInfo(onboardingService.getCurrentTourInfo());
+      setFormData({ ...formData, ...data });
+    },
+    [formData]
+  );
 
   // Execute cursor guidance when a step changes
   const executeCursorGuidance = useCallback((step) => {
@@ -422,13 +519,13 @@ const OnboardingOrchestrator = ({
         duration: 2000,
         onComplete: () => {
           console.log('Mouse animation completed to:', guidanceStep.target);
-          
+
           // Highlight the target menu item when mouse reaches it
           const menuTitle = targetElement.getAttribute('data-nav-item');
           if (menuTitle) {
             highlightMenuItem(menuTitle);
           }
-        }
+        },
       });
 
       if (mousePosition) {
@@ -437,7 +534,7 @@ const OnboardingOrchestrator = ({
           setTimeout(() => {
             const rect = targetElement.getBoundingClientRect();
             const position = calculateBannerPosition(rect, guidanceStep.instruction.position);
-            
+
             banners.showBanner({
               title: guidanceStep.instruction.title,
               message: guidanceStep.instruction.description,
@@ -446,71 +543,87 @@ const OnboardingOrchestrator = ({
               autoHide: guidanceStep.instruction.actions ? false : true,
               autoHideDelay: guidanceStep.instruction.actions ? 0 : 12000,
               showCloseButton: false,
-              actions: guidanceStep.instruction.actions?.map(action => ({
+              actions: guidanceStep.instruction.actions?.map((action) => ({
                 text: action.text,
                 type: action.type,
                 onClick: () => {
                   // Hide current banner immediately when any action is clicked
                   banners.hideAllBanners();
-                  
-                              if (action.action === 'nextStep') {
-              // Handle special case for closing connect dialog
-              if (currentStep?.id === 'close-connect-dialog') {
-                // Dispatch event to close connect dialog
-                window.dispatchEvent(new CustomEvent('onboarding:close-connect-dialog'));
-                
-                // Small delay to allow dialog to close before advancing
-                setTimeout(() => {
-                  onboardingService.nextStep();
-                  setCurrentStep(onboardingService.getCurrentStep());
-                  setTourInfo(onboardingService.getCurrentTourInfo());
-                  
-                  if (!onboardingService.getCurrentStep()) {
-                    handleTourComplete();
-                  }
-                }, 500);
-              } else {
-                // Directly advance step without causing re-renders
-                onboardingService.nextStep();
-                setCurrentStep(onboardingService.getCurrentStep());
-                setTourInfo(onboardingService.getCurrentTourInfo());
-                
-                if (!onboardingService.getCurrentStep()) {
-                  handleTourComplete();
-                }
-              }
-            } else if (action.action === 'skipTour') {
+
+                  if (action.action === 'nextStep') {
+                    // Handle special case for closing connect dialog
+                    if (currentStep?.id === 'close-connect-dialog') {
+                      // Dispatch event to close connect dialog
+                      window.dispatchEvent(new CustomEvent('onboarding:close-connect-dialog'));
+
+                      // Small delay to allow dialog to close before advancing
+                      setTimeout(() => {
+                        onboardingService.nextStep();
+                        setCurrentStep(onboardingService.getCurrentStep());
+                        setTourInfo(onboardingService.getCurrentTourInfo());
+
+                        if (!onboardingService.getCurrentStep()) {
+                          userService
+                            .updateOnboardingProgress(action.nextTourId)
+                            .then(() => {
+                              console.log('Onboarding progress updated to next tour:', action.nextTourId);
+                            })
+                            .catch((error) => {
+                              console.error('Failed to update onboarding progress:', error);
+                            });
+                          handleTourEndWithNextTourCheck();
+                        }
+                      }, 500);
+                    } else {
+                      // Directly advance step without causing re-renders
+                      onboardingService.nextStep();
+                      setCurrentStep(onboardingService.getCurrentStep());
+                      setTourInfo(onboardingService.getCurrentTourInfo());
+
+                      if (!onboardingService.getCurrentStep()) {
+                        userService
+                          .updateOnboardingProgress(action.nextTourId)
+                          .then(() => {
+                            console.log('Onboarding progress updated to next tour:', action.nextTourId);
+                          })
+                          .catch((error) => {
+                            console.error('Failed to update onboarding progress:', error);
+                          });
+                        handleTourEndWithNextTourCheck();
+                      }
+                    }
+                  } else if (action.action === 'skipTour') {
                     onboardingService.skipTour('user_skip');
                     handleTourSkip();
                   } else if (action.action === 'nextTour') {
                     // Use transition method to avoid emitting completion event
                     onboardingService.transitionTour();
                     const nextStep = onboardingService.startTour(action.nextTourId);
-                    
+
                     if (nextStep) {
                       setCurrentStep(nextStep);
                       const tourInfo = onboardingService.getCurrentTourInfo();
                       setTourInfo(tourInfo);
-                      
+
                       // Show assistant if tour settings specify it
                       if (tourInfo?.settings?.showAssistant) {
                         setAssistantVisible(true);
                       }
-                      
+
                       // Update localStorage with new tour state
                       const onboardingState = {
                         isActive: true,
                         tourId: action.nextTourId,
                         currentStepId: nextStep.id,
-                        assistantVisible: tourInfo?.settings?.showAssistant || false
+                        assistantVisible: tourInfo?.settings?.showAssistant || false,
                       };
                       localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
                     }
                   } else if (action.action === 'finishTour') {
                     onboardingService.completeTour('tour_complete');
-                    handleTourComplete();
+                    handleTourEndWithNextTourCheck();
                   }
-                }
+                },
               })),
             });
           }, 1800); // Reduced delay for faster appearance
@@ -531,7 +644,7 @@ const OnboardingOrchestrator = ({
   // Helper function to find target elements
   const findTargetElement = (selector, targetText) => {
     console.log('Finding element with selector:', selector, 'and text:', targetText);
-    
+
     if (targetText) {
       // Find element containing specific text
       const elements = document.querySelectorAll(selector);
@@ -544,7 +657,7 @@ const OnboardingOrchestrator = ({
         }
       }
     }
-    
+
     const element = document.querySelector(selector);
     console.log('Direct selector result:', element);
     return element;
@@ -553,7 +666,7 @@ const OnboardingOrchestrator = ({
   // Helper function to calculate banner position
   const calculateBannerPosition = (elementRect, position) => {
     const offset = 20;
-    
+
     switch (position) {
       case 'right':
         return { top: elementRect.top, left: elementRect.right + offset };
@@ -566,21 +679,6 @@ const OnboardingOrchestrator = ({
       default:
         return { top: elementRect.top, left: elementRect.right + offset };
     }
-  };
-
-  // Helper function to simulate typing
-  const simulateTyping = (element, text) => {
-    element.value = '';
-    let i = 0;
-    const typeChar = () => {
-      if (i < text.length) {
-        element.value += text.charAt(i);
-        element.dispatchEvent(new Event('input', { bubbles: true }));
-        i++;
-        setTimeout(typeChar, 50);
-      }
-    };
-    typeChar();
   };
 
   // Execute cursor guidance when step changes
@@ -599,11 +697,11 @@ const OnboardingOrchestrator = ({
                 targetElement.scrollIntoView({
                   behavior: currentStep.scrollIntoView.behavior || 'smooth',
                   block: currentStep.scrollIntoView.block || 'center',
-                  inline: currentStep.scrollIntoView.inline || 'nearest'
+                  inline: currentStep.scrollIntoView.inline || 'nearest',
                 });
               }
             }
-            
+
             // Mouse will be shown during animation - no need to show immediately
             executeCursorGuidance(currentStep);
           } else {
@@ -611,14 +709,14 @@ const OnboardingOrchestrator = ({
             setTimeout(checkForElement, currentStep.waitForElement.checkInterval || 1000);
           }
         };
-        
+
         // Start checking for element with timeout
         const timeoutId = setTimeout(() => {
           console.warn('waitForElement timeout reached for:', currentStep.waitForElement.target);
         }, currentStep.waitForElement.timeout || 10000);
-        
+
         checkForElement();
-        
+
         return () => clearTimeout(timeoutId);
       } else {
         // Handle scrollIntoView if specified
@@ -628,54 +726,53 @@ const OnboardingOrchestrator = ({
             targetElement.scrollIntoView({
               behavior: currentStep.scrollIntoView.behavior || 'smooth',
               block: currentStep.scrollIntoView.block || 'center',
-              inline: currentStep.scrollIntoView.inline || 'nearest'
+              inline: currentStep.scrollIntoView.inline || 'nearest',
             });
           }
         }
-        
+
         // Mouse will be shown during animation - no need to show immediately
         executeCursorGuidance(currentStep);
       }
     }
   }, [currentStep, executeCursorGuidance]);
 
-
-
   // Set up click listeners for advanceOnClick targets
   useEffect(() => {
     if (currentStep && currentStep.advanceOnClick) {
       const handleTargetClick = (event) => {
+        console.log('handleTargetClick', event);
         const target = event.target.closest(currentStep.advanceOnClick.target);
         if (target) {
           // Remove highlighting when user clicks (mouse will move to next target)
           unhighlightMenuItem();
-          
+
           // Hide instruction banners when user clicks menu item (but keep center banners)
           banners.hideAllBanners();
-          
+
           // Add delay if specified
           const delay = currentStep.advanceDelay || 0;
-          
+
           setTimeout(() => {
             // Advance to next step BEFORE navigation happens
             onboardingService.nextStep();
             const nextStep = onboardingService.getCurrentStep();
-            
+
             if (nextStep) {
               // Update state and localStorage for the next step
               setCurrentStep(nextStep);
               setTourInfo(onboardingService.getCurrentTourInfo());
-              
+
               const onboardingState = {
                 isActive: true,
                 tourId: tourInfo?.id,
                 currentStepId: nextStep.id,
-                assistantVisible: assistantVisible
+                assistantVisible: assistantVisible,
               };
               localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
             } else {
               // No more steps, complete tour
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
           }, delay);
         }
@@ -689,7 +786,7 @@ const OnboardingOrchestrator = ({
         document.removeEventListener('click', handleTargetClick);
       };
     }
-  }, [currentStep, banners, tourInfo, assistantVisible, handleTourComplete]);
+  }, [currentStep, banners, tourInfo, assistantVisible, handleTourEndWithNextTourCheck]);
 
   // Set up change listeners for advanceOnChange targets
   useEffect(() => {
@@ -699,38 +796,37 @@ const OnboardingOrchestrator = ({
         // Also check if the event target itself matches or if it's a child of the target
         const directTarget = document.querySelector(currentStep.advanceOnChange.target);
         const isWithinTarget = directTarget && (directTarget.contains(event.target) || event.target === directTarget);
-        
+
         if (target || isWithinTarget) {
-          
           // Remove highlighting when user makes selection
           unhighlightMenuItem();
-          
+
           // Hide instruction banners
           banners.hideAllBanners();
-          
+
           // Add delay if specified
           const delay = currentStep.advanceDelay || 1000; // Default 1s delay for form changes
-          
+
           setTimeout(() => {
             // Advance to next step
             onboardingService.nextStep();
             const nextStep = onboardingService.getCurrentStep();
-            
+
             if (nextStep) {
               // Update state and localStorage for the next step
               setCurrentStep(nextStep);
               setTourInfo(onboardingService.getCurrentTourInfo());
-              
+
               const onboardingState = {
                 isActive: true,
                 tourId: tourInfo?.id,
                 currentStepId: nextStep.id,
-                assistantVisible: assistantVisible
+                assistantVisible: assistantVisible,
               };
               localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
             } else {
               // No more steps, complete tour
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
           }, delay);
         }
@@ -742,38 +838,37 @@ const OnboardingOrchestrator = ({
         // Also check if the event target itself matches or if it's a child of the target
         const directTarget = document.querySelector(currentStep.advanceOnChange.target);
         const isWithinTarget = directTarget && (directTarget.contains(event.target) || event.target === directTarget);
-        
+
         if (target || isWithinTarget) {
-          
           // Remove highlighting when user makes selection
           unhighlightMenuItem();
-          
+
           // Hide instruction banners
           banners.hideAllBanners();
-          
+
           // Add delay if specified
           const delay = currentStep.advanceDelay || 1000; // Default 1s delay for form changes
-          
+
           setTimeout(() => {
             // Advance to next step
             onboardingService.nextStep();
             const nextStep = onboardingService.getCurrentStep();
-            
+
             if (nextStep) {
               // Update state and localStorage for the next step
               setCurrentStep(nextStep);
               setTourInfo(onboardingService.getCurrentTourInfo());
-              
+
               const onboardingState = {
                 isActive: true,
                 tourId: tourInfo?.id,
                 currentStepId: nextStep.id,
-                assistantVisible: assistantVisible
+                assistantVisible: assistantVisible,
               };
               localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
             } else {
               // No more steps, complete tour
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
           }, delay);
         }
@@ -784,38 +879,37 @@ const OnboardingOrchestrator = ({
         const target = event.target.closest(currentStep.advanceOnChange.target);
         const directTarget = document.querySelector(currentStep.advanceOnChange.target);
         const isWithinTarget = directTarget && (directTarget.contains(event.target) || event.target === directTarget);
-        
+
         if (target || isWithinTarget) {
-          
           // Remove highlighting when user makes selection
           unhighlightMenuItem();
-          
+
           // Hide instruction banners
           banners.hideAllBanners();
-          
+
           // Add delay if specified
           const delay = currentStep.advanceDelay || 1000; // Default 1s delay for form changes
-          
+
           setTimeout(() => {
             // Advance to next step
             onboardingService.nextStep();
             const nextStep = onboardingService.getCurrentStep();
-            
+
             if (nextStep) {
               // Update state and localStorage for the next step
               setCurrentStep(nextStep);
               setTourInfo(onboardingService.getCurrentTourInfo());
-              
+
               const onboardingState = {
                 isActive: true,
                 tourId: tourInfo?.id,
                 currentStepId: nextStep.id,
-                assistantVisible: assistantVisible
+                assistantVisible: assistantVisible,
               };
               localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
             } else {
               // No more steps, complete tour
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
           }, delay);
         }
@@ -834,7 +928,7 @@ const OnboardingOrchestrator = ({
         document.removeEventListener('click', handleMuiSelectChange);
       };
     }
-  }, [currentStep, banners, tourInfo, assistantVisible, handleTourComplete]);
+  }, [currentStep, banners, tourInfo, assistantVisible, handleTourEndWithNextTourCheck]);
 
   // Set up focus listeners for advanceOnFocus targets
   useEffect(() => {
@@ -843,36 +937,36 @@ const OnboardingOrchestrator = ({
         const target = event.target.closest(currentStep.advanceOnFocus.target);
         if (target) {
           console.log('Focus event detected on target:', target);
-          
+
           // Remove highlighting when user focuses input
           unhighlightMenuItem();
-          
+
           // Hide instruction banners
           banners.hideAllBanners();
-          
+
           // Add delay if specified
           const delay = currentStep.advanceDelay || 500; // Default 0.5s delay for focus
-          
+
           setTimeout(() => {
             // Advance to next step
             onboardingService.nextStep();
             const nextStep = onboardingService.getCurrentStep();
-            
+
             if (nextStep) {
               // Update state and localStorage for the next step
               setCurrentStep(nextStep);
               setTourInfo(onboardingService.getCurrentTourInfo());
-              
+
               const onboardingState = {
                 isActive: true,
                 tourId: tourInfo?.id,
                 currentStepId: nextStep.id,
-                assistantVisible: assistantVisible
+                assistantVisible: assistantVisible,
               };
               localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
             } else {
               // No more steps, complete tour
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
           }, delay);
         }
@@ -886,15 +980,15 @@ const OnboardingOrchestrator = ({
         document.removeEventListener('focus', handleTargetFocus, true);
       };
     }
-  }, [currentStep, banners, tourInfo, assistantVisible, handleTourComplete]);
+  }, [currentStep, banners, tourInfo, assistantVisible, handleTourEndWithNextTourCheck]);
 
   // Handle banner-type steps
   const [lastBannerStepId, setLastBannerStepId] = useState(null);
-  
+
   useEffect(() => {
     if (currentStep && currentStep.type === 'banner' && currentStep.id !== lastBannerStepId) {
       const position = calculateBannerPositionForPlacement(currentStep.placement);
-      
+
       banners.showBanner({
         title: currentStep.content.heading,
         message: currentStep.content.description,
@@ -903,27 +997,27 @@ const OnboardingOrchestrator = ({
         autoHide: currentStep.content.autoHide !== false,
         autoHideDelay: currentStep.content.autoHideDelay || 10000,
         showCloseButton: currentStep.content.showCloseButton !== false,
-        actions: currentStep.actions?.map(action => ({
+        actions: currentStep.actions?.map((action) => ({
           text: action.text,
           type: action.type,
           onClick: () => {
             // Hide current banner immediately when any action is clicked
             banners.hideAllBanners();
-            
+
             if (action.action === 'nextStep') {
               // Handle special case for closing connect dialog
               if (currentStep?.id === 'close-connect-dialog') {
                 // Dispatch event to close connect dialog
                 window.dispatchEvent(new CustomEvent('onboarding:close-connect-dialog'));
-                
+
                 // Small delay to allow dialog to close before advancing
                 setTimeout(() => {
                   onboardingService.nextStep();
                   setCurrentStep(onboardingService.getCurrentStep());
                   setTourInfo(onboardingService.getCurrentTourInfo());
-                  
+
                   if (!onboardingService.getCurrentStep()) {
-                    handleTourComplete();
+                    handleTourEndWithNextTourCheck();
                   }
                 }, 500);
               } else {
@@ -931,9 +1025,9 @@ const OnboardingOrchestrator = ({
                 onboardingService.nextStep();
                 setCurrentStep(onboardingService.getCurrentStep());
                 setTourInfo(onboardingService.getCurrentTourInfo());
-                
+
                 if (!onboardingService.getCurrentStep()) {
-                  handleTourComplete();
+                  handleTourEndWithNextTourCheck();
                 }
               }
             } else if (action.action === 'skipTour') {
@@ -943,35 +1037,35 @@ const OnboardingOrchestrator = ({
               // Use transition method to avoid emitting completion event
               onboardingService.transitionTour();
               const nextStep = onboardingService.startTour(action.nextTourId);
-              
+
               if (nextStep) {
                 setCurrentStep(nextStep);
                 const tourInfo = onboardingService.getCurrentTourInfo();
                 setTourInfo(tourInfo);
-                
+
                 // Show assistant if tour settings specify it
                 if (tourInfo?.settings?.showAssistant) {
                   setAssistantVisible(true);
                 }
-                
+
                 // Update localStorage with new tour state
                 const onboardingState = {
                   isActive: true,
                   tourId: action.nextTourId,
                   currentStepId: nextStep.id,
-                  assistantVisible: tourInfo?.settings?.showAssistant || false
+                  assistantVisible: tourInfo?.settings?.showAssistant || false,
                 };
                 localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
               }
             } else if (action.action === 'finishTour') {
               onboardingService.completeTour('tour_complete');
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
-          }
+          },
         })),
-        icon: currentStep.content.icon
+        icon: currentStep.content.icon,
       });
-      
+
       setLastBannerStepId(currentStep.id);
     }
   }, [currentStep]);
@@ -980,20 +1074,20 @@ const OnboardingOrchestrator = ({
   useEffect(() => {
     if (currentStep && currentStep.type === 'navigation') {
       const navigation = currentStep.navigation;
-      
+
       if (navigation?.url) {
         // Navigate to the specified URL
         window.location.href = navigation.url;
-        
+
         // Auto-advance after navigation if specified
         if (currentStep.autoAdvance && currentStep.duration) {
           setTimeout(() => {
             onboardingService.nextStep();
             setCurrentStep(onboardingService.getCurrentStep());
             setTourInfo(onboardingService.getCurrentTourInfo());
-            
+
             if (!onboardingService.getCurrentStep()) {
-              handleTourComplete();
+              handleTourEndWithNextTourCheck();
             }
           }, currentStep.duration);
         }
@@ -1030,36 +1124,36 @@ const OnboardingOrchestrator = ({
     switch (currentStep.type) {
       case 'fullscreen-modal':
         return <FullscreenModal step={currentStep} onNext={handleNext} onSkip={handleSkip} />;
-      
+
       case 'modal':
         return (
-          <StepModal 
-            step={currentStep} 
-            onNext={handleNext} 
+          <StepModal
+            step={currentStep}
+            onNext={handleNext}
             onPrevious={handlePrevious}
             onSkip={handleSkip}
             onFormSubmit={handleFormSubmit}
           />
         );
-      
+
       case 'banner':
         // Banner is handled through banners system, no separate component needed
         return null;
-      
+
       case 'cursor-only':
         // Cursor guidance is handled in useEffect, no visual component needed
         return null;
-      
+
       case 'tooltip':
         return <StepTooltip step={currentStep} onNext={handleNext} onPrevious={handlePrevious} />;
-      
+
       default:
         return null;
     }
   };
 
   console.log('OnboardingOrchestrator render - isActive:', isActive, 'menuOpen:', menuOpen);
-  
+
   if (!isActive) {
     console.log('OnboardingOrchestrator not active, returning null');
     return null;
@@ -1068,49 +1162,52 @@ const OnboardingOrchestrator = ({
   return (
     <>
       {/* Main Menu */}
-      <OnboardingMenu 
-        open={menuOpen} 
+      <OnboardingMenu
+        open={menuOpen}
         onClose={() => {
           setMenuOpen(false);
           setIsActive(false);
         }}
         onStartTour={(tourId) => {
+          console.log('Starting tour:', tourId);
           const step = onboardingService.startTour(tourId);
           if (step) {
             setCurrentStep(step);
             const tourInfo = onboardingService.getCurrentTourInfo();
             setTourInfo(tourInfo);
             setMenuOpen(false);
-            
+
             // Show assistant if tour settings specify it
             if (tourInfo?.settings?.showAssistant) {
               setAssistantVisible(true);
             }
+
+            // Update user's onboarding progress in database
+            userService
+              .updateOnboardingProgress(tourId)
+              .then(() => {
+                console.log('Onboarding progress updated to:', tourId);
+              })
+              .catch((error) => {
+                console.error('Failed to update onboarding progress:', error);
+              });
           }
         }}
+        userOnboardingCurrentTour={userState.onboardingCurrentTour}
+        userCompletedTours={userState.completedTours || []}
       />
 
       {/* Assistant - Always show during onboarding */}
       {(assistantVisible || (currentStep && isActive)) && (
         <OnboardingAssistant
           visible={true}
-          currentStep={tourInfo ? (tourInfo.currentStep - 1) : 0}
+          currentStep={tourInfo ? tourInfo.currentStep - 1 : 0}
           totalSteps={tourInfo ? tourInfo.totalSteps : 0}
           stepTitle={currentStep?.content?.heading || currentStep?.title || 'Onboarding Step'}
           position="bottom-center"
           onNext={handleNext}
           onPrevious={handlePrevious}
           onFinish={handleFinish}
-          onOpenChat={() => {
-            banners.showBanner({
-              title: 'Chat Feature',
-              message: 'This would open the AI chat assistant for help.',
-              position: { top: 150, left: 400 },
-              variant: 'info',
-              autoHide: true,
-              autoHideDelay: 3000,
-            });
-          }}
         />
       )}
 
@@ -1137,7 +1234,7 @@ const FullscreenModal = ({ step, onNext, onSkip }) => (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-      }
+      },
     }}
   >
     <DialogContent sx={{ textAlign: 'center', color: 'white', maxWidth: 600 }}>
@@ -1150,7 +1247,7 @@ const FullscreenModal = ({ step, onNext, onSkip }) => (
       <Typography variant="body1" sx={{ mb: 6, fontSize: '1.2rem', opacity: 0.8 }}>
         {step.content.description}
       </Typography>
-      
+
       <Stack direction="row" spacing={3} justifyContent="center">
         {step.actions?.map((action, index) => (
           <Button
@@ -1166,8 +1263,8 @@ const FullscreenModal = ({ step, onNext, onSkip }) => (
               color: action.type === 'primary' ? '#667eea' : 'white',
               border: action.type !== 'primary' ? '2px solid white' : 'none',
               '&:hover': {
-                bgcolor: action.type === 'primary' ? '#f5f5f5' : 'rgba(255, 255, 255, 0.1)'
-              }
+                bgcolor: action.type === 'primary' ? '#f5f5f5' : 'rgba(255, 255, 255, 0.1)',
+              },
             }}
           >
             {action.text}
@@ -1183,7 +1280,7 @@ const StepModal = ({ step, onNext, onPrevious, onSkip, onFormSubmit }) => {
   const [formValues, setFormValues] = useState({});
 
   const handleFormChange = (field, value) => {
-    setFormValues(prev => ({ ...prev, [field]: value }));
+    setFormValues((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
@@ -1200,14 +1297,14 @@ const StepModal = ({ step, onNext, onPrevious, onSkip, onFormSubmit }) => {
       maxWidth="md"
       fullWidth
       PaperProps={{
-        sx: { bgcolor: '#2a2a2a', color: 'white', borderRadius: 2 }
+        sx: { bgcolor: '#2a2a2a', color: 'white', borderRadius: 2 },
       }}
     >
       <DialogContent sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ mb: 3, color: 'white' }}>
           {step.content.heading}
         </Typography>
-        
+
         <Typography variant="body1" sx={{ mb: 4, color: '#ccc' }}>
           {step.content.description}
         </Typography>
@@ -1227,9 +1324,15 @@ const StepModal = ({ step, onNext, onPrevious, onSkip, onFormSubmit }) => {
                       sx={{
                         p: 2,
                         mb: 2,
-                        bgcolor: formValues[step.content.form.field] === option.value ? 'rgba(66, 165, 245, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                        border: formValues[step.content.form.field] === option.value ? '2px solid #42a5f5' : '1px solid rgba(255, 255, 255, 0.1)',
-                        cursor: 'pointer'
+                        bgcolor:
+                          formValues[step.content.form.field] === option.value
+                            ? 'rgba(66, 165, 245, 0.2)'
+                            : 'rgba(255, 255, 255, 0.05)',
+                        border:
+                          formValues[step.content.form.field] === option.value
+                            ? '2px solid #42a5f5'
+                            : '1px solid rgba(255, 255, 255, 0.1)',
+                        cursor: 'pointer',
                       }}
                       onClick={() => handleFormChange(step.content.form.field, option.value)}
                     >
@@ -1271,9 +1374,9 @@ const StepModal = ({ step, onNext, onPrevious, onSkip, onFormSubmit }) => {
                     color: 'white',
                     '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
                     '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
-                    '&.Mui-focused fieldset': { borderColor: '#42a5f5' }
+                    '&.Mui-focused fieldset': { borderColor: '#42a5f5' },
                   },
-                  '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
+                  '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
                 }}
               />
             ))}
@@ -1321,7 +1424,7 @@ const StepTooltip = ({ step, onNext, onPrevious }) => (
       p: 3,
       borderRadius: 2,
       maxWidth: 400,
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
     }}
   >
     <Typography variant="h6" sx={{ mb: 2 }}>
@@ -1330,7 +1433,7 @@ const StepTooltip = ({ step, onNext, onPrevious }) => (
     <Typography variant="body2" sx={{ mb: 3, color: '#ccc' }}>
       {step.content.description}
     </Typography>
-    
+
     <Stack direction="row" spacing={2} justifyContent="flex-end">
       <Button variant="outlined" onClick={onPrevious} size="small">
         Previous
@@ -1342,4 +1445,4 @@ const StepTooltip = ({ step, onNext, onPrevious }) => (
   </Box>
 );
 
-export default OnboardingOrchestrator; 
+export default OnboardingOrchestrator;
