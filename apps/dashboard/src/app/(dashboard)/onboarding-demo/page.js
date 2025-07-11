@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 
 import { useInvisibleMouse } from '@/components/onboarding/InvisibleMouse';
+import { OnboardingChatContainer, ConnectAgentBanner } from '@/components/onboarding';
 
 export default function OnboardingDemoPage() {
   // OnboardingMenu state
@@ -37,6 +38,10 @@ export default function OnboardingDemoPage() {
 
   // Orchestrator state
   const [orchestratorActive, setOrchestratorActive] = useState(false);
+
+  // Chat Container state
+  const [connectBannerVisible, setConnectBannerVisible] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   const stepTitles = [
     'Install Layup',
@@ -101,6 +106,16 @@ export default function OnboardingDemoPage() {
         alert('Element clicked by invisible mouse!');
       });
     }, 1000);
+  };
+
+  const handleConnectionCheck = async () => {
+    setConnectionStatus('checking');
+    
+    // Simulate connection check
+    setTimeout(() => {
+      const isSuccess = Math.random() > 0.3;
+      setConnectionStatus(isSuccess ? 'connected' : 'error');
+    }, 2000);
   };
 
   return (
@@ -269,6 +284,73 @@ export default function OnboardingDemoPage() {
                   Hide
                 </Button>
               </Stack>
+            </Stack>
+          </Card>
+        </Grid>
+
+        {/* OnboardingChat Controls */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h5" sx={{ mb: 3 }}>
+              💬 Floating Chat Components
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+              Standalone floating chat components that can be positioned anywhere and triggered by events
+            </Typography>
+            <Stack spacing={2}>
+              <Button 
+                variant="contained" 
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
+                    detail: { mode: 'assistant' } 
+                  }));
+                }}
+                fullWidth
+              >
+                Open Assistant Chat
+              </Button>
+              <Button 
+                variant="outlined" 
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
+                    detail: { mode: 'agent-setup' } 
+                  }));
+                }}
+                fullWidth
+              >
+                Open Agent Setup Chat
+              </Button>
+              <Typography variant="caption" color="text.secondary">
+                Connection Status: {connectionStatus}
+              </Typography>
+            </Stack>
+          </Card>
+        </Grid>
+
+        {/* ConnectAgentBanner Controls */}
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h5" sx={{ mb: 3 }}>
+              🔗 Connect Agent Banner
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+              A banner that triggers the agent setup chat experience
+            </Typography>
+            <Stack spacing={2}>
+              <Button 
+                variant="contained" 
+                onClick={() => setConnectBannerVisible(true)}
+                fullWidth
+              >
+                Show Connect Agent Banner
+              </Button>
+              <Button 
+                variant="outlined" 
+                onClick={() => setConnectBannerVisible(false)}
+                fullWidth
+              >
+                Hide Banner
+              </Button>
             </Stack>
           </Card>
         </Grid>

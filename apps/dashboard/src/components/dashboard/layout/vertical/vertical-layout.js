@@ -156,7 +156,6 @@ export function VerticalLayout({ children, forceNavOpen = false }) {
         </Box>
       </Box>
       
-      <AIChatPanel />
     </React.Fragment>
   );
 }

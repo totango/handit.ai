@@ -29,6 +29,7 @@ import { Truck as TruckIcon } from '@phosphor-icons/react/dist/ssr/Truck';
 import { Upload as UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
 import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
 import { WarningDiamond as WarningDiamondIcon } from '@phosphor-icons/react/dist/ssr/WarningDiamond';
+import { Question as QuestionIcon } from '@phosphor-icons/react/dist/ssr/Question';
 
 export const icons = {
   'address-book': AddressBookIcon,
@@ -69,4 +70,5 @@ export const icons = {
   upload: UploadIcon,
   gear: GearIcon,
   users: UsersIcon,
+  question: QuestionIcon,
 };

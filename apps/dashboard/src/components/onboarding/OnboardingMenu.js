@@ -25,7 +25,52 @@ import {
   Plug,
   ShieldCheck,
   PaperPlaneTilt,
+  House,
+  Gear,
+  Question,
+  Book,
+  Calendar,
+  Link,
+  Code,
+  Rocket,
+  Shield,
+  Eye,
+  Chart,
 } from '@phosphor-icons/react';
+import onboardingService from '../../services/onboarding/onboardingService';
+
+// Icon mapping for string-based icon names
+const iconMap = {
+  'Play': Play,
+  'Plug': Plug,
+  'ShieldCheck': ShieldCheck,
+  'CheckCircle': CheckCircle,
+  'Circle': Circle,
+  'Users': Users,
+  'Database': Database,
+  'ArrowLeft': ArrowLeft,
+  'PaperPlaneTilt': PaperPlaneTilt,
+  'House': House,
+  'Gear': Gear,
+  'Question': Question,
+  'Book': Book,
+  'Calendar': Calendar,
+  'Link': Link,
+  'Code': Code,
+  'Rocket': Rocket,
+  'Shield': Shield,
+  'Eye': Eye,
+  'Chart': Chart,
+};
+
+// Helper function to render icon from string or component
+const renderIcon = (icon, props = {}) => {
+  if (typeof icon === 'string') {
+    const IconComponent = iconMap[icon];
+    return IconComponent ? React.createElement(IconComponent, props) : React.createElement(Circle, props);
+  }
+  return React.createElement(icon, props);
+};
 
 const OnboardingMenu = ({ 
   open, 
@@ -37,31 +82,8 @@ const OnboardingMenu = ({
 }) => {
   const [view, setView] = useState(currentView);
   const [chatInput, setChatInput] = useState('');
-  console.log('userOnboardingCurrentTour', userOnboardingCurrentTour);
   // Main onboarding steps based on config.json tours
-  const onboardingSteps = [
-    {
-      id: 'welcome-concept-walkthrough',
-      label: 'Platform Walkthrough',
-      icon: Play,
-      tourId: 'welcome-concept-walkthrough',
-      tourNumber: 1
-    },
-    {
-      id: 'agent-connection-flow', 
-      label: 'Connect Your First Agent',
-      icon: Plug,
-      tourId: 'agent-connection-flow',
-      tourNumber: 2
-    },
-    {
-      id: 'evaluation-suite-navigation',
-      label: 'Enable Evaluation',
-      icon: ShieldCheck,
-      tourId: 'evaluation-suite-navigation',
-      tourNumber: 3
-    }
-  ];
+  const onboardingSteps = onboardingService.getTourDefinition();
 
   // Calculate current tour number and completed tours
   const currentTourNumber = userOnboardingCurrentTour 
@@ -243,7 +265,8 @@ const OnboardingMenu = ({
                     }}
                   >
                     <ListItemIcon sx={{ color: item.id === 'onboarding' ? '#42a5f5' : '#888', minWidth: 36 }}>
-                      {React.createElement(item.icon, { size: 16 })}
+                      {/* icons are phosphor icons in string, render the corresponding icon */}
+                      {renderIcon(item.icon, { size: 16 })}
                     </ListItemIcon>
                     <ListItemText 
                       primary={item.label}
@@ -445,7 +468,7 @@ const OnboardingMenu = ({
                         {isCompleted ? (
                           <CheckCircle size={18} color="#42a5f5" weight="fill" />
                         ) : (
-                          React.createElement(step.icon, { 
+                          renderIcon(step.icon, { 
                             size: 18, 
                             color: isCurrent ? "#42a5f5" : "#888" 
                           })

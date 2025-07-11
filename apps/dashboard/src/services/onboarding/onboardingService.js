@@ -34,6 +34,35 @@ class OnboardingService {
     }
   }
 
+  getTourDefinition() {
+    return this.config.tours.map((tour, idx) => {
+      return {
+        id: tour.id,
+        label: tour.name,
+        tourId: tour.id,
+        tourNumber: idx + 1,
+        icon: tour.icon || 'Play',
+      };
+    });
+  }
+
+  getTourOrder() {
+    const ids = this.config.tours.map((tour) => tour.id);
+    const map = {};
+    for (let i = 0; i < ids.length; i++) {
+      if (i === ids.length - 1) {
+        map[ids[i]] = null;
+      } else {
+        map[ids[i]] = ids[i + 1];
+      }
+    }
+    return map;
+  }
+
+  getInitialTourId() {
+    return this.config.tours[0].id;
+  }
+
   // Check triggers and return appropriate tour
   checkTriggers() {
     const triggers = this.config.triggers;
@@ -186,7 +215,7 @@ class OnboardingService {
     });
 
     // Update user state based on completed tour
-    if (this.currentTour.id === 'welcome-concept-walkthrough') {
+    if (this.currentTour.id === this.getInitialTourId()) {
       this.userState.hasCompletedWalkthrough = true;
     }
 
@@ -207,7 +236,7 @@ class OnboardingService {
     });
 
     // Update user state based on completed tour
-    if (this.currentTour.id === 'welcome-concept-walkthrough') {
+    if (this.currentTour.id === this.getInitialTourId()) {
       this.userState.hasCompletedWalkthrough = true;
     }
 
@@ -238,7 +267,7 @@ class OnboardingService {
       reason,
     });
 
-    if (this.currentTour.id === 'welcome-concept-walkthrough') {
+    if (this.currentTour.id === this.getInitialTourId()) {
       this.userState.hasSkippedWalkthrough = true;
     }
 

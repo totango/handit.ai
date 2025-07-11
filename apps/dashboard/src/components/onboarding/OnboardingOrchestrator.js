@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 
 import onboardingService from '../../services/onboarding/onboardingService';
-import userService from '../../services/userService';
 import { OnboardingAssistant, OnboardingMenu, useInvisibleMouse, useOnboardingBanners } from './index';
 
 const OnboardingOrchestrator = ({
@@ -24,6 +23,7 @@ const OnboardingOrchestrator = ({
   userState = {},
   onComplete = () => {},
   onSkip = () => {},
+  updateOnboardingProgress = () => {},
 }) => {
   // Core state
   const [isActive, setIsActive] = useState(false);
@@ -82,9 +82,9 @@ const OnboardingOrchestrator = ({
   }, [mouse, banners, onComplete]);
 
   // Helper function to handle tour completion with next tour checking
-  const handleTourEndWithNextTourCheck = useCallback(() => {
+  const handleTourEndWithNextTourCheck = useCallback((forceNextTour = false) => {
     // Check if there are more steps in current tour
-    if (onboardingService.getCurrentStep()) {
+    if (onboardingService.getCurrentStep() && !forceNextTour) {
       // Still have steps, don't complete
       return;
     }
@@ -94,11 +94,7 @@ const OnboardingOrchestrator = ({
     let nextTourId = null;
 
     // Define the tour progression order
-    const tourOrder = {
-      'welcome-concept-walkthrough': 'agent-connection-flow',
-      'agent-connection-flow': 'evaluation-suite-navigation',
-      'evaluation-suite-navigation': null, // No next tour, finish
-    };
+    const tourOrder = onboardingService.getTourOrder();
 
     nextTourId = tourOrder[currentTourId];
 
@@ -117,7 +113,7 @@ const OnboardingOrchestrator = ({
         }
 
         // Update user's onboarding progress in database
-        userService.updateOnboardingProgress(nextTourId);
+        updateOnboardingProgress(nextTourId);
 
         // Update localStorage with new tour state
         const onboardingState = {
@@ -132,7 +128,7 @@ const OnboardingOrchestrator = ({
       // No more tours, complete all tours
       handleTourComplete();
     }
-  }, [tourInfo, handleTourComplete, userService]);
+  }, [tourInfo, handleTourComplete, updateOnboardingProgress]);
 
   // Tour skip handler
   const handleTourSkip = useCallback(() => {
@@ -162,7 +158,7 @@ const OnboardingOrchestrator = ({
   }, [mouse, banners, onSkip]);
 
   // Start onboarding flow
-  const startOnboarding = useCallback((tourId = 'welcome-concept-walkthrough') => {
+  const startOnboarding = useCallback((tourId = onboardingService.getInitialTourId()) => {
     const step = onboardingService.startTour(tourId);
 
     if (step) {
@@ -177,7 +173,7 @@ const OnboardingOrchestrator = ({
       }
 
       // Update user's onboarding progress in database
-      userService.updateOnboardingProgress(tourId);
+      updateOnboardingProgress(tourId);
 
       // Persist onboarding state to localStorage
       const onboardingState = {
@@ -387,7 +383,7 @@ const OnboardingOrchestrator = ({
     // Only start if we haven't already started onboarding for this new user
     if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current) {
       hasStartedNewUserOnboarding.current = true;
-      startOnboarding('welcome-concept-walkthrough');
+      startOnboarding(onboardingService.getInitialTourId());
       return;
     }
 
@@ -441,8 +437,8 @@ const OnboardingOrchestrator = ({
   }, [handleTourSkip]);
 
   const handleFinish = useCallback(() => {
-    onboardingService.completeTour('tour_complete');
-    handleTourEndWithNextTourCheck();
+    //onboardingService.completeTour('tour_complete');
+    handleTourEndWithNextTourCheck(true);
   }, [handleTourEndWithNextTourCheck]);
 
   // Form handling
@@ -529,7 +525,7 @@ const OnboardingOrchestrator = ({
                         setTourInfo(onboardingService.getCurrentTourInfo());
 
                         if (!onboardingService.getCurrentStep()) {
-                          userService.updateOnboardingProgress(action.nextTourId);
+                          updateOnboardingProgress(action.nextTourId);
 
                           handleTourEndWithNextTourCheck();
                         }
@@ -541,7 +537,7 @@ const OnboardingOrchestrator = ({
                       setTourInfo(onboardingService.getCurrentTourInfo());
 
                       if (!onboardingService.getCurrentStep()) {
-                        userService.updateOnboardingProgress(action.nextTourId);
+                        updateOnboardingProgress(action.nextTourId);
 
                         handleTourEndWithNextTourCheck();
                       }
@@ -1124,7 +1120,7 @@ const OnboardingOrchestrator = ({
             }
 
             // Update user's onboarding progress in database
-            userService.updateOnboardingProgress(tourId);
+            updateOnboardingProgress(tourId);
           }
         }}
         userOnboardingCurrentTour={userState.onboardingCurrentTour}

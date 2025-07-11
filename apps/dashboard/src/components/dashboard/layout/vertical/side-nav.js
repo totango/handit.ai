@@ -9,12 +9,15 @@ import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { CaretRight as CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight';
 import { CaretLeft as CaretLeftIcon } from '@phosphor-icons/react';
-import { Question } from '@phosphor-icons/react/dist/ssr/Question';
+import { SignOut } from '@phosphor-icons/react/dist/ssr/SignOut';
 
 import { paths } from '@/paths';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
 import { useSettings } from '@/hooks/use-settings';
 import { Logo } from '@/components/core/logo';
+import { useUser } from '@/hooks/use-user';
+import { authClient } from '@/lib/auth/custom/client';
+import { toast } from '@/components/core/toaster';
 
 import { icons } from '../nav-icons';
 import { WorkspacesSwitch } from '../workspaces-switch';
@@ -27,6 +30,8 @@ const logoColors = {
 
 export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpen = false }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { checkSession } = useUser();
   const {
     settings: { colorScheme = 'light' },
   } = useSettings();
@@ -53,6 +58,32 @@ export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpe
       window.removeEventListener('onboardingMouseLeave', handleMouseLeave);
     };
   }, []);
+
+  // Handle sign out functionality
+  const handleSignOut = React.useCallback(async () => {
+    try {
+      const { error } = await authClient.signOut();
+
+      if (error) {
+        console.error('Sign out error', error);
+        toast.error('Something went wrong, unable to sign out');
+        return;
+      }
+
+      // Refresh the auth state
+      await checkSession?.();
+
+      // Refresh the router and redirect to sign-in
+      router.refresh();
+      router.push('/auth/custom/sign-in');
+
+    } catch (err) {
+      console.error('Sign out error', err);
+      toast.error('Something went wrong, unable to sign out');
+      // Even if sign out fails, redirect to sign-in page
+      router.push('/auth/custom/sign-in');
+    }
+  }, [checkSession, router]);
   
   // Force open during onboarding or use normal open state
   const isOpen = forceOpen || open;
@@ -105,13 +136,10 @@ export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpe
         {renderNavGroups({ items, pathname, open: isOpen, highlightedMenuItem })}
       </Box>
 
-      {/* Onboarding Trigger Button */}
+      {/* Sign Out Button */}
       <Box sx={{ p: 2, borderTop: '1px solid var(--SideNav-border)' }}>
         <Box
-          onClick={() => {
-            // Trigger onboarding menu
-            window.dispatchEvent(new CustomEvent('openOnboardingMenu'));
-          }}
+          onClick={handleSignOut}
           sx={{
             alignItems: 'center',
             borderRadius: 1,
@@ -131,7 +159,7 @@ export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpe
           tabIndex={0}
         >
           <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', flex: '0 0 auto' }}>
-            <Question
+            <SignOut
               fill="var(--NavItem-color)"
               fontSize="var(--icon-fontSize-md)"
             />
@@ -147,7 +175,7 @@ export function SideNav({ color = 'evident', items = [], open, setOpen, forceOpe
                   lineHeight: '28px' 
                 }}
               >
-                Need Help?
+                Sign Out
               </Typography>
             </Box>
           )}
@@ -223,6 +251,7 @@ function NavItem({
   title,
   open: navOpen,
   highlightedMenuItem,
+  onboardingTrigger,
 }) {
   const [open, setOpen] = React.useState(forceOpen);
   const [modelId, setModelId] = React.useState(null);
@@ -261,16 +290,28 @@ function NavItem({
               role: 'button',
             }
           : {
-              ...(href
+              ...(onboardingTrigger
                 ? {
-                    component: external ? 'a' : RouterLink,
-                    href: href + (href === '/dynamic-review' && modelId !== null ? '?modelId=' + modelId : ''),
-                    target: external ? '_blank' : undefined,
-                    rel: external ? 'noreferrer' : undefined,
-                    'data-nav-item': title,
-                    'data-href': href,
+                    onClick: () => {
+                      window.dispatchEvent(new CustomEvent('openOnboardingMenu'));
+                    },
+                    onKeyUp: (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        window.dispatchEvent(new CustomEvent('openOnboardingMenu'));
+                      }
+                    },
+                    role: 'button',
                   }
-                : { role: 'button' }),
+                : href
+                  ? {
+                      component: external ? 'a' : RouterLink,
+                      href: href + (href === '/dynamic-review' && modelId !== null ? '?modelId=' + modelId : ''),
+                      target: external ? '_blank' : undefined,
+                      rel: external ? 'noreferrer' : undefined,
+                      'data-nav-item': title,
+                      'data-href': href,
+                    }
+                  : { role: 'button' }),
             })}
         sx={{
           alignItems: 'center',
