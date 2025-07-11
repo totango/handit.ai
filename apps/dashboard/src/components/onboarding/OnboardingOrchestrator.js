@@ -18,12 +18,12 @@ import onboardingService from '../../services/onboarding/onboardingService';
 import userService from '../../services/userService';
 import { OnboardingAssistant, OnboardingMenu, useInvisibleMouse, useOnboardingBanners } from './index';
 
-const OnboardingOrchestrator = ({ 
-  autoStart = false, 
+const OnboardingOrchestrator = ({
+  autoStart = false,
   triggerOnMount = true,
   userState = {},
   onComplete = () => {},
-  onSkip = () => {}
+  onSkip = () => {},
 }) => {
   // Core state
   const [isActive, setIsActive] = useState(false);
@@ -31,7 +31,7 @@ const OnboardingOrchestrator = ({
   const [currentStep, setCurrentStep] = useState(null);
   const [tourInfo, setTourInfo] = useState(null);
   const [formData, setFormData] = useState({});
-  
+
   // Component states
   const [assistantVisible, setAssistantVisible] = useState(false);
   const banners = useOnboardingBanners();
@@ -39,15 +39,6 @@ const OnboardingOrchestrator = ({
 
   // Ref to track if we've already started onboarding for a new user
   const hasStartedNewUserOnboarding = useRef(false);
-
-  // Debug logging for userState changes
-  useEffect(() => {
-    console.log('OnboardingOrchestrator: userState updated:', {
-      onboardingCurrentTour: userState.onboardingCurrentTour,
-      userId: userState.userId,
-      email: userState.email
-    });
-  }, [userState]);
 
   // Trigger highlighting when mouse targets a menu item
   const highlightMenuItem = (menuTitle) => {
@@ -126,14 +117,7 @@ const OnboardingOrchestrator = ({
         }
 
         // Update user's onboarding progress in database
-        userService
-          .updateOnboardingProgress(nextTourId)
-          .then(() => {
-            console.log('Onboarding progress updated to next tour:', nextTourId);
-          })
-          .catch((error) => {
-            console.error('Failed to update onboarding progress:', error);
-          });
+        userService.updateOnboardingProgress(nextTourId);
 
         // Update localStorage with new tour state
         const onboardingState = {
@@ -193,14 +177,7 @@ const OnboardingOrchestrator = ({
       }
 
       // Update user's onboarding progress in database
-      userService
-        .updateOnboardingProgress(tourId)
-        .then(() => {
-          console.log('Onboarding progress updated to:', tourId);
-        })
-        .catch((error) => {
-          console.error('Failed to update onboarding progress:', error);
-        });
+      userService.updateOnboardingProgress(tourId);
 
       // Persist onboarding state to localStorage
       const onboardingState = {
@@ -268,8 +245,6 @@ const OnboardingOrchestrator = ({
                     detail: { active: true },
                   })
                 );
-
-                console.log('Onboarding state restored:', restoredStep.id);
               }
             }
           }, 500); // Small delay to ensure DOM is ready
@@ -410,9 +385,7 @@ const OnboardingOrchestrator = ({
 
     // Check if user is new (onboardingCurrentTour is null) and start onboarding immediately
     // Only start if we haven't already started onboarding for this new user
-    console.log('userState.onboardingCurrentTour', userState);
     if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current) {
-      console.log('New user detected (onboardingCurrentTour is null), starting onboarding automatically');
       hasStartedNewUserOnboarding.current = true;
       startOnboarding('welcome-concept-walkthrough');
       return;
@@ -421,9 +394,7 @@ const OnboardingOrchestrator = ({
     // Auto-trigger if enabled
     if (triggerOnMount) {
       const suggestedTour = onboardingService.checkTriggers();
-      console.log('Suggested tour:', suggestedTour);
       if (suggestedTour && autoStart) {
-        console.log('Auto-starting onboarding via triggers');
         startOnboarding();
         return;
       }
@@ -431,7 +402,6 @@ const OnboardingOrchestrator = ({
 
     // Direct start if autoStart is true (bypass triggers entirely)
     if (autoStart) {
-      console.log('Direct auto-start onboarding (bypassing triggers)');
       startOnboarding();
     }
 
@@ -495,12 +465,10 @@ const OnboardingOrchestrator = ({
 
     const executeGuidanceStep = () => {
       if (currentStepIndex >= guidance.steps.length) {
-        console.log('All guidance steps completed');
         return;
       }
 
       const guidanceStep = guidance.steps[currentStepIndex];
-      console.log('Executing guidance step:', guidanceStep);
 
       // Find the target element
       const targetElement = findTargetElement(guidanceStep.target, guidanceStep.targetText);
@@ -518,8 +486,6 @@ const OnboardingOrchestrator = ({
       const mousePosition = mouse.animateToElement(guidanceStep.target, {
         duration: 2000,
         onComplete: () => {
-          console.log('Mouse animation completed to:', guidanceStep.target);
-
           // Highlight the target menu item when mouse reaches it
           const menuTitle = targetElement.getAttribute('data-nav-item');
           if (menuTitle) {
@@ -563,14 +529,8 @@ const OnboardingOrchestrator = ({
                         setTourInfo(onboardingService.getCurrentTourInfo());
 
                         if (!onboardingService.getCurrentStep()) {
-                          userService
-                            .updateOnboardingProgress(action.nextTourId)
-                            .then(() => {
-                              console.log('Onboarding progress updated to next tour:', action.nextTourId);
-                            })
-                            .catch((error) => {
-                              console.error('Failed to update onboarding progress:', error);
-                            });
+                          userService.updateOnboardingProgress(action.nextTourId);
+
                           handleTourEndWithNextTourCheck();
                         }
                       }, 500);
@@ -581,14 +541,8 @@ const OnboardingOrchestrator = ({
                       setTourInfo(onboardingService.getCurrentTourInfo());
 
                       if (!onboardingService.getCurrentStep()) {
-                        userService
-                          .updateOnboardingProgress(action.nextTourId)
-                          .then(() => {
-                            console.log('Onboarding progress updated to next tour:', action.nextTourId);
-                          })
-                          .catch((error) => {
-                            console.error('Failed to update onboarding progress:', error);
-                          });
+                        userService.updateOnboardingProgress(action.nextTourId);
+
                         handleTourEndWithNextTourCheck();
                       }
                     }
@@ -643,23 +597,17 @@ const OnboardingOrchestrator = ({
 
   // Helper function to find target elements
   const findTargetElement = (selector, targetText) => {
-    console.log('Finding element with selector:', selector, 'and text:', targetText);
-
     if (targetText) {
       // Find element containing specific text
       const elements = document.querySelectorAll(selector);
-      console.log('Found elements matching selector:', elements);
       for (let element of elements) {
-        console.log('Checking element text:', element.textContent, 'against target:', targetText);
         if (element.textContent?.includes(targetText)) {
-          console.log('Match found!', element);
           return element;
         }
       }
     }
 
     const element = document.querySelector(selector);
-    console.log('Direct selector result:', element);
     return element;
   };
 
@@ -741,7 +689,6 @@ const OnboardingOrchestrator = ({
   useEffect(() => {
     if (currentStep && currentStep.advanceOnClick) {
       const handleTargetClick = (event) => {
-        console.log('handleTargetClick', event);
         const target = event.target.closest(currentStep.advanceOnClick.target);
         if (target) {
           // Remove highlighting when user clicks (mouse will move to next target)
@@ -936,8 +883,6 @@ const OnboardingOrchestrator = ({
       const handleTargetFocus = (event) => {
         const target = event.target.closest(currentStep.advanceOnFocus.target);
         if (target) {
-          console.log('Focus event detected on target:', target);
-
           // Remove highlighting when user focuses input
           unhighlightMenuItem();
 
@@ -1152,10 +1097,7 @@ const OnboardingOrchestrator = ({
     }
   };
 
-  console.log('OnboardingOrchestrator render - isActive:', isActive, 'menuOpen:', menuOpen);
-
   if (!isActive) {
-    console.log('OnboardingOrchestrator not active, returning null');
     return null;
   }
 
@@ -1169,7 +1111,6 @@ const OnboardingOrchestrator = ({
           setIsActive(false);
         }}
         onStartTour={(tourId) => {
-          console.log('Starting tour:', tourId);
           const step = onboardingService.startTour(tourId);
           if (step) {
             setCurrentStep(step);
@@ -1183,14 +1124,7 @@ const OnboardingOrchestrator = ({
             }
 
             // Update user's onboarding progress in database
-            userService
-              .updateOnboardingProgress(tourId)
-              .then(() => {
-                console.log('Onboarding progress updated to:', tourId);
-              })
-              .catch((error) => {
-                console.error('Failed to update onboarding progress:', error);
-              });
+            userService.updateOnboardingProgress(tourId);
           }
         }}
         userOnboardingCurrentTour={userState.onboardingCurrentTour}
