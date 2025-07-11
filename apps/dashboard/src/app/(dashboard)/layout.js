@@ -20,6 +20,7 @@ import { Rocket } from '@phosphor-icons/react';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { DynamicLayout } from '@/components/dashboard/layout/dynamic-layout';
 import { OnboardingOrchestrator } from '@/components/onboarding';
+import { useUser } from '@/hooks/use-user';
 
 /**
  * Main dashboard layout component
@@ -29,41 +30,67 @@ import { OnboardingOrchestrator } from '@/components/onboarding';
  * @returns {JSX.Element} The authenticated dashboard layout structure
  */
 export default function Layout({ children }) {
-  // Global onboarding state  
-  const [showOnboarding, setShowOnboarding] = React.useState(false); // Don't start by default
-
   return (
     <AuthGuard>
-      <DynamicLayout>
-        {children}
-
-        {/* Floating onboarding trigger - backup option */}
-        {!showOnboarding && (
-          <Tooltip title="Start HandIt Onboarding">
-            <Fab
-              color="primary"
-              size="small"
-              onClick={() => setShowOnboarding(true)}
-              sx={{
-                position: 'fixed',
-                bottom: 24,
-                right: 24,
-                zIndex: 1000,
-              }}
-            >
-              <Rocket size={20} />
-            </Fab>
-          </Tooltip>
-        )}
-
-        {/* Onboarding System - Always render so it can listen for sidebar events */}
-        <OnboardingOrchestrator
-          autoStart={false}
-          triggerOnMount={false}
-          onComplete={() => setShowOnboarding(false)}
-          onSkip={() => setShowOnboarding(false)}
-        />
-      </DynamicLayout>
+      <LayoutInner>{children}</LayoutInner>
     </AuthGuard>
+  );
+}
+
+/**
+ * Inner component that has access to user data through useUser hook
+ * This needs to be separate since useUser must be used within AuthGuard
+ */
+function LayoutInner({ children }) {
+  const { user, checkSession } = useUser();
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+
+  // Debug logging for user state changes
+  React.useEffect(() => {
+    console.log('Layout: User state updated:', {
+      onboardingCurrentTour: user?.onboardingCurrentTour,
+      userId: user?.id,
+      email: user?.email
+    });
+  }, [user]);
+
+  return (
+    <DynamicLayout>
+      {children}
+
+      {/* Floating onboarding trigger - backup option */}
+      {!showOnboarding && (
+        <Tooltip title="Start HandIt Onboarding">
+          <Fab
+            color="primary"
+            size="small"
+            onClick={() => setShowOnboarding(true)}
+            sx={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24,
+              zIndex: 1000,
+            }}
+          >
+            <Rocket size={20} />
+          </Fab>
+        </Tooltip>
+      )}
+
+      {/* Onboarding System - Always render so it can listen for sidebar events */}
+      <OnboardingOrchestrator
+        autoStart={false}
+        triggerOnMount={false}
+        userState={{
+          onboardingCurrentTour: user?.onboardingCurrentTour || null,
+          userId: user?.id,
+          email: user?.email,
+          firstName: user?.firstName,
+          lastName: user?.lastName
+        }}
+        onComplete={() => setShowOnboarding(false)}
+        onSkip={() => setShowOnboarding(false)}
+      />
+    </DynamicLayout>
   );
 }

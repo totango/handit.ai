@@ -11,6 +11,8 @@ import {
   LinearProgress,
   Chip,
   Stack,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
   X as CloseIcon,
@@ -22,18 +24,69 @@ import {
   Play,
   Plug,
   ShieldCheck,
+  PaperPlaneTilt,
 } from '@phosphor-icons/react';
 
-const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick, onStartTour }) => {
+const OnboardingMenu = ({ 
+  open, 
+  onClose, 
+  currentView = 'main', 
+  onOnboardingClick, 
+  onStartTour,
+  userOnboardingCurrentTour = null // Current tour user is on
+}) => {
   const [view, setView] = useState(currentView);
-  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [chatInput, setChatInput] = useState('');
+  console.log('userOnboardingCurrentTour', userOnboardingCurrentTour);
+  // Main onboarding steps based on config.json tours
+  const onboardingSteps = [
+    {
+      id: 'welcome-concept-walkthrough',
+      label: 'Platform Walkthrough',
+      icon: Play,
+      tourId: 'welcome-concept-walkthrough',
+      tourNumber: 1
+    },
+    {
+      id: 'agent-connection-flow', 
+      label: 'Connect Your First Agent',
+      icon: Plug,
+      tourId: 'agent-connection-flow',
+      tourNumber: 2
+    },
+    {
+      id: 'evaluation-suite-navigation',
+      label: 'Enable Evaluation',
+      icon: ShieldCheck,
+      tourId: 'evaluation-suite-navigation',
+      tourNumber: 3
+    }
+  ];
+
+  // Calculate current tour number and completed tours
+  const currentTourNumber = userOnboardingCurrentTour 
+    ? onboardingSteps.find(step => step.tourId === userOnboardingCurrentTour)?.tourNumber || 1
+    : (userOnboardingCurrentTour === null ? 4 : 1); // null means all tours completed
+  
+  // Calculate completed tours: all tours with numbers less than current tour
+  const completedTourIds = onboardingSteps
+    .filter(step => step.tourNumber < currentTourNumber)
+    .map(step => step.tourId);
+  
+  const completedCount = completedTourIds.length;
+  const totalTours = onboardingSteps.length;
+  const completionPercentage = userOnboardingCurrentTour === null ? 100 : (completedCount / totalTours) * 100;
+
+  // Badge shows remaining tours or completion status
+  const badgeText = userOnboardingCurrentTour === null ? 'Done' : `${totalTours - currentTourNumber + 1}`;
 
   const menuItems = [
     { 
-      id: 'ai-agent-questions', 
-      label: 'AI Agent Questions', 
+      id: 'onboarding', 
+      label: 'Onboarding', 
       icon: CheckCircle,
-      completed: false 
+      badge: badgeText,
+      completed: completedCount === totalTours 
     },
     { 
       id: 'docs', 
@@ -43,45 +96,11 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
     },
     { 
       id: 'contact-calendly', 
-      label: 'Schedule a Call', 
+      label: 'Office Hours', 
       icon: Users,
       completed: false 
-    },
-    { 
-      id: 'onboarding', 
-      label: 'Onboarding', 
-      icon: CheckCircle,
-      badge: 3,
-      completed: false 
-    },
-  ];
-
-  // Main onboarding steps based on config.json tours
-  const onboardingSteps = [
-    {
-      id: 'welcome-concept-walkthrough',
-      label: 'Platform Walkthrough',
-      icon: Play,
-      tourId: 'welcome-concept-walkthrough',
-      completed: false
-    },
-    {
-      id: 'wizard-guided-setup', 
-      label: 'Connect Your First Agent',
-      icon: Plug,
-      tourId: 'wizard-guided-setup',
-      completed: false
-    },
-    {
-      id: 'evaluator-wizard',
-      label: 'Enable Evaluation',
-      icon: ShieldCheck,
-      tourId: 'evaluator-wizard',
-      completed: false
     }
   ];
-
-  const completionPercentage = (completedSteps.size / onboardingSteps.length) * 100;
 
   const handleItemClick = (itemId) => {
     if (itemId === 'onboarding') {
@@ -95,10 +114,7 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
       window.open('https://docs.handit.ai', '_blank');
     } else if (itemId === 'contact-calendly') {
       // Open Calendly scheduling
-      window.open('https://calendly.com/handit-team', '_blank');
-    } else {
-      // Handle other item clicks
-      setCompletedSteps(prev => new Set([...prev, itemId]));
+      window.open('https://calendly.com/cristhian-handit/30min', '_blank');
     }
   };
 
@@ -107,9 +123,24 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
     if (onStartTour) {
       onStartTour(step.tourId);
     }
+  };
+
+  const handleChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // TODO: Implement API call here
+    console.log('Chat input:', chatInput);
     
-    // Mark as completed for demo purposes
-    setCompletedSteps(prev => new Set([...prev, step.id]));
+    // For now, just clear the input
+    setChatInput('');
+  };
+
+  const handleChatKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleChatSubmit(e);
+    }
   };
 
   if (!open) return null;
@@ -192,7 +223,7 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
               </Typography>
 
               {/* All Menu Items */}
-              <List sx={{ p: 0, mb: 1 }}>
+              <List sx={{ p: 0, mb: 2 }}>
                 {menuItems.map((item) => (
                   <ListItem 
                     key={item.id}
@@ -239,6 +270,72 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
                   </ListItem>
                 ))}
               </List>
+
+              {/* Chat Input Section */}
+              <Box sx={{ 
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                pt: 2
+              }}>
+                <form onSubmit={handleChatSubmit}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="How can we guide you?"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={handleChatKeyPress}
+                    multiline
+                    maxRows={1}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: 2,
+                        fontSize: '0.7rem',
+                        '& fieldset': {
+                          borderColor: 'rgba(255, 255, 255, 0.2)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#42a5f5',
+                        },
+                      },
+                      '& .MuiOutlinedInput-input': {
+                        color: 'white',
+                        padding: '0px 10px',
+                        fontSize: '0.9rem',
+                        '&::placeholder': {
+                          color: 'rgba(255, 255, 255, 0.5)',
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            type="submit"
+                            size="small"
+                            disabled={!chatInput.trim()}
+                            sx={{
+                              color: chatInput.trim() ? '#42a5f5' : 'rgba(255, 255, 255, 0.3)',
+                              '&:hover': {
+                                bgcolor: 'rgba(66, 165, 245, 0.1)',
+                              },
+                              '&.Mui-disabled': {
+                                color: 'rgba(255, 255, 255, 0.3)',
+                              },
+                            }}
+                          >
+                            <PaperPlaneTilt size={16} />
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </form>
+              </Box>
             </Box>
           </>
         ) : (
@@ -324,7 +421,8 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
 
               <List sx={{ p: 0 }}>
                 {onboardingSteps.map((step, index) => {
-                  const isCompleted = completedSteps.has(step.id);
+                  const isCompleted = completedTourIds.includes(step.tourId);
+                  const isCurrent = userOnboardingCurrentTour === step.tourId;
                   return (
                     <ListItem 
                       key={step.id}
@@ -336,8 +434,9 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
                         borderRadius: 1,
                         mx: 0,
                         transition: 'all 0.2s ease',
+                        bgcolor: isCurrent ? 'rgba(66, 165, 245, 0.15)' : 'transparent',
                         '&:hover': { 
-                          bgcolor: 'rgba(255, 255, 255, 0.08)',
+                          bgcolor: isCurrent ? 'rgba(66, 165, 245, 0.25)' : 'rgba(255, 255, 255, 0.08)',
                           transform: 'translateX(3px)'
                         }
                       }}
@@ -346,15 +445,18 @@ const OnboardingMenu = ({ open, onClose, currentView = 'main', onOnboardingClick
                         {isCompleted ? (
                           <CheckCircle size={18} color="#42a5f5" weight="fill" />
                         ) : (
-                          React.createElement(step.icon, { size: 18, color: "#888" })
+                          React.createElement(step.icon, { 
+                            size: 18, 
+                            color: isCurrent ? "#42a5f5" : "#888" 
+                          })
                         )}
                       </ListItemIcon>
                       <ListItemText 
                         primary={step.label}
                         primaryTypographyProps={{ 
-                          color: isCompleted ? '#42a5f5' : 'white',
+                          color: isCompleted ? '#42a5f5' : (isCurrent ? '#42a5f5' : 'white'),
                           fontSize: '0.8rem',
-                          fontWeight: isCompleted ? 500 : 400,
+                          fontWeight: isCompleted ? 500 : (isCurrent ? 500 : 400),
                           sx: { textDecoration: isCompleted ? 'line-through' : 'none' }
                         }}
                       />

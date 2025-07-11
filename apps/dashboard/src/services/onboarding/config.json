@@ -58,34 +58,34 @@
           "trackSkips": true,
           "trackTimeSpent": true
         },
-                 "steps": [
-           {
-             "stepNumber": 1,
-             "id": "welcome-banner",
-             "type": "banner",
-             "title": "Welcome to HandIt",
-             "target": "body",
-             "placement": "center",
-             "content": {
-               "heading": "Welcome to HandIt! 👋",
-               "description": "The engine that makes your AI agents improve themselves automatically. Let's explore how HandIt traces, evaluates, and optimizes your AI agents.",
-               "variant": "welcome",
-               "showCloseButton": false,
-               "autoHide": false,
-               "icon": "🚀"
-             },
-             "actions": [
-               {
-                 "text": "Start Exploring",
-                 "type": "secondary",
-                 "action": "nextStep",
-                 "analytics": "welcome_start_dashboard_tour"
-               }
-             ],
-             "duration": null,
-             "autoAdvance": false
-           },
-           {
+        "steps": [
+          {
+            "stepNumber": 1,
+            "id": "welcome-banner",
+            "type": "banner",
+            "title": "Welcome to HandIt",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "Welcome to HandIt! 👋",
+              "description": "AI agents that improve automatically. Let's explore tracing, evaluation, and optimization.",
+              "variant": "welcome",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🚀"
+            },
+            "actions": [
+              {
+                "text": "Start Tour",
+                "type": "secondary",
+                "action": "nextStep",
+                "analytics": "welcome_start_dashboard_tour"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
             "stepNumber": 2,
             "id": "dashboard-tracing-guide",
             "type": "cursor-only",
@@ -93,8 +93,8 @@
             "target": "[data-nav-item='Tracing']",
             "placement": "right",
             "content": {
-              "heading": "Click on Tracing to Continue",
-              "description": "This section shows you all your agent executions in real time"
+              "heading": "Click on Tracing",
+              "description": "See all agent executions in real time"
             },
             "actions": [],
             "duration": null,
@@ -115,8 +115,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Tracing",
-                    "description": "This section shows you all your agent executions in real time. Here you can see inputs, outputs, errors and performance metrics.",
-                    "tip": "Complete observability for debugging and understanding your AI agent's behavior",
+                    "description": "View all agent executions with inputs, outputs, and performance metrics.",
+                    "tip": "Complete observability for debugging",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -133,8 +133,8 @@
             "target": "[data-nav-item='Evaluation Suite']",
             "placement": "right",
             "content": {
-              "heading": "Click on Evaluation Suite to Continue",
-              "description": "This is where you set up automated quality checks for your AI agent"
+              "heading": "Click on Evaluation Suite",
+              "description": "Set up automated quality checks"
             },
             "actions": [],
             "duration": null,
@@ -155,8 +155,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Evaluation Suite",
-                    "description": "Set up automated quality checks to continuously monitor your agent's performance and catch issues before they impact users.",
-                    "tip": "Create custom evaluators for accuracy, completeness, tone, compliance, and more",
+                    "description": "Create automated quality checks for accuracy, completeness, and more.",
+                    "tip": "Monitor your agent's performance",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -173,8 +173,8 @@
             "target": "[data-nav-item='Release Hub']",
             "placement": "right",
             "content": {
-              "heading": "Click on Release Hub to Continue",
-              "description": "This is HandIt's AI improvement engine - where your agent evolves automatically"
+              "heading": "Click on Release Hub",
+              "description": "AI improvement engine - agents evolve automatically"
             },
             "actions": [],
             "duration": null,
@@ -195,8 +195,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Release Hub",
-                    "description": "HandIt's AI optimization engine automatically improves your agent. It analyzes performance, generates better prompts, tests improvements, and provides safe deployment recommendations.",
-                    "tip": "Transform your AI from static to self-improving with automated optimization",
+                    "description": "Automatic optimization engine. Analyzes performance and improves prompts.",
+                    "tip": "Transform static AI to self-improving",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -214,7 +214,7 @@
             "placement": "center",
             "content": {
               "heading": "🎉 Great Job!",
-              "description": "You've explored HandIt's core features: Tracing for observability, Evaluation Suite for quality monitoring, and Release Hub for continuous improvement. Ready to connect your agent?",
+              "description": "You've seen HandIt's core features. Ready to connect your agent?",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -222,7 +222,7 @@
             },
             "actions": [
               {
-                "text": "Connect Your Agent",
+                "text": "Connect Agent",
                 "type": "primary", 
                 "action": "nextTour",
                 "nextTourId": "agent-connection-flow",
@@ -255,7 +255,7 @@
             "placement": "right",
             "content": {
               "heading": "Click on Agent Performance",
-              "description": "Let's go to the Agent Performance section to connect your agent"
+              "description": "Go to Agent Performance to connect your agent"
             },
             "actions": [],
             "duration": null,
@@ -276,8 +276,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Agent Performance",
-                    "description": "This section is where you can manage and connect your AI agents to HandIt's monitoring and optimization platform.",
-                    "tip": "From here, you'll be able to connect your agent and start getting insights",
+                    "description": "Manage and connect your AI agents here.",
+                    "tip": "Connect your agent to start monitoring",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -295,7 +295,7 @@
             "placement": "bottom",
             "content": {
               "heading": "Click Connect Agent",
-              "description": "Now click the Connect Agent button in the top navigation"
+              "description": "Click the Connect Agent button"
             },
             "actions": [],
             "duration": null,
@@ -316,8 +316,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click Connect Agent",
-                    "description": "This button will open the agent connection dialog where you can integrate your AI agent with HandIt's monitoring platform.",
-                    "tip": "Once connected, you'll see real-time traces and get automatic performance insights",
+                    "description": "Opens the agent connection dialog.",
+                    "tip": "Start monitoring your agent",
                     "position": "bottom",
                     "showNearTarget": true
                   },
@@ -335,7 +335,7 @@
             "placement": "top-center",
             "content": {
               "heading": "📝 Tell Us About Your Agent",
-              "description": "Please fill out the three questions below: your use case, programming language/tool, and a description of your agent. This helps us generate personalized setup instructions.",
+              "description": "Fill out the three questions: use case, programming language, and description.",
               "variant": "info",
               "showCloseButton": false,
               "autoHide": false,
@@ -343,7 +343,7 @@
             },
             "actions": [
               {
-                "text": "Got it, I'll fill this out",
+                "text": "Got it",
                 "type": "primary",
                 "action": "nextStep",
                 "analytics": "form_instructions_acknowledged"
@@ -387,8 +387,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "🚀 Generate Your Guide",
-                    "description": "Once you've filled out all three fields above, click here to generate personalized setup instructions.",
-                    "tip": "The button will be enabled automatically when all fields are completed",
+                    "description": "Generate personalized setup instructions.",
+                    "tip": "Button enables when all fields are filled",
                     "position": "top",
                     "showNearTarget": true
                   },
@@ -406,7 +406,7 @@
             "placement": "top",
             "content": {
               "heading": "View Your Instructions",
-              "description": "Click to see your personalized setup guide"
+              "description": "Click to see your setup guide"
             },
             "actions": [],
             "duration": null,
@@ -433,8 +433,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "📖 View Your Guide",
-                    "description": "Click to see your personalized setup instructions. Follow the steps to integrate HandIt with your agent.",
-                    "tip": "Copy the code snippets and follow the installation instructions",
+                    "description": "See your personalized setup instructions.",
+                    "tip": "Copy code snippets and follow steps",
                     "position": "top",
                     "showNearTarget": true
                   },
@@ -452,7 +452,7 @@
             "placement": "center",
             "content": {
               "heading": "📋 Follow Your Setup Guide",
-              "description": "Please follow the personalized setup instructions shown above. Copy the code snippets, install the SDK, and integrate HandIt with your agent. Once you've completed the setup, come back and test your connection.",
+              "description": "Follow the instructions above. Copy code snippets, install SDK, and integrate HandIt.",
               "variant": "info",
               "showCloseButton": false,
               "autoHide": false,
@@ -460,7 +460,7 @@
             },
             "actions": [
               {
-                "text": "I've followed the instructions",
+                "text": "Done",
                 "type": "primary",
                 "action": "nextStep",
                 "analytics": "setup_instructions_followed"
@@ -478,7 +478,7 @@
             "placement": "left",
             "content": {
               "heading": "Test Your Connection",
-              "description": "Click to verify your agent is connected to HandIt"
+              "description": "Click to verify your agent is connected"
             },
             "actions": [],
             "duration": null,
@@ -495,8 +495,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "🔗 Test Your Connection",
-                    "description": "Click the Test Connection button in the bottom-right to verify your agent is properly connected to HandIt. The onboarding will continue automatically if the connection is successful.",
-                    "tip": "This confirms that traces and monitoring are working correctly",
+                    "description": "Verify your agent is connected to HandIt.",
+                    "tip": "Continues automatically if successful",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -505,7 +505,6 @@
               ]
             }
           },
-
           {
             "stepNumber": 8,
             "id": "setup-complete",
@@ -515,7 +514,7 @@
             "placement": "center",
             "content": {
               "heading": "🎉 Connection Successful!",
-              "description": "Excellent! Your agent is now connected to HandIt. Now let's set up quality evaluation to ensure your agent performs at its best. We'll help you create an evaluator to monitor your agent's responses.",
+              "description": "Agent connected! Now let's set up evaluation to monitor quality.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -556,7 +555,7 @@
             "placement": "center",
             "content": {
               "heading": "🎯 Let's Set Up Evaluation",
-              "description": "First, let's close the connection dialog so we can navigate to the Evaluation Suite to create an evaluator for your agent.",
+              "description": "Close the connection dialog so we can set up evaluation.",
               "variant": "info",
               "showCloseButton": false,
               "autoHide": false,
@@ -564,7 +563,7 @@
             },
             "actions": [
               {
-                "text": "Close Dialog & Continue",
+                "text": "Continue",
                 "type": "primary",
                 "action": "nextStep",
                 "analytics": "close_connection_dialog_continue"
@@ -582,7 +581,7 @@
             "placement": "right",
             "content": {
               "heading": "Click on Evaluation Suite",
-              "description": "Now let's navigate to the Evaluation Suite to create an evaluator"
+              "description": "Navigate to create an evaluator"
             },
             "actions": [],
             "duration": null,
@@ -603,8 +602,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Evaluation Suite",
-                    "description": "This is where you can create and manage evaluators to monitor your agent's quality and performance.",
-                    "tip": "Evaluators help ensure your agent provides accurate and helpful responses",
+                    "description": "Create and manage quality evaluators.",
+                    "tip": "Monitor your agent's performance",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -622,7 +621,7 @@
             "placement": "bottom",
             "content": {
               "heading": "Click on the Last Evaluator",
-              "description": "Click on the last evaluator in the list to see how evaluators work"
+              "description": "Click the last evaluator to see how they work"
             },
             "actions": [],
             "duration": null,
@@ -648,8 +647,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "📊 Click on this Evaluator",
-                    "description": "Click on this evaluator to see how quality evaluation works. This will help you understand what evaluators can do for your agent.",
-                    "tip": "You can see evaluator details and learn how to create your own",
+                    "description": "See how quality evaluation works.",
+                    "tip": "Learn about evaluator details",
                     "position": "bottom",
                     "showNearTarget": true
                   },
@@ -660,14 +659,246 @@
           },
           {
             "stepNumber": 4,
-            "id": "evaluation-complete",
+            "id": "add-token-button",
+            "type": "cursor-only",
+            "title": "Add Token",
+            "target": "[data-testid='add-token-button']",
+            "placement": "bottom",
+            "content": {
+              "heading": "Add a Token",
+              "description": "Add an API token for this evaluator"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-testid='add-token-button']",
+              "description": "Click the Add Token button"
+            },
+            "waitForElement": {
+              "target": "[data-testid='add-token-button']",
+              "timeout": 10000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='add-token-button']",
+                  "targetText": "Add Token",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "🔑 Add API Token",
+                    "description": "Add token for the evaluator to use.",
+                    "tip": "Token enables LLM API calls",
+                    "position": "bottom",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 5,
+            "id": "fill-token-details",
             "type": "banner",
-            "title": "Evaluation Tour Complete",
+            "title": "Fill Token Details",
             "target": "body",
             "placement": "center",
             "content": {
-              "heading": "🎉 Great Job!",
-              "description": "You've successfully connected your agent and learned about evaluation! Your agent is now ready to be monitored and optimized. HandIt will help you create evaluators specific to your use case when you're ready.",
+              "heading": "📝 Add Your API Token",
+              "description": "Fill out: provider, name, and token value.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "📝"
+            },
+            "actions": [
+              {
+                "text": "Done",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "token_details_filled"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 6,
+            "id": "save-token-button",
+            "type": "cursor-only",
+            "title": "Save Token",
+            "target": "[data-testid='save-token-button']",
+            "placement": "top",
+            "content": {
+              "heading": "Save the Token",
+              "description": "Click Save to create the token"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-testid='save-token-button']",
+              "description": "Click the Save button"
+            },
+            "waitForElement": {
+              "target": "[data-testid='save-token-button']:not([disabled])",
+              "timeout": 30000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='save-token-button']",
+                  "targetText": "Save",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "💾 Save Token",
+                    "description": "Save and auto-select as default token.",
+                    "tip": "Token stored securely",
+                    "position": "top",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 7,
+            "id": "associate-llm-node-button",
+            "type": "cursor-only",
+            "title": "Associate LLM Node",
+            "target": "[data-testid='associate-new-llm-node-button']",
+            "placement": "bottom",
+            "content": {
+              "heading": "Associate LLM Node",
+              "description": "Connect evaluator to your agent's LLM nodes"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-testid='associate-new-llm-node-button']",
+              "description": "Click the Associate New LLM Node button"
+            },
+            "waitForElement": {
+              "target": "[data-testid='associate-new-llm-node-button']",
+              "timeout": 15000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 2000,
+              "steps": [
+                {
+                  "target": "[data-testid='associate-new-llm-node-button']",
+                  "targetText": "Associate New LLM Node",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "🔗 Connect to LLM Nodes",
+                    "description": "Connect evaluator to your agent's nodes.",
+                    "tip": "Choose nodes to monitor",
+                    "position": "bottom",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 8,
+            "id": "select-nodes-banner",
+            "type": "banner",
+            "title": "Select Nodes to Evaluate",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🎯 Choose Your Nodes",
+              "description": "Select the nodes you want this evaluator to monitor.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🎯"
+            },
+            "actions": [
+              {
+                "text": "Done",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "nodes_selected"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 9,
+            "id": "save-association-button",
+            "type": "cursor-only",
+            "title": "Save Association",
+            "target": "[data-testid='save-association-button']",
+            "placement": "top",
+            "content": {
+              "heading": "Save the Association",
+              "description": "Click Save to connect evaluator to selected nodes"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-testid='save-association-button']",
+              "description": "Click the Save button"
+            },
+            "waitForElement": {
+              "target": "[data-testid='save-association-button']:not([disabled])",
+              "timeout": 30000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='save-association-button']",
+                  "targetText": "Save",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "💾 Save Association",
+                    "description": "Connect evaluator to selected nodes.",
+                    "tip": "HandIt will start monitoring these nodes",
+                    "position": "top",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 10,
+            "id": "evaluation-complete",
+            "type": "banner",
+            "title": "Evaluation Setup Complete",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🎉 Congratulations!",
+              "description": "HandIt will automatically evaluate ~30% of entries and optimize prompts when needed.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -675,10 +906,10 @@
             },
             "actions": [
               {
-                "text": "Finish Tour",
+                "text": "Finish Setup",
                 "type": "primary",
                 "action": "finishTour",
-                "analytics": "evaluation_navigation_complete"
+                "analytics": "evaluation_setup_complete"
               }
             ],
             "duration": null,

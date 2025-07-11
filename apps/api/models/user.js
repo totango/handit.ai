@@ -84,6 +84,11 @@ export default (sequelize, DataTypes) => {
         key: 'id'
       }
     },
+    onboardingCurrentTour: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      field: 'onboarding_current_tour'
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,

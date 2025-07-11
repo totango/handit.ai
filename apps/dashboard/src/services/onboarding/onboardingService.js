@@ -1,4 +1,5 @@
 import onboardingConfig from './config.json';
+import userService from '../../services/userService';
 
 class OnboardingService {
   constructor() {
@@ -13,7 +14,7 @@ class OnboardingService {
       hasIntegratedSDK: false,
       agentType: null,
       agentName: null,
-      integrationToken: null
+      integrationToken: null,
     };
     this.analytics = [];
     this.listeners = new Map();
@@ -36,13 +37,13 @@ class OnboardingService {
   // Check triggers and return appropriate tour
   checkTriggers() {
     const triggers = this.config.triggers;
-    
+
     for (const [triggerName, trigger] of Object.entries(triggers)) {
       if (this.evaluateCondition(trigger.condition)) {
         return this.getTour(trigger.tourId);
       }
     }
-    
+
     return null;
   }
 
@@ -51,8 +52,8 @@ class OnboardingService {
     const context = {
       user: this.userState,
       events: {
-        firstTrace: this.userState.hasIntegratedSDK
-      }
+        firstTrace: this.userState.hasIntegratedSDK,
+      },
     };
 
     try {
@@ -66,7 +67,7 @@ class OnboardingService {
 
   // Get tour by ID
   getTour(tourId) {
-    return this.config.tours.find(tour => tour.id === tourId);
+    return this.config.tours.find((tour) => tour.id === tourId);
   }
 
   // Start a tour
@@ -80,7 +81,7 @@ class OnboardingService {
     this.currentTour = tour;
     this.currentStepIndex = 0;
     this.trackEvent('tour_started', { tourId, userId: this.userState.userId });
-    
+
     return this.getCurrentStep();
   }
 
@@ -97,15 +98,17 @@ class OnboardingService {
   // Process step content with dynamic replacements
   processStepContent(step) {
     const processed = JSON.parse(JSON.stringify(step));
-    
+
     // Replace dynamic content placeholders
     const replacements = {
       '{{user.agentName}}': this.userState.agentName || 'Your Agent',
       '{{user.agentType}}': this.userState.agentType || 'custom-agent',
       '{{user.integrationToken}}': this.userState.integrationToken,
       '{{recommendedEvaluator.name}}': this.getRecommendedEvaluator()?.name || 'Quality Evaluator',
-      '{{recommendedEvaluator.description}}': this.getRecommendedEvaluator()?.description || 'Evaluates response quality',
-      '{{recommendedEvaluator.defaultCriteria}}': this.getRecommendedEvaluator()?.defaultCriteria || 'Check for accuracy and completeness'
+      '{{recommendedEvaluator.description}}':
+        this.getRecommendedEvaluator()?.description || 'Evaluates response quality',
+      '{{recommendedEvaluator.defaultCriteria}}':
+        this.getRecommendedEvaluator()?.defaultCriteria || 'Check for accuracy and completeness',
     };
 
     return this.replaceContentRecursively(processed, replacements);
@@ -120,11 +123,11 @@ class OnboardingService {
       }
       return result;
     }
-    
+
     if (Array.isArray(obj)) {
-      return obj.map(item => this.replaceContentRecursively(item, replacements));
+      return obj.map((item) => this.replaceContentRecursively(item, replacements));
     }
-    
+
     if (obj && typeof obj === 'object') {
       const result = {};
       for (const [key, value] of Object.entries(obj)) {
@@ -132,7 +135,7 @@ class OnboardingService {
       }
       return result;
     }
-    
+
     return obj;
   }
 
@@ -151,12 +154,12 @@ class OnboardingService {
       this.trackEvent('step_completed', {
         tourId: this.currentTour.id,
         stepId: currentStep.id,
-        userId: this.userState.userId
+        userId: this.userState.userId,
       });
     }
 
     this.currentStepIndex++;
-    
+
     if (this.currentStepIndex >= this.currentTour.steps.length) {
       this.completeTour();
       return null;
@@ -179,7 +182,7 @@ class OnboardingService {
 
     this.trackEvent('tour_completed', {
       tourId: this.currentTour.id,
-      userId: this.userState.userId
+      userId: this.userState.userId,
     });
 
     // Update user state based on completed tour
@@ -189,18 +192,18 @@ class OnboardingService {
 
     this.currentTour = null;
     this.currentStepIndex = 0;
-    
+
     // Trigger listeners
     this.emit('tourCompleted', this.currentTour);
   }
 
   // Transition to next tour without emitting completion event
-  transitionTour() {
+  async transitionTour() {
     if (!this.currentTour) return;
 
     this.trackEvent('tour_transitioned', {
       tourId: this.currentTour.id,
-      userId: this.userState.userId
+      userId: this.userState.userId,
     });
 
     // Update user state based on completed tour
@@ -208,11 +211,20 @@ class OnboardingService {
       this.userState.hasCompletedWalkthrough = true;
     }
 
-    this.currentTour = null;
-    this.currentStepIndex = 0;
-    
     // Don't emit 'tourCompleted' event during transitions
     console.log('Tour transitioned without UI reset');
+
+    userService.updateOnboardingProgress(this.currentTour.id)
+      .then(() => {
+        console.log('Onboarding progress updated to next tour:', this.currentTour.id);
+      })
+      .catch((error) => {
+        console.error('Failed to update onboarding progress:', error);
+      });
+
+
+    this.currentTour = null;
+    this.currentStepIndex = 0;
   }
 
   // Skip current tour
@@ -223,7 +235,7 @@ class OnboardingService {
       tourId: this.currentTour.id,
       stepId: this.getCurrentStep()?.id,
       userId: this.userState.userId,
-      reason
+      reason,
     });
 
     if (this.currentTour.id === 'welcome-concept-walkthrough') {
@@ -232,7 +244,7 @@ class OnboardingService {
 
     this.currentTour = null;
     this.currentStepIndex = 0;
-    
+
     this.emit('tourSkipped', { reason });
   }
 
@@ -242,10 +254,10 @@ class OnboardingService {
       this.userState = { ...this.userState, ...formData };
       this.trackEvent('integration_completed', {
         userId: this.userState.userId,
-        agentType: formData.agentType
+        agentType: formData.agentType,
       });
     }
-    
+
     return this.nextStep();
   }
 
@@ -254,7 +266,7 @@ class OnboardingService {
     this.userState.hasIntegratedSDK = true;
     this.trackEvent('first_trace_received', {
       userId: this.userState.userId,
-      traceId: 'trace_' + Date.now()
+      traceId: 'trace_' + Date.now(),
     });
   }
 
@@ -262,29 +274,33 @@ class OnboardingService {
   createEvaluator(criteria, threshold) {
     this.trackEvent('evaluator_created', {
       userId: this.userState.userId,
-      evaluatorType: this.userState.agentType
+      evaluatorType: this.userState.agentType,
     });
-    
+
     return this.nextStep();
   }
 
   // Get terminology based on agent type
   getTerminology() {
     const agentType = this.userState.agentType || 'custom-agent';
-    return this.config.personalizations?.agentType?.[agentType]?.terminology || {
-      agent: 'AI agent',
-      inputs: 'inputs',
-      outputs: 'outputs'
-    };
+    return (
+      this.config.personalizations?.agentType?.[agentType]?.terminology || {
+        agent: 'AI agent',
+        inputs: 'inputs',
+        outputs: 'outputs',
+      }
+    );
   }
 
   // Get examples based on agent type
   getExamples() {
     const agentType = this.userState.agentType || 'custom-agent';
-    return this.config.personalizations?.agentType?.[agentType]?.examples || {
-      inputExample: 'user query',
-      outputExample: 'agent response'
-    };
+    return (
+      this.config.personalizations?.agentType?.[agentType]?.examples || {
+        inputExample: 'user query',
+        outputExample: 'agent response',
+      }
+    );
   }
 
   // Track analytics events
@@ -292,13 +308,22 @@ class OnboardingService {
     const event = {
       type: eventType,
       timestamp: new Date().toISOString(),
-      ...data
+      ...data,
     };
-    
+
     this.analytics.push(event);
-    console.log('Onboarding Event:', event);
-    
-    // In production, send to analytics service
+
+    if (eventType === 'tour_completed') {
+      const nextTourId = data.tourId;
+      userService
+        .updateOnboardingProgress(nextTourId)
+        .then(() => {
+          console.log('Onboarding progress updated to next tour:', this.currentTour.id);
+        })
+        .catch((error) => {
+          console.error('Failed to update onboarding progress:', error);
+        });
+    }
   }
 
   // Event system
@@ -311,19 +336,19 @@ class OnboardingService {
 
   emit(eventName, data) {
     const callbacks = this.listeners.get(eventName) || [];
-    callbacks.forEach(callback => callback(data));
+    callbacks.forEach((callback) => callback(data));
   }
 
   // Get current tour info
   getCurrentTourInfo() {
     if (!this.currentTour) return null;
-    
+
     return {
       tourId: this.currentTour.id,
       tourName: this.currentTour.name,
       currentStep: this.currentStepIndex + 1,
       totalSteps: this.currentTour.steps.length,
-      progress: ((this.currentStepIndex + 1) / this.currentTour.steps.length) * 100
+      progress: ((this.currentStepIndex + 1) / this.currentTour.steps.length) * 100,
     };
   }
 
@@ -340,7 +365,7 @@ class OnboardingService {
       hasIntegratedSDK: false,
       agentType: null,
       agentName: null,
-      integrationToken: null
+      integrationToken: null,
     };
   }
 }
@@ -348,4 +373,4 @@ class OnboardingService {
 // Create singleton instance
 const onboardingService = new OnboardingService();
 
-export default onboardingService; 
+export default onboardingService;

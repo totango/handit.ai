@@ -63,6 +63,30 @@ export const updateMe = async (req, res) => {
   }
 }
 
+export const updateOnboardingProgress = async (req, res) => {
+  const { user } = req;
+  const { userId } = user;
+  const { onboardingCurrentTour } = req.body;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await user.update({
+      onboardingCurrentTour: onboardingCurrentTour
+    });
+
+    res.status(200).json({
+      message: 'Onboarding progress updated successfully',
+      onboardingCurrentTour: user.onboardingCurrentTour
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id);

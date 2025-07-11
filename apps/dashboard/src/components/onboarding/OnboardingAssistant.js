@@ -19,10 +19,7 @@ const OnboardingAssistant = ({
   currentStep = 0, 
   totalSteps = 5, 
   onNext, 
-  onPrevious, 
   onFinish,
-  onOpenChat,
-  onClose,
   stepTitle = "Install HandIt",
   position = "bottom-right"
 }) => {
@@ -72,21 +69,21 @@ const OnboardingAssistant = ({
               color: 'white',
               borderRadius: 3,
               overflow: 'hidden',
-              minWidth: 360,
-              maxWidth: 420,
+              minWidth: 320,
+              maxWidth: 380,
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             }}
           >
             {/* Content */}
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: 2 }}>
               {/* Title */}
               <Typography 
                 variant="h6" 
                 sx={{ 
                   color: 'white', 
-                  fontSize: '1.1rem',
+                  fontSize: '1rem',
                   fontWeight: 500,
-                  mb: 2,
+                  mb: 1.5,
                   textAlign: 'center'
                 }}
               >
@@ -100,7 +97,7 @@ const OnboardingAssistant = ({
                 sx={{ 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  mb: 3 
+                  mb: 2 
                 }}
               >
                 {Array.from({ length: totalSteps }).map((_, index) => (
@@ -128,34 +125,18 @@ const OnboardingAssistant = ({
               </Stack>
 
               {/* Buttons */}
-              <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
-                <Button
-                  variant="text"
-                  onClick={onOpenChat}
-                  sx={{ 
-                    color: '#999',
-                    textTransform: 'none',
-                    fontSize: '0.875rem',
-                    minWidth: 'auto',
-                    '&:hover': {
-                      color: 'white',
-                      bgcolor: 'rgba(255, 255, 255, 0.1)'
-                    }
-                  }}
-                >
-                  Open Chat
-                </Button>
-                
-                <Stack direction="row" spacing={2}>
-                  <Button
+              <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+                                  <Button
                     variant="text"
                     onClick={isLastStep ? onFinish : onNext}
                     sx={{
                       color: 'white',
                       textTransform: 'none',
-                      fontSize: '0.875rem',
+                      fontSize: '0.8rem',
                       bgcolor: 'rgba(255, 255, 255, 0.1)',
-                      px: 3,
+                      px: 2.5,
+                      py: 0.4,
+                      minHeight: 'unset',
                       '&:hover': {
                         bgcolor: 'rgba(255, 255, 255, 0.2)'
                       }
@@ -170,9 +151,11 @@ const OnboardingAssistant = ({
                     sx={{
                       color: 'white',
                       textTransform: 'none',
-                      fontSize: '0.875rem',
+                      fontSize: '0.8rem',
                       bgcolor: 'rgba(255, 255, 255, 0.1)',
-                      px: 3,
+                      px: 2.5,
+                      py: 0.4,
+                      minHeight: 'unset',
                       '&:hover': {
                         bgcolor: 'rgba(255, 255, 255, 0.2)'
                       }
@@ -180,7 +163,6 @@ const OnboardingAssistant = ({
                   >
                     Finish
                   </Button>
-                </Stack>
               </Stack>
             </Box>
           </Card>

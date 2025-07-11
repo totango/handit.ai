@@ -15,11 +15,7 @@ import {
   Slider,
 } from '@mui/material';
 
-import OnboardingMenu from '@/components/onboarding/OnboardingMenu';
-import OnboardingAssistant from '@/components/onboarding/OnboardingAssistant';
-import OnboardingBanner, { useOnboardingBanners } from '@/components/onboarding/OnboardingBanner';
 import { useInvisibleMouse } from '@/components/onboarding/InvisibleMouse';
-import { OnboardingOrchestrator } from '@/components/onboarding';
 
 export default function OnboardingDemoPage() {
   // OnboardingMenu state
@@ -38,7 +34,6 @@ export default function OnboardingDemoPage() {
 
   // Mouse state
   const mouse = useInvisibleMouse();
-  const banners = useOnboardingBanners();
 
   // Orchestrator state
   const [orchestratorActive, setOrchestratorActive] = useState(false);
@@ -344,43 +339,7 @@ export default function OnboardingDemoPage() {
         </Grid>
       </Grid>
 
-      {/* Components */}
-      <OnboardingMenu 
-        open={menuOpen} 
-        onClose={() => setMenuOpen(false)} 
-      />
       
-      <OnboardingAssistant
-        visible={assistantVisible}
-        currentStep={currentStep}
-        totalSteps={5}
-        stepTitle={stepTitle}
-        onNext={handleNextStep}
-        onPrevious={handlePreviousStep}
-        onFinish={handleFinish}
-        onOpenChat={handleOpenChat}
-      />
-
-      {/* JSON-Driven Orchestrator */}
-      {orchestratorActive && (
-        <OnboardingOrchestrator
-          autoStart={false}
-          triggerOnMount={false}
-          userState={{
-            userId: 'demo-user',
-            agentType: 'document-ai',
-            agentName: 'Demo Agent'
-          }}
-          onComplete={(tour) => {
-            setOrchestratorActive(false);
-            alert(`Onboarding completed! Tour: ${tour?.name || 'Unknown'}`);
-          }}
-          onSkip={(data) => {
-            setOrchestratorActive(false);
-            alert(`Onboarding skipped. Reason: ${data.reason}`);
-          }}
-        />
-      )}
 
       {/* Banner and Mouse containers */}
       <banners.BannerContainer />
