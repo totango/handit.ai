@@ -41,6 +41,7 @@
         "name": "Welcome & Concept Walkthrough",
         "description": "Interactive dashboard walkthrough with assistant guidance",
         "type": "guided",
+        "icon": "Play",
         "settings": {
           "canSkip": true,
           "showOnlyOnce": true,
@@ -239,6 +240,7 @@
         "name": "Agent Connection Flow", 
         "description": "Guide users to connect their agent through the performance section",
         "type": "guided",
+        "icon": "Plug",
         "settings": {
           "canSkip": false,
           "showProgress": true,
@@ -539,6 +541,7 @@
         "name": "Evaluation Suite Navigation",
         "description": "Navigate to evaluation suite and create an evaluator",
         "type": "guided",
+        "icon": "ShieldCheck",
         "settings": {
           "canSkip": false,
           "showProgress": true,
@@ -914,155 +917,6 @@
             ],
             "duration": null,
             "autoAdvance": false
-          }
-        ]
-      },
-      {
-        "id": "evaluator-wizard",
-        "name": "Evaluator Setup Wizard",
-        "description": "Set up automatic evaluation for agent quality",
-        "type": "overlay",
-        "settings": {
-          "canSkip": false,
-          "showProgress": true,
-          "position": "center"
-        },
-        "steps": [
-          {
-            "id": "recommended-evaluator",
-            "type": "modal",
-            "title": "Set Up Quality Evaluation",
-            "content": {
-              "heading": "Recommended Evaluator",
-              "description": "Based on your agent type ({{user.agentType}}), we recommend this evaluator:",
-              "evaluatorCard": {
-                "name": "{{recommendedEvaluator.name}}",
-                "description": "{{recommendedEvaluator.description}}",
-                "icon": "{{recommendedEvaluator.icon}}",
-                "benefits": "{{recommendedEvaluator.benefits}}",
-                "examples": "{{recommendedEvaluator.examples}}"
-              },
-              "customization": {
-                "enabled": true,
-                "fields": [
-                  {
-                    "name": "evaluationCriteria",
-                    "type": "textarea",
-                    "label": "Evaluation Criteria",
-                    "placeholder": "What should we check for in your agent's responses?",
-                    "value": "{{recommendedEvaluator.defaultCriteria}}"
-                  },
-                  {
-                    "name": "scoreThreshold",
-                    "type": "slider",
-                    "label": "Pass Score Threshold",
-                    "min": 1,
-                    "max": 10,
-                    "value": 7,
-                    "description": "Responses scoring below this will be flagged for optimization"
-                  }
-                ]
-              }
-            },
-            "actions": [
-              {
-                "text": "Create Evaluator",
-                "type": "primary",
-                "action": "createEvaluator",
-                "analytics": "evaluator_created"
-              },
-              {
-                "text": "Customize Further",
-                "type": "secondary",
-                "action": "openCustomization",
-                "analytics": "evaluator_customize"
-              }
-            ],
-            "autoAttachment": {
-              "enabled": true,
-              "condition": "nodeNameMatches(['response_generator', 'document_processor', 'main_agent'])",
-              "message": "✅ Auto-attached to matching nodes in your trace"
-            }
-          },
-          {
-            "id": "evaluator-success",
-            "type": "tooltip",
-            "title": "Evaluator Created!",
-            "target": ".evaluators-section",
-            "placement": "bottom",
-            "content": {
-              "heading": "🎉 Your evaluator is now active",
-              "description": "Every trace will now be automatically evaluated for quality. You'll see results in real-time.",
-              "nextSteps": [
-                "Run your agent a few more times",
-                "Check the evaluation scores in the dashboard", 
-                "HandIt will suggest optimizations automatically"
-              ],
-              "visual": {
-                "type": "progress-animation",
-                "steps": ["Trace", "Evaluate", "Optimize", "Deploy"]
-              }
-            },
-            "actions": [
-              {
-                "text": "Run My Agent Again",
-                "type": "primary",
-                "action": "encourageMoreTraces",
-                "analytics": "evaluator_success_run_agent"
-              },
-              {
-                "text": "See Evaluation Results",
-                "type": "secondary",
-                "action": "viewEvaluations",
-                "analytics": "evaluator_success_view_results"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "first-optimization",
-        "name": "First Optimization Experience",
-        "description": "Guide through the first automatic optimization",
-        "type": "contextual",
-        "trigger": {
-          "condition": "evaluations.count >= 3 && evaluations.lowScoreCount >= 1",
-          "autoStart": true
-        },
-        "steps": [
-          {
-            "id": "optimization-available",
-            "type": "notification",
-            "title": "🚀 Optimization Ready!",
-            "target": ".optimizations-section",
-            "placement": "top",
-            "content": {
-              "heading": "HandIt found optimization opportunities",
-              "description": "Based on your evaluation results, we've generated improvements for your agent.",
-              "preview": {
-                "improvementPercentage": "{{optimization.improvementPercentage}}",
-                "metric": "{{optimization.primaryMetric}}",
-                "issuesFixed": "{{optimization.issuesFixed}}"
-              }
-            },
-            "actions": [
-              {
-                "text": "Review Optimization",
-                "type": "primary",
-                "action": "openOptimization",
-                "analytics": "first_optimization_review"
-              },
-              {
-                "text": "Not Now",
-                "type": "ghost",
-                "action": "dismissOptimization",
-                "analytics": "first_optimization_dismiss"
-              }
-            ],
-            "persistence": {
-              "showUntilInteraction": true,
-              "maxShowCount": 3
-            }
           }
         ]
       }

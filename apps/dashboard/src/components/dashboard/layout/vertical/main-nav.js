@@ -408,11 +408,15 @@ export function MainNav({ items, title, onNewEvaluator }) {
             )}
             
             {/* Existing buttons */}
-            {(path.includes('ag-monitoring') || path.includes('ag-tracing')) && (
+            {(
               <Button
                 variant="outlined"
                 color="primary"
-                onClick={() => setConnectDialogOpen(true)}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
+                    detail: { mode: 'assistant', message: 'I want to connect my agent to Handit' } 
+                  }));
+                }}
                 startIcon={<TerminalWindow size={16} />}
                 data-testid="connect-agent-button"
                 sx={{
@@ -428,12 +432,6 @@ export function MainNav({ items, title, onNewEvaluator }) {
                 Connect Agent
               </Button>
             )}
-            <Divider
-              flexItem
-              orientation="vertical"
-              sx={{ borderColor: 'var(--MainNav-divider)', display: { xs: 'none', lg: 'block' } }}
-            />
-            <UserButton />
           </Stack>
         </Box>
       </Box>
@@ -498,40 +496,3 @@ export function MainNav({ items, title, onNewEvaluator }) {
     </React.Fragment>
   );
 }
-
-function UserButton() {
-  const popover = usePopover();
-  const { user } = useUser();
-
-  return (
-    <React.Fragment>
-      <Box
-        component="button"
-        onClick={popover.handleOpen}
-        ref={popover.anchorRef}
-        sx={{ border: 'none', background: 'transparent', cursor: 'pointer', p: 0 }}
-      >
-        <Badge
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          color="success"
-          sx={{
-            '& .MuiBadge-dot': {
-              border: '2px solid var(--MainNav-background)',
-              borderRadius: '50%',
-              bottom: '6px',
-              height: '12px',
-              right: '6px',
-              width: '12px',
-            },
-          }}
-        >
-          <Avatar src={user?.company?.icon && user?.company?.icon?.length > 0 ? user?.company?.icon : user?.avatar} />
-        </Badge>
-      </Box>
-      <UserPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
-    </React.Fragment>
-  );
-}
-
-// Add a new CodeBlock component
-

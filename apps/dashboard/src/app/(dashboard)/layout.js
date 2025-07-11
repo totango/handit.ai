@@ -19,8 +19,9 @@ import { Rocket } from '@phosphor-icons/react';
 
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { DynamicLayout } from '@/components/dashboard/layout/dynamic-layout';
-import { OnboardingOrchestrator } from '@/components/onboarding';
+import { OnboardingOrchestrator, OnboardingChatContainer } from '@/components/onboarding';
 import { useUser } from '@/hooks/use-user';
+import userService from '../../services/userService';
 
 /**
  * Main dashboard layout component
@@ -44,6 +45,7 @@ export default function Layout({ children }) {
 function LayoutInner({ children }) {
   const { user, checkSession } = useUser();
   const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [connectionStatus, setConnectionStatus] = React.useState('disconnected');
 
   // Debug logging for user state changes
   React.useEffect(() => {
@@ -53,6 +55,39 @@ function LayoutInner({ children }) {
       email: user?.email
     });
   }, [user]);
+
+  // Connection check handler
+  const handleConnectionCheck = async () => {
+    setConnectionStatus('checking');
+    
+    try {
+      // TODO: Replace with actual API call to check agent connection
+      // Simulate connection check
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // For demo purposes, randomly succeed or fail
+      const isSuccess = Math.random() > 0.3;
+      
+      if (isSuccess) {
+        setConnectionStatus('connected');
+        // Optionally call onboarding completion
+        setTimeout(() => {
+          setConnectionStatus('disconnected'); // Reset for demo
+        }, 5000);
+      } else {
+        setConnectionStatus('error');
+        setTimeout(() => {
+          setConnectionStatus('disconnected'); // Reset for demo
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Connection check failed:', error);
+      setConnectionStatus('error');
+      setTimeout(() => {
+        setConnectionStatus('disconnected'); // Reset for demo
+      }, 3000);
+    }
+  };
 
   return (
     <DynamicLayout>
@@ -88,8 +123,36 @@ function LayoutInner({ children }) {
           firstName: user?.firstName,
           lastName: user?.lastName
         }}
+        updateOnboardingProgress={(tourId) => userService.updateOnboardingProgress(tourId)}
         onComplete={() => setShowOnboarding(false)}
         onSkip={() => setShowOnboarding(false)}
+      />
+
+      {/* Floating Chat Container - Always render so it can listen for chat events */}
+      <OnboardingChatContainer
+        onConnectionCheck={handleConnectionCheck}
+        connectionStatus={connectionStatus}
+        onComplete={() => {
+          console.log('Chat completed');
+          setShowOnboarding(false);
+        }}
+        questions={[
+          {
+            id: 'framework',
+            question: "What framework or platform are you using for your application?",
+            placeholder: "e.g., React, Node.js, Python Flask, etc."
+          },
+          {
+            id: 'language',
+            question: "What programming language is your main application written in?",
+            placeholder: "e.g., JavaScript, Python, Java, C#, etc."
+          },
+          {
+            id: 'environment',
+            question: "What type of environment are you working in?",
+            placeholder: "e.g., Web app, API, Mobile app, Desktop app, etc."
+          }
+        ]}
       />
     </DynamicLayout>
   );

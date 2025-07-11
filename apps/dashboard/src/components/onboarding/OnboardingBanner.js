@@ -11,8 +11,6 @@ import {
 } from '@mui/material';
 import {
   X as CloseIcon,
-  Eye,
-  EyeSlash,
 } from '@phosphor-icons/react';
 
   // Custom hook for typing animation

@@ -7,11 +7,12 @@ import {
   Button,
   Stack,
   Fade,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
-  ArrowLeft,
   ChatCircle,
-  X as CloseIcon,
+  PaperPlaneTilt,
 } from '@phosphor-icons/react';
 
 const OnboardingAssistant = ({ 
@@ -21,9 +22,25 @@ const OnboardingAssistant = ({
   onNext, 
   onFinish,
   stepTitle = "Install HandIt",
-  position = "bottom-right"
+  position = "bottom-right",
+  chatPosition = "bottom-right" // Position for the floating chat when opened
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+
+  // Handle chat message submission
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // Open the floating chat with the message
+    window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
+      detail: { mode: 'assistant', message: chatInput.trim(), position: chatPosition } 
+    }));
+    
+    // Clear the input
+    setChatInput('');
+  };
 
   if (!visible) return null;
 
@@ -67,10 +84,10 @@ const OnboardingAssistant = ({
             sx={{
               bgcolor: '#333333',
               color: 'white',
-              borderRadius: 3,
+              borderRadius: '5px',
               overflow: 'hidden',
-              minWidth: 320,
-              maxWidth: 380,
+              minWidth: 500,
+              maxWidth: 500,
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             }}
           >
@@ -124,9 +141,67 @@ const OnboardingAssistant = ({
                 </Typography>
               </Stack>
 
-              {/* Buttons */}
-              <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
-                                  <Button
+              {/* Buttons and Chat Input on Same Line */}
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', pt: 2 }}>
+                {/* Buttons */}
+                
+
+                {/* Chat Input */}
+                <Box sx={{ flex: 1 }}>
+                  <form onSubmit={handleChatSubmit}>
+                    <TextField
+                      fullWidth
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Ask me anything..."
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          bgcolor: 'rgba(255, 255, 255, 0.05)',
+                          borderRadius: '5px',
+                          '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+                          '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+                          '&.Mui-focused fieldset': { borderColor: '#4A90E2' },
+                        },
+                        '& .MuiOutlinedInput-input': {
+                          color: 'white',
+                          fontSize: '0.875rem',
+                          py: 0.5,
+                          '&::placeholder': {
+                            color: 'rgba(255, 255, 255, 0.5)',
+                            opacity: 1
+                          }
+                        }
+                      }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              type="submit"
+                              size="small"
+                              disabled={!chatInput.trim()}
+                              sx={{
+                                color: chatInput.trim() ? '#4A90E2' : 'rgba(255, 255, 255, 0.3)',
+                                '&:hover': {
+                                  bgcolor: 'rgba(74, 144, 226, 0.1)'
+                                },
+                                '&.Mui-disabled': {
+                                  color: 'rgba(255, 255, 255, 0.3)'
+                                }
+                              }}
+                            >
+                              <PaperPlaneTilt size={16} />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }}
+                    />
+                  </form>
+                </Box>
+
+                <Stack direction="row" spacing={1.5}>
+                  <Button
                     variant="text"
                     onClick={isLastStep ? onFinish : onNext}
                     sx={{
@@ -163,6 +238,7 @@ const OnboardingAssistant = ({
                   >
                     Finish
                   </Button>
+                </Stack>
               </Stack>
             </Box>
           </Card>
