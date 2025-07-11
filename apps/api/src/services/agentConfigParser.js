@@ -134,7 +134,6 @@ export const repositionGraphNodes = (graph) => {
   }
 
   const visited = new Set();
-  let layerIndex = 0;
 
   while (queue.length > 0) {
     const nextQueue = [];

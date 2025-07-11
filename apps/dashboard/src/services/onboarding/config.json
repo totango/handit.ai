@@ -222,17 +222,11 @@
             },
             "actions": [
               {
-                "text": "Start Setup",
+                "text": "Connect Your Agent",
                 "type": "primary", 
                 "action": "nextTour",
-                "nextTourId": "wizard-guided-setup",
-                "analytics": "tour_complete_setup"
-              },
-              {
-                "text": "Finish Tour",
-                "type": "secondary",
-                "action": "finishTour",
-                "analytics": "walkthrough_complete"
+                "nextTourId": "agent-connection-flow",
+                "analytics": "tour_complete_connect_agent"
               }
             ],
             "duration": null,
@@ -241,224 +235,450 @@
         ]
       },
       {
-        "id": "wizard-guided-setup",
-        "name": "Wizard-Guided Setup",
-        "description": "Real integration setup with floating stepper",
-        "type": "overlay",
+        "id": "agent-connection-flow",
+        "name": "Agent Connection Flow", 
+        "description": "Guide users to connect their agent through the performance section",
+        "type": "guided",
         "settings": {
           "canSkip": false,
           "showProgress": true,
-          "position": "top-left",
-          "floating": true,
-          "persistent": true
+          "showAssistant": true,
+          "autoNavigate": false
         },
         "steps": [
-                     {
-             "id": "agent-type-selection",
-             "type": "modal",
-             "title": "What are you building?",
-             "target": "body",
-             "placement": "center",
-             "content": {
-               "heading": "What are you building?",
-               "description": "This helps us personalize your experience with relevant templates and examples.",
-               "form": {
-                 "type": "multiple-choice",
-                 "field": "agentType",
-                 "options": [
-                   {
-                     "value": "document-ai",
-                     "label": "🧾 Document AI",
-                     "description": "Invoice processing, contract analysis, form extraction",
-                     "default": true,
-                     "examples": ["Invoice extraction", "Contract review", "Form processing"]
-                   },
-                   {
-                     "value": "custom-agent",
-                     "label": "🤖 Custom Agent", 
-                     "description": "Customer support, sales assistant, content generation",
-                     "examples": ["Customer support bot", "Sales assistant", "Content writer"]
-                   },
-                   {
-                     "value": "langchain-rag",
-                     "label": "🛠️ LangChain / RAG",
-                     "description": "Knowledge base search, document Q&A, research assistant",
-                     "examples": ["Knowledge base", "Document Q&A", "Research assistant"]
-                   }
-                 ],
-                 "additionalFields": [
-                   {
-                     "name": "agentName",
-                     "type": "text",
-                     "label": "Agent Name",
-                     "placeholder": "e.g., Invoice Processor",
-                     "required": true
-                   },
-                   {
-                     "name": "keyFunctions",
-                     "type": "textarea",
-                     "label": "Key Functions",
-                     "placeholder": "What are the most important functions for your agent?",
-                     "required": false
-                   }
-                 ]
-               }
-             },
-             "actions": [
-               {
-                 "text": "Continue",
-                 "type": "primary",
-                 "action": "nextStep",
-                 "analytics": "agent_type_selected",
-                 "validation": ["agentType", "agentName"]
-               }
-             ],
-             "duration": null,
-             "autoAdvance": false,
-             "cursorGuidance": {
-               "enabled": true,
-               "delay": 1000,
-               "steps": [
-                 {
-                   "target": ".agent-option[data-value='document-ai']",
-                   "highlight": { "style": "pulse", "intensity": "medium", "duration": 2500 },
-                   "animation": { "duration": 800, "easing": "ease-out", "path": "direct" },
-                   "action": { "type": "hover" },
-                   "instruction": {
-                     "title": "Explore the options",
-                     "description": "Each option is optimized for different types of AI agents",
-                     "tip": "Read the descriptions to choose the best option for your case"
-                   },
-                   "delay": 1000
-                 },
-                 {
-                   "target": "input[name='agentName']",
-                   "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
-                   "animation": { "duration": 1000, "easing": "ease-in-out", "path": "curved" },
-                   "action": { "type": "click" },
-                   "instruction": {
-                     "title": "Name your agent",
-                     "description": "Choose a descriptive name that identifies the main function",
-                     "tip": "Examples: 'Invoice Processor', 'Sales Assistant', 'Document Analyzer'"
-                   },
-                   "delay": 2000
-                 },
-                 {
-                   "target": "textarea[name='keyFunctions']",
-                   "highlight": { "style": "shake", "intensity": "medium", "duration": 2000 },
-                   "animation": { "duration": 1200, "easing": "bounce", "path": "curved" },
-                   "action": { "type": "type", "text": "Extract key data from documents, validate information, generate summaries..." },
-                   "instruction": {
-                     "title": "Describe the functions",
-                     "description": "This helps us personalize recommendations and evaluators",
-                     "tip": "Be specific about what your agent does and what results you expect"
-                   },
-                   "delay": 1500
-                 },
-                 {
-                   "target": ".primary-action",
-                   "highlight": { "style": "glow", "intensity": "high", "duration": 2000 },
-                   "animation": { "duration": 1000, "easing": "ease-out", "path": "direct" },
-                   "action": { "type": "hover" },
-                   "instruction": {
-                     "title": "Ready to continue!",
-                     "description": "Once the form is completed, continue to SDK integration",
-                     "tip": "The information you provide will improve your personalized experience"
-                   },
-                   "delay": 2000
-                 }
-               ]
-             }
-           },
           {
-            "id": "sdk-integration",
-            "type": "tooltip",
-            "title": "Add HandIt to Your Code",
-            "target": ".dashboard-main",
-            "placement": "center",
+            "stepNumber": 1,
+            "id": "go-to-agent-performance",
+            "type": "cursor-only",
+            "title": "Navigate to Agent Performance",
+            "target": "[data-nav-item='Agent Performance']",
+            "placement": "right",
             "content": {
-              "heading": "Install the HandIt SDK",
-              "description": "Add these lines to start tracing your agent immediately.",
-              "codeSnippet": {
-                "language": "python",
-                "tabs": [
-                  {
-                    "name": "Install",
-                    "content": "pip install handit-sdk"
-                  },
-                  {
-                    "name": "handit_service.py",
-                    "content": "from handit_sdk import HandItTracer\n\n# Initialize with your token\ntracer = HandItTracer(token=\"{{user.integrationToken}}\")\n\n# Wrap your agent function\n@tracer.trace_agent(name=\"{{user.agentName}}\")\ndef your_agent_function(input_data):\n    # Your existing agent code\n    result = process_document(input_data)\n    return result\n\n# Start tracing\ntracer.start_tracing()"
-                  },
-                  {
-                    "name": "Integration",
-                    "content": "import handit_service\n\n# In your main application\ndef main():\n    # Your agent will now be traced automatically\n    result = handit_service.your_agent_function(document)\n    return result"
-                  }
-                ]
-              },
-              "copyButton": true,
-              "tokenDisplay": {
-                "label": "Your Integration Token:",
-                "value": "{{user.integrationToken}}",
-                "masked": true,
-                "copyable": true
-              }
+              "heading": "Click on Agent Performance",
+              "description": "Let's go to the Agent Performance section to connect your agent"
             },
-            "actions": [
-              {
-                "text": "I've added this",
-                "type": "primary",
-                "action": "waitForTrace",
-                "analytics": "sdk_integration_completed"
-              },
-              {
-                "text": "Copy Code",
-                "type": "secondary",
-                "action": "copyToClipboard",
-                "analytics": "sdk_code_copied"
-              }
-            ],
-            "waitCondition": {
-              "type": "event",
-              "event": "firstTrace",
-              "timeout": 300000,
-              "loadingMessage": "Waiting for your first agent trace...",
-              "helpText": "Run your agent with the HandIt integration to continue."
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-nav-item='Agent Performance']",
+              "description": "Click on Agent Performance in the navigation"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-nav-item='Agent Performance']",
+                  "targetText": "Agent Performance",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on Agent Performance",
+                    "description": "This section is where you can manage and connect your AI agents to HandIt's monitoring and optimization platform.",
+                    "tip": "From here, you'll be able to connect your agent and start getting insights",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
             }
           },
           {
-            "id": "first-trace-confirmation",
-            "type": "tooltip",
-            "title": "Great! Your Agent is Connected",
-            "target": ".traces-section",
+            "stepNumber": 2,
+            "id": "find-connect-button",
+            "type": "cursor-only",
+            "title": "Find Connect Agent Button",
+            "target": "[data-testid='connect-agent-button']",
             "placement": "bottom",
             "content": {
-              "heading": "✅ Nice! Your agent is now observable.",
-              "description": "We received your first trace. You can now see exactly what your agent is doing.",
-              "visual": {
-                "type": "success-animation",
-                "icon": "check-circle",
-                "color": "#10b981"
-              },
-              "tracePreview": {
-                "runId": "{{latestTrace.id}}",
-                "duration": "{{latestTrace.duration}}",
-                "status": "{{latestTrace.status}}",
-                "steps": "{{latestTrace.stepCount}}"
-              }
+              "heading": "Click Connect Agent",
+              "description": "Now click the Connect Agent button in the top navigation"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-testid='connect-agent-button']",
+              "description": "Click on the Connect Agent button in the top navigation"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='connect-agent-button']",
+                  "targetText": "Connect Agent",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click Connect Agent",
+                    "description": "This button will open the agent connection dialog where you can integrate your AI agent with HandIt's monitoring platform.",
+                    "tip": "Once connected, you'll see real-time traces and get automatic performance insights",
+                    "position": "bottom",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 3,
+            "id": "fill-agent-form",
+            "type": "banner",
+            "title": "Fill Out Agent Information",
+            "target": "body",
+            "placement": "top-center",
+            "content": {
+              "heading": "📝 Tell Us About Your Agent",
+              "description": "Please fill out the three questions below: your use case, programming language/tool, and a description of your agent. This helps us generate personalized setup instructions.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "📝"
             },
             "actions": [
               {
-                "text": "Make your agent audit itself",
+                "text": "Got it, I'll fill this out",
                 "type": "primary",
                 "action": "nextStep",
-                "analytics": "first_trace_confirmed"
-              },
+                "analytics": "form_instructions_acknowledged"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 4,
+            "id": "generate-setup-button",
+            "type": "cursor-only",
+            "title": "Generate Your Setup Guide",
+            "target": "[data-testid='generate-setup-button']",
+            "placement": "top",
+            "content": {
+              "heading": "Generate Setup Guide",
+              "description": "Click to generate personalized instructions"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-testid='generate-setup-button']",
+              "description": "Click the Generate Setup button"
+            },
+            "waitForElement": {
+              "target": "[data-testid='generate-setup-button']:not([disabled])",
+              "timeout": 30000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 2000,
+              "steps": [
+                {
+                  "target": "[data-testid='generate-setup-button']",
+                  "targetText": "Generate Setup",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "🚀 Generate Your Guide",
+                    "description": "Once you've filled out all three fields above, click here to generate personalized setup instructions.",
+                    "tip": "The button will be enabled automatically when all fields are completed",
+                    "position": "top",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 5,
+            "id": "view-instructions",
+            "type": "cursor-only",
+            "title": "View Your Instructions", 
+            "target": "[data-testid='view-instructions-button']",
+            "placement": "top",
+            "content": {
+              "heading": "View Your Instructions",
+              "description": "Click to see your personalized setup guide"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-testid='view-instructions-button']",
+              "description": "Click the View Instructions button"
+            },
+            "advanceDelay": 2000,
+            "waitForElement": {
+              "target": "[data-testid='view-instructions-button']", 
+              "timeout": 15000,
+              "checkInterval": 500
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 500,
+              "steps": [
+                {
+                  "target": "[data-testid='view-instructions-button']",
+                  "targetText": "View Instructions",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "📖 View Your Guide",
+                    "description": "Click to see your personalized setup instructions. Follow the steps to integrate HandIt with your agent.",
+                    "tip": "Copy the code snippets and follow the installation instructions",
+                    "position": "top",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 6,
+            "id": "follow-instructions-banner",
+            "type": "banner",
+            "title": "Follow The Setup Instructions",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "📋 Follow Your Setup Guide",
+              "description": "Please follow the personalized setup instructions shown above. Copy the code snippets, install the SDK, and integrate HandIt with your agent. Once you've completed the setup, come back and test your connection.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "📋"
+            },
+            "actions": [
               {
-                "text": "View Trace Details",
-                "type": "secondary", 
-                "action": "openTrace",
-                "analytics": "view_trace_details"
+                "text": "I've followed the instructions",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "setup_instructions_followed"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 7,
+            "id": "test-connection-button",
+            "type": "cursor-only",
+            "title": "Test Your Connection",
+            "target": "[data-testid='test-connection-button']",
+            "placement": "left",
+            "content": {
+              "heading": "Test Your Connection",
+              "description": "Click to verify your agent is connected to HandIt"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='test-connection-button']",
+                  "targetText": "Test Connection",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "🔗 Test Your Connection",
+                    "description": "Click the Test Connection button in the bottom-right to verify your agent is properly connected to HandIt. The onboarding will continue automatically if the connection is successful.",
+                    "tip": "This confirms that traces and monitoring are working correctly",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+
+          {
+            "stepNumber": 8,
+            "id": "setup-complete",
+            "type": "banner",
+            "title": "Setup Complete",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🎉 Connection Successful!",
+              "description": "Excellent! Your agent is now connected to HandIt. Now let's set up quality evaluation to ensure your agent performs at its best. We'll help you create an evaluator to monitor your agent's responses.",
+              "variant": "success",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🎉"
+            },
+            "actions": [
+              {
+                "text": "Set Up Evaluation",
+                "type": "primary",
+                "action": "nextTour",
+                "nextTourId": "evaluation-suite-navigation",
+                "analytics": "agent_connection_flow_continue_to_evaluation"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          }
+        ]
+      },
+      {
+        "id": "evaluation-suite-navigation",
+        "name": "Evaluation Suite Navigation",
+        "description": "Navigate to evaluation suite and create an evaluator",
+        "type": "guided",
+        "settings": {
+          "canSkip": false,
+          "showProgress": true,
+          "showAssistant": true,
+          "autoNavigate": false
+        },
+        "steps": [
+          {
+            "stepNumber": 1,
+            "id": "close-connect-dialog",
+            "type": "banner",
+            "title": "Close Connection Dialog",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🎯 Let's Set Up Evaluation",
+              "description": "First, let's close the connection dialog so we can navigate to the Evaluation Suite to create an evaluator for your agent.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🎯"
+            },
+            "actions": [
+              {
+                "text": "Close Dialog & Continue",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "close_connection_dialog_continue"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 2,
+            "id": "navigate-to-evaluation-suite",
+            "type": "cursor-only",
+            "title": "Navigate to Evaluation Suite",
+            "target": "[data-nav-item='Evaluation Suite']",
+            "placement": "right",
+            "content": {
+              "heading": "Click on Evaluation Suite",
+              "description": "Now let's navigate to the Evaluation Suite to create an evaluator"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-nav-item='Evaluation Suite']",
+              "description": "Click on the Evaluation Suite menu item"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-nav-item='Evaluation Suite']",
+                  "targetText": "Evaluation Suite",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on Evaluation Suite",
+                    "description": "This is where you can create and manage evaluators to monitor your agent's quality and performance.",
+                    "tip": "Evaluators help ensure your agent provides accurate and helpful responses",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 3,
+            "id": "find-last-evaluator",
+            "type": "cursor-only",
+            "title": "Select Last Evaluator",
+            "target": "[data-is-last-evaluator='true']",
+            "placement": "bottom",
+            "content": {
+              "heading": "Click on the Last Evaluator",
+              "description": "Click on the last evaluator in the list to see how evaluators work"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": true,
+            "advanceOnClick": {
+              "target": "[data-is-last-evaluator='true']",
+              "description": "Click on the last evaluator row"
+            },
+            "waitForElement": {
+              "target": "[data-is-last-evaluator='true']",
+              "timeout": 15000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 2000,
+              "steps": [
+                {
+                  "target": "[data-is-last-evaluator='true']",
+                  "targetText": "Last Evaluator",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "📊 Click on this Evaluator",
+                    "description": "Click on this evaluator to see how quality evaluation works. This will help you understand what evaluators can do for your agent.",
+                    "tip": "You can see evaluator details and learn how to create your own",
+                    "position": "bottom",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 4,
+            "id": "evaluation-complete",
+            "type": "banner",
+            "title": "Evaluation Tour Complete",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🎉 Great Job!",
+              "description": "You've successfully connected your agent and learned about evaluation! Your agent is now ready to be monitored and optimized. HandIt will help you create evaluators specific to your use case when you're ready.",
+              "variant": "success",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🎉"
+            },
+            "actions": [
+              {
+                "text": "Finish Tour",
+                "type": "primary",
+                "action": "finishTour",
+                "analytics": "evaluation_navigation_complete"
               }
             ],
             "duration": null,

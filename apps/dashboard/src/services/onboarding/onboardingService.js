@@ -194,6 +194,27 @@ class OnboardingService {
     this.emit('tourCompleted', this.currentTour);
   }
 
+  // Transition to next tour without emitting completion event
+  transitionTour() {
+    if (!this.currentTour) return;
+
+    this.trackEvent('tour_transitioned', {
+      tourId: this.currentTour.id,
+      userId: this.userState.userId
+    });
+
+    // Update user state based on completed tour
+    if (this.currentTour.id === 'welcome-concept-walkthrough') {
+      this.userState.hasCompletedWalkthrough = true;
+    }
+
+    this.currentTour = null;
+    this.currentStepIndex = 0;
+    
+    // Don't emit 'tourCompleted' event during transitions
+    console.log('Tour transitioned without UI reset');
+  }
+
   // Skip current tour
   skipTour(reason = 'user_skip') {
     if (!this.currentTour) return;
