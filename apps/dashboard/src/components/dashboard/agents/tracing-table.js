@@ -846,7 +846,7 @@ export function TracingTable({ isLoading, agentId, agentDetails }) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredEntries.map((entry) => {
+                  filteredEntries.map((entry, index) => {
                     const displayStatus = getDisplayStatus(entry.status);
                     const duration = calculateDuration(entry);
                     return (
@@ -860,6 +860,7 @@ export function TracingTable({ isLoading, agentId, agentDetails }) {
                           },
                         }}
                         onClick={() => handleEntrySelect(entry)}
+                        data-testid={index === 0 ? 'trace-row-first' : undefined}
                       >
                         <TableCell>
                           <Typography

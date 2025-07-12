@@ -82,53 +82,62 @@ const OnboardingOrchestrator = ({
   }, [mouse, banners, onComplete]);
 
   // Helper function to handle tour completion with next tour checking
-  const handleTourEndWithNextTourCheck = useCallback((forceNextTour = false) => {
-    // Check if there are more steps in current tour
-    if (onboardingService.getCurrentStep() && !forceNextTour) {
-      // Still have steps, don't complete
-      return;
-    }
-
-    // No more steps in current tour, check if there's a next tour
-    const currentTourId = tourInfo?.tourId;
-    let nextTourId = null;
-
-    // Define the tour progression order
-    const tourOrder = onboardingService.getTourOrder();
-
-    nextTourId = tourOrder[currentTourId];
-
-    if (nextTourId) {
-      // There's a next tour, advance to it
-      onboardingService.transitionTour();
-      const nextStep = onboardingService.startTour(nextTourId);
-      if (nextStep) {
-        setCurrentStep(nextStep);
-        const tourInfo = onboardingService.getCurrentTourInfo();
-        setTourInfo(tourInfo);
-
-        // Show assistant if tour settings specify it
-        if (tourInfo?.settings?.showAssistant) {
-          setAssistantVisible(true);
-        }
-
-        // Update user's onboarding progress in database
-        updateOnboardingProgress(nextTourId);
-
-        // Update localStorage with new tour state
-        const onboardingState = {
-          isActive: true,
-          tourId: nextTourId,
-          currentStepId: nextStep.id,
-          assistantVisible: tourInfo?.settings?.showAssistant || false,
-        };
-        localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
+  const handleTourEndWithNextTourCheck = useCallback(
+    (forceNextTour = false) => {
+      // Check if there are more steps in current tour
+      if (onboardingService.getCurrentStep() && !forceNextTour) {
+        // Still have steps, don't complete
+        return;
       }
-    } else {
-      // No more tours, complete all tours
-      handleTourComplete();
-    }
-  }, [tourInfo, handleTourComplete, updateOnboardingProgress]);
+
+
+      // No more steps in current tour, check if there's a next tour
+      const currentTourId = tourInfo?.tourId;
+      let nextTourId = null;
+
+      // Define the tour progression order
+      const tourOrder = onboardingService.getTourOrder();
+
+      nextTourId = tourOrder[currentTourId];
+      window.dispatchEvent(
+        new CustomEvent('onboarding:change-tour', {
+          detail: { tourId: nextTourId },
+        })
+      );
+
+      if (nextTourId) {
+        // There's a next tour, advance to it
+        onboardingService.transitionTour();
+        const nextStep = onboardingService.startTour(nextTourId);
+        if (nextStep) {
+          setCurrentStep(nextStep);
+          const tourInfo = onboardingService.getCurrentTourInfo();
+          setTourInfo(tourInfo);
+
+          // Show assistant if tour settings specify it
+          if (tourInfo?.settings?.showAssistant) {
+            setAssistantVisible(true);
+          }
+
+          // Update user's onboarding progress in database
+          updateOnboardingProgress(nextTourId);
+
+          // Update localStorage with new tour state
+          const onboardingState = {
+            isActive: true,
+            tourId: nextTourId,
+            currentStepId: nextStep.id,
+            assistantVisible: tourInfo?.settings?.showAssistant || false,
+          };
+          localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
+        }
+      } else {
+        // No more tours, complete all tours
+        handleTourComplete();
+      }
+    },
+    [tourInfo, handleTourComplete, updateOnboardingProgress]
+  );
 
   // Tour skip handler
   const handleTourSkip = useCallback(() => {
@@ -199,7 +208,7 @@ const OnboardingOrchestrator = ({
     if (isActive && currentStep) {
       const onboardingState = {
         isActive: true,
-        tourId: tourInfo?.id,
+        tourId: tourInfo?.tourId,
         currentStepId: currentStep.id,
         assistantVisible: assistantVisible,
       };
@@ -348,7 +357,7 @@ const OnboardingOrchestrator = ({
 
           const onboardingState = {
             isActive: true,
-            tourId: tourInfo?.id,
+            tourId: tourInfo?.tourId,
             currentStepId: nextStep.id,
             assistantVisible: assistantVisible,
           };
@@ -531,6 +540,7 @@ const OnboardingOrchestrator = ({
                         }
                       }, 500);
                     } else {
+
                       // Directly advance step without causing re-renders
                       onboardingService.nextStep();
                       setCurrentStep(onboardingService.getCurrentStep());
@@ -708,7 +718,7 @@ const OnboardingOrchestrator = ({
 
               const onboardingState = {
                 isActive: true,
-                tourId: tourInfo?.id,
+                tourId: tourInfo?.tourId,
                 currentStepId: nextStep.id,
                 assistantVisible: assistantVisible,
               };
@@ -762,7 +772,7 @@ const OnboardingOrchestrator = ({
 
               const onboardingState = {
                 isActive: true,
-                tourId: tourInfo?.id,
+                tourId: tourInfo?.tourId,
                 currentStepId: nextStep.id,
                 assistantVisible: assistantVisible,
               };
@@ -804,7 +814,7 @@ const OnboardingOrchestrator = ({
 
               const onboardingState = {
                 isActive: true,
-                tourId: tourInfo?.id,
+                tourId: tourInfo?.tourId,
                 currentStepId: nextStep.id,
                 assistantVisible: assistantVisible,
               };
@@ -845,7 +855,7 @@ const OnboardingOrchestrator = ({
 
               const onboardingState = {
                 isActive: true,
-                tourId: tourInfo?.id,
+                tourId: tourInfo?.tourId,
                 currentStepId: nextStep.id,
                 assistantVisible: assistantVisible,
               };
@@ -900,7 +910,7 @@ const OnboardingOrchestrator = ({
 
               const onboardingState = {
                 isActive: true,
-                tourId: tourInfo?.id,
+                tourId: tourInfo?.tourId,
                 currentStepId: nextStep.id,
                 assistantVisible: assistantVisible,
               };
@@ -962,6 +972,8 @@ const OnboardingOrchestrator = ({
                   }
                 }, 500);
               } else {
+
+
                 // Directly advance step without causing re-renders
                 onboardingService.nextStep();
                 setCurrentStep(onboardingService.getCurrentStep());
@@ -1108,6 +1120,11 @@ const OnboardingOrchestrator = ({
         }}
         onStartTour={(tourId) => {
           const step = onboardingService.startTour(tourId);
+          window.dispatchEvent(
+            new CustomEvent('onboarding:start-tour', {
+              detail: { tourId: tourId },
+            })
+          );
           if (step) {
             setCurrentStep(step);
             const tourInfo = onboardingService.getCurrentTourInfo();

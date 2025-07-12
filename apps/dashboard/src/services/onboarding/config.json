@@ -38,7 +38,7 @@
     "tours": [
       {
         "id": "welcome-concept-walkthrough",
-        "name": "Welcome & Concept Walkthrough",
+        "name": "Welcome Walkthrough",
         "description": "Interactive dashboard walkthrough with assistant guidance",
         "type": "guided",
         "icon": "Play",
@@ -69,7 +69,7 @@
             "placement": "center",
             "content": {
               "heading": "Welcome to HandIt! 👋",
-              "description": "AI agents that improve automatically. Let's explore tracing, evaluation, and optimization.",
+              "description": "The Open Source Engine that Auto-Improves Your AI. HandIt evaluates every decision, auto-generates better prompts, A/B-tests fixes, and lets you control deployments.",
               "variant": "welcome",
               "showCloseButton": false,
               "autoHide": false,
@@ -90,12 +90,12 @@
             "stepNumber": 2,
             "id": "dashboard-tracing-guide",
             "type": "cursor-only",
-            "title": "Explore Traces",
+            "title": "View Agent Executions",
             "target": "[data-nav-item='Tracing']",
             "placement": "right",
             "content": {
               "heading": "Click on Tracing",
-              "description": "See all agent executions in real time"
+              "description": "See every agent execution with complete observability"
             },
             "actions": [],
             "duration": null,
@@ -116,8 +116,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Tracing",
-                    "description": "View all agent executions with inputs, outputs, and performance metrics.",
-                    "tip": "Complete observability for debugging",
+                    "description": "Monitor every agent decision in real-time with complete visibility.",
+                    "tip": "Every execution tracked automatically",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -128,36 +128,41 @@
           },
           {
             "stepNumber": 3,
-            "id": "evaluation-suite-guide",
+            "id": "click-first-trace",
             "type": "cursor-only",
-            "title": "Explore Evaluation Suite",
-            "target": "[data-nav-item='Evaluation Suite']",
+            "title": "Open Agent Execution",
+            "target": "[data-testid='trace-row-first']",
             "placement": "right",
             "content": {
-              "heading": "Click on Evaluation Suite",
-              "description": "Set up automated quality checks"
+              "heading": "Click on First Trace",
+              "description": "Dive into a complete agent execution"
             },
             "actions": [],
             "duration": null,
             "autoAdvance": false,
             "advanceOnClick": {
-              "target": "[data-nav-item='Evaluation Suite']",
-              "description": "Click on the Evaluation Suite menu item to proceed"
+              "target": "[data-testid='trace-row-first']",
+              "description": "Click on the first trace row to open it"
+            },
+            "waitForElement": {
+              "target": "[data-testid='trace-row-first']",
+              "timeout": 15000,
+              "checkInterval": 1000
             },
             "cursorGuidance": {
               "enabled": true,
-              "delay": 500,
+              "delay": 1000,
               "steps": [
                 {
-                  "target": "[data-nav-item='Evaluation Suite']",
-                  "targetText": "Evaluation Suite",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "target": "[data-testid='trace-row-first']",
+                  "targetText": "First Trace",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
                   "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
                   "action": { "type": "hover" },
                   "instruction": {
-                    "title": "Click on Evaluation Suite",
-                    "description": "Create automated quality checks for accuracy, completeness, and more.",
-                    "tip": "Monitor your agent's performance",
+                    "title": "Click on this Trace",
+                    "description": "See the complete execution flow with every node, input, and output.",
+                    "tip": "Every decision is tracked",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -168,14 +173,104 @@
           },
           {
             "stepNumber": 4,
+            "id": "click-first-llm-node",
+            "type": "cursor-only",
+            "title": "View LLM Node Details",
+            "target": "[data-testid='llm-node-success-first']",
+            "placement": "bottom",
+            "content": {
+              "heading": "Click on First LLM Node",
+              "description": "See the complete input and output"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-testid='llm-node-success-first']",
+              "description": "Click on the first successful LLM node"
+            },
+            "waitForElement": {
+              "target": "[data-testid='llm-node-success-first']",
+              "timeout": 15000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='llm-node-success-first']",
+                  "targetText": "LLM Node",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
+                  "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on this LLM Node",
+                    "description": "Here you'll see the complete input and output of your node.",
+                    "tip": "Complete observability into every LLM call",
+                    "position": "bottom",
+                    "showNearTarget": true
+                  },
+                  "delay": 100
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 5,
+            "id": "click-failed-node",
+            "type": "cursor-only",
+            "title": "Examine Failed Node",
+            "target": "[data-testid='llm-node-failed-first']",
+            "placement": "bottom",
+            "content": {
+              "heading": "Click on Failed Node",
+              "description": "See why this node failed"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-testid='llm-node-failed-first']",
+              "description": "Click on the first failed node"
+            },
+            "waitForElement": {
+              "target": "[data-testid='llm-node-failed-first']",
+              "timeout": 15000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='llm-node-failed-first']",
+                  "targetText": "Failed Node",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
+                  "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on this Failed Node",
+                    "description": "Here you'll see exactly why the node failed and what HandIt detected.",
+                    "tip": "Every failure is analyzed automatically",
+                    "position": "bottom",
+                    "showNearTarget": true
+                  },
+                  "delay": 100
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 6,
             "id": "release-hub-guide",
             "type": "cursor-only",
-            "title": "Explore Release Hub",
+            "title": "View Auto-Improvements",
             "target": "[data-nav-item='Release Hub']",
             "placement": "right",
             "content": {
               "heading": "Click on Release Hub",
-              "description": "AI improvement engine - agents evolve automatically"
+              "description": "See how HandIt auto-improves your prompts"
             },
             "actions": [],
             "duration": null,
@@ -196,8 +291,8 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "Click on Release Hub",
-                    "description": "Automatic optimization engine. Analyzes performance and improves prompts.",
-                    "tip": "Transform static AI to self-improving",
+                    "description": "Automatic optimization engine that generates better prompts from failures.",
+                    "tip": "Zero manual tuning required",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -207,15 +302,60 @@
             }
           },
           {
-            "stepNumber": 5,
+            "stepNumber": 7,
+            "id": "click-first-improvement",
+            "type": "cursor-only",
+            "title": "View Auto-Generated Improvement",
+            "target": "[data-testid='improvement-row-first']",
+            "placement": "right",
+            "content": {
+              "heading": "Click on First Improvement",
+              "description": "See HandIt's auto-generated prompt improvement"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-testid='improvement-row-first']",
+              "description": "Click on the first improvement row"
+            },
+            "waitForElement": {
+              "target": "[data-testid='improvement-row-first']",
+              "timeout": 15000,
+              "checkInterval": 1000
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='improvement-row-first']",
+                  "targetText": "First Improvement",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 3000 },
+                  "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on this Improvement",
+                    "description": "HandIt automatically improves prompts based on detected errors. Here you'll see the improved prompts, metrics, and deployment options.",
+                    "tip": "Continuous improvement without manual work",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 100
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 8,
             "id": "tour-complete",
             "type": "banner",
             "title": "Tour Complete",
             "target": "body",
             "placement": "center",
             "content": {
-              "heading": "🎉 Great Job!",
-              "description": "You've seen HandIt's core features. Ready to connect your agent?",
+              "heading": "🎉 That's HandIt in Action!",
+              "description": "Monitoring isn't enough - you need optimization. HandIt tags failures, auto-generates fixes, A/B-tests patches, and deploys winners on your approval.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -223,7 +363,7 @@
             },
             "actions": [
               {
-                "text": "Connect Agent",
+                "text": "Connect Your Agent",
                 "type": "primary", 
                 "action": "nextTour",
                 "nextTourId": "agent-connection-flow",

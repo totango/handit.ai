@@ -1196,7 +1196,7 @@ export function TracingModal({
   preSelectedNodeId = null,
 }) {
   // Flag to disable cycles functionality - set to true to show all entries in one flow
-  const [disableCycles, setDisableCycles] = React.useState(true);
+  const [disableCycles, setDisableCycles] = React.useState(false);
   
   const [selectedNode, setSelectedNode] = React.useState(null);
   const [processedNodes, setProcessedNodes] = React.useState([]);

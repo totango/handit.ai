@@ -2,7 +2,6 @@
 'use strict';
 import { Model } from 'sequelize';
 import { redisService } from '../src/services/redisService.js';
-import { Op } from 'sequelize';
 
 export default (sequelize, DataTypes) => {
   class Agent extends Model {
@@ -113,6 +112,13 @@ export default (sequelize, DataTypes) => {
       defaultValue: false,
       field: 'auto_stop',
       comment: 'Flag to indicate if agent should automatically stop and close logs when reaching an end node'
+    },
+    tourAgent: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'tour_agent',
+      comment: 'Flag to indicate if agent is a tour/demo agent for onboarding'
     }
   }, {
     sequelize,

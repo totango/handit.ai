@@ -5,13 +5,11 @@ import { usePathname } from 'next/navigation';
 import { useGetMineModelLogsCountQuery } from '@/services/modelsService';
 import { Link, Typography } from '@mui/material';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import GlobalStyles from '@mui/material/GlobalStyles';
 import RouterLink from 'next/link';
 
 import { useSettings } from '@/hooks/use-settings';
 import { isSandboxPage } from '@/lib/sandbox';
-import { AIChatPanel } from '@/components/core/chat/ai-chat-panel';
 
 import { layoutConfig } from '../config';
 import { MainNav } from './main-nav';
@@ -41,13 +39,7 @@ export function VerticalLayout({ children, forceNavOpen = false }) {
       window.removeEventListener('onboardingStateChange', handleOnboardingStateChange);
     };
   }, []);
-  let modelLogs = null;
-  if (isSandboxPage(window)) {
-    modelLogs = { count: 1 };
-  } else {
-    const { data } = useGetMineModelLogsCountQuery();
-    modelLogs = data;
-  }
+  let modelLogs = { count: 1 };
 
   const sideNavWidth = (sideNavOpen || onboardingActive) ? '280px' : '64px';
 
