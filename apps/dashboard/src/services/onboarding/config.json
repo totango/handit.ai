@@ -303,13 +303,13 @@
           },
           {
             "stepNumber": 7,
-            "id": "click-first-improvement",
+            "id": "click-first-llm-node",
             "type": "cursor-only",
             "title": "View Auto-Generated Improvement",
             "target": "[data-testid='improvement-row-first']",
             "placement": "right",
             "content": {
-              "heading": "Click on First Improvement",
+              "heading": "Click on First LLM Node",
               "description": "See HandIt's auto-generated prompt improvement"
             },
             "actions": [],
@@ -348,6 +348,32 @@
           },
           {
             "stepNumber": 8,
+            "id": "self-optimization-guide",
+            "type": "banner",
+            "title": "Self-Optimization Guide",
+            "target": "body",
+            "placement": "top",
+            "content": {
+              "heading": "Self-Optimization Guide",
+              "description": "HandIt automatically improves prompts based on detected errors. Here you'll see the improved prompts, metrics, and deployment options.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🎉"
+            },
+            "actions": [
+              {
+                "text": "Got it",
+                "type": "primary", 
+                "action": "nextStep",
+                "analytics": "self_optimization_guide_acknowledged"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 9,
             "id": "tour-complete",
             "type": "banner",
             "title": "Tour Complete",
