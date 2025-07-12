@@ -12,6 +12,10 @@ import {
   Tooltip,
   CircularProgress,
   Card,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   PaperPlaneTilt,
@@ -22,7 +26,9 @@ import {
   CheckCircle,
   XCircle,
   X,
+  Code,
 } from '@phosphor-icons/react';
+import CodeRenderer from './CodeRenderer';
 
 const OnboardingChat = ({ 
   onConnectionCheck,
@@ -38,10 +44,11 @@ const OnboardingChat = ({
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentFlow, setCurrentFlow] = useState('greeting'); // 'greeting', 'questions', 'instructions', 'followup'
-  const [userAnswers, setUserAnswers] = useState({});
-  const [questionIndex, setQuestionIndex] = useState(0);
+
   const [isVisible, setIsVisible] = useState(visible);
+  const [sessionId, setSessionId] = useState(null);
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [codeModalContent, setCodeModalContent] = useState('');
   const messagesEndRef = useRef(null);
 
   const theme = {
@@ -68,12 +75,12 @@ const OnboardingChat = ({
   useEffect(() => {
     // Only add initial greeting if no messages exist
     if (messages.length === 0) {
-      addMessage('ai', "Hi! I'm your assistant. I can help you with onboarding questions or guide you through connecting your agent. How can I help you today?");
+      addMessage('ai', "Hi! I'm your Handit assistant. I can help you with onboarding questions, guide you through connecting your agent, or answer any questions about using Handit. How can I help you today?");
     }
   }, []);
 
   useEffect(() => {
-    const handleOpenChat = (event) => {
+    const handleOpenChat = async (event) => {
       if (event.detail.mode === mode && event.detail.message) {
         // Add the user's message
         const userMessage = {
@@ -86,20 +93,18 @@ const OnboardingChat = ({
         };
         setMessages(prev => [...prev, userMessage]);
         
-        // Simulate AI response
-        setTimeout(() => {
-          const aiMessage = {
-            id: Date.now() + Math.random(),
-            sender: 'ai',
-            content: mode === 'assistant' 
-              ? "I'm here to help you with your onboarding! Let me know what specific questions you have about using Handit or setting up your agents."
-              : "Thanks for your message! I'll help you with agent setup. Let me know what you'd like to know about connecting your agent.",
-            type: 'text',
-            metadata: {},
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiMessage]);
-        }, 1000);
+                 // Call AI agent with the message
+         setIsLoading(true);
+         try {
+           const aiResponse = await callAIAgent(event.detail.message);
+           const processedResponse = processAIResponse(aiResponse);
+           
+           addMessage('ai', processedResponse.content, processedResponse.type, processedResponse.metadata);
+         } catch (error) {
+           addMessage('ai', "I'm sorry, I encountered an error. Please try again or check your connection.");
+         } finally {
+           setIsLoading(false);
+         }
       }
     };
 
@@ -107,7 +112,7 @@ const OnboardingChat = ({
     return () => {
       window.removeEventListener('openOnboardingChat', handleOpenChat);
     };
-  }, [mode]);
+  }, [mode, sessionId]);
 
 
 
@@ -123,6 +128,90 @@ const OnboardingChat = ({
     setMessages(prev => [...prev, message]);
   };
 
+  const parseMarkdownCodeBlocks = (content) => {
+    // Regex to match code blocks with language specification
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const codeBlocks = [];
+    let match;
+    
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      codeBlocks.push({
+        language: match[1] || 'text',
+        code: match[2].trim()
+      });
+    }
+    
+    return codeBlocks;
+  };
+
+  const processAIResponse = (response) => {
+    const content = response.answer || response.response || response.message;
+    
+    // Check if response has explicit code property
+    if (response.hasCode || response.code) {
+      return {
+        content,
+        type: 'code',
+        metadata: {
+          code: response.code,
+          language: response.language || 'javascript'
+        }
+      };
+    }
+    
+    // Check for markdown code blocks
+    const codeBlocks = parseMarkdownCodeBlocks(content);
+    if (codeBlocks.length > 0) {
+      return {
+        content,
+        type: 'markdown-with-code',
+        metadata: {
+          codeBlocks
+        }
+      };
+    }
+    
+    // Regular text response
+    return {
+      content,
+      type: 'text',
+      metadata: {}
+    };
+  };
+
+  const callAIAgent = async (question) => {
+    try {
+      const aiApiUrl = process.env.NEXT_PUBLIC_AI_AGENT_URL || 'http://localhost:3006/api/ai/chat';
+      
+      const response = await fetch(aiApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question,
+          sessionId: sessionId || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Store sessionId from first response
+      if (data.sessionId && !sessionId) {
+        setSessionId(data.sessionId);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error calling AI agent:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
@@ -131,54 +220,13 @@ const OnboardingChat = ({
     setInputValue('');
     addMessage('user', userMessage);
 
-    // Handle both assistant and agent setup in the same flow
-    if (currentFlow === 'greeting' || currentFlow === 'questions' || currentFlow === 'instructions' || currentFlow === 'followup') {
-      // We're in agent setup mode regardless of the original mode
-      await handleAgentSetupFlow(userMessage);
-    } else {
-      // Regular assistant conversation
-      await handleAssistantFlow(userMessage);
-    }
-  };
-
-  const handleAgentSetupFlow = async (userMessage) => {
     setIsLoading(true);
-
+    
     try {
-      switch (currentFlow) {
-        case 'greeting':
-          if (userMessage.toLowerCase().includes('yes') || userMessage.toLowerCase().includes('ready') || userMessage.toLowerCase().includes('start')) {
-            addMessage('ai', questions[0].question);
-            setCurrentFlow('questions');
-          } else {
-            addMessage('ai', "No problem! When you're ready to connect your agent, just let me know. I'll guide you through the whole process step by step.");
-          }
-          break;
-
-        case 'questions':
-          const currentQuestion = questions[questionIndex];
-          setUserAnswers(prev => ({ ...prev, [currentQuestion.id]: userMessage }));
-          
-          if (questionIndex < questions.length - 1) {
-            setQuestionIndex(questionIndex + 1);
-            setTimeout(() => {
-              addMessage('ai', questions[questionIndex + 1].question);
-            }, 500);
-          } else {
-            // All questions answered, provide instructions
-            setCurrentFlow('instructions');
-            setTimeout(() => {
-              generateInstructions({ ...userAnswers, [currentQuestion.id]: userMessage });
-            }, 500);
-          }
-          break;
-
-        case 'instructions':
-        case 'followup':
-          // Handle follow-up questions
-          addMessage('ai', "Great question! Before we dive into that, please make sure you've followed the setup instructions above. Once your agent is connected, I'll be happy to help with any additional questions you might have!");
-          break;
-      }
+      const aiResponse = await callAIAgent(userMessage);
+      const processedResponse = processAIResponse(aiResponse);
+      
+      addMessage('ai', processedResponse.content, processedResponse.type, processedResponse.metadata);
     } catch (error) {
       addMessage('ai', "I'm sorry, I encountered an error. Please try again or check your connection.");
     } finally {
@@ -186,92 +234,137 @@ const OnboardingChat = ({
     }
   };
 
-  const handleAssistantFlow = async (userMessage) => {
-    setIsLoading(true);
-    
-    try {
-      // Check if user wants to connect an agent
-      const isAgentConnectionRequest = userMessage.toLowerCase().includes('connect') && 
-        (userMessage.toLowerCase().includes('agent') || userMessage.toLowerCase().includes('setup'));
-        
-      if (isAgentConnectionRequest) {
-        // Start agent setup flow
-        addMessage('ai', "Great! I'll help you connect your agent to Handit. I'll ask you a few questions to provide personalized setup instructions. Ready to get started?");
-        setCurrentFlow('greeting');
-      } else {
-        // Regular assistant response
-        addMessage('ai', "I'm here to help you with your onboarding! Feel free to ask me anything about using Handit or setting up your agents.");
-      }
-    } catch (error) {
-      addMessage('ai', "I'm sorry, I encountered an error. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const generateInstructions = (answers) => {
-    const { framework, language, environment } = answers;
-    
-    addMessage('ai', `Perfect! Based on your answers (${framework}, ${language}, ${environment}), here are your personalized setup instructions:`);
-    
-    // Installation instructions
-    setTimeout(() => {
-      addMessage('ai', "**Step 1: Install the Handit SDK**", 'instruction', {
-        code: `npm install handit-sdk`,
-        copyText: `npm install handit-sdk`
-      });
-    }, 1000);
-
-    // Configuration instructions
-    setTimeout(() => {
-      addMessage('ai', "**Step 2: Configure your agent**", 'instruction', {
-        code: `import { HanditAgent } from 'handit-sdk';
-
-const agent = new HanditAgent({
-  apiKey: 'your-api-key-here',
-  agentId: 'your-agent-id',
-  environment: '${environment.toLowerCase()}'
-});`,
-        copyText: `import { HanditAgent } from 'handit-sdk';
-
-const agent = new HanditAgent({
-  apiKey: 'your-api-key-here',
-  agentId: 'your-agent-id',
-  environment: '${environment.toLowerCase()}'
-});`
-      });
-    }, 2000);
-
-    // Usage instructions
-    setTimeout(() => {
-      addMessage('ai', "**Step 3: Start tracking**", 'instruction', {
-        code: `// Initialize the agent
-await agent.initialize();
-
-// Track your first event
-agent.track('user_action', {
-  action: 'button_click',
-  component: 'signup_form'
-});`,
-        copyText: `// Initialize the agent
-await agent.initialize();
-
-// Track your first event
-agent.track('user_action', {
-  action: 'button_click',
-  component: 'signup_form'
-});`
-      });
-    }, 3000);
-
-    setTimeout(() => {
-      addMessage('ai', "That's it! Once you've followed these steps, use the 'Check Connection' button below to verify everything is working. If you need any help or have questions, just ask!");
-      setCurrentFlow('followup');
-    }, 4000);
-  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const openCodeModal = (code) => {
+    setCodeModalContent(code);
+    setCodeModalOpen(true);
+  };
+
+  const renderMarkdownWithCode = (content, codeBlocks) => {
+    // Split content by code blocks to render markdown and code separately
+    const parts = [];
+    let lastIndex = 0;
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    let match;
+    let codeBlockIndex = 0;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      // Add text before code block
+      if (match.index > lastIndex) {
+        const textPart = content.substring(lastIndex, match.index);
+        parts.push({
+          type: 'text',
+          content: textPart,
+          key: `text-${parts.length}`
+        });
+      }
+
+      // Add code block
+      parts.push({
+        type: 'code',
+        content: codeBlocks[codeBlockIndex],
+        key: `code-${codeBlockIndex}`
+      });
+
+      lastIndex = match.index + match[0].length;
+      codeBlockIndex++;
+    }
+
+    // Add remaining text after last code block
+    if (lastIndex < content.length) {
+      const textPart = content.substring(lastIndex);
+      parts.push({
+        type: 'text',
+        content: textPart,
+        key: `text-${parts.length}`
+      });
+    }
+
+    return parts.map((part) => {
+      if (part.type === 'text') {
+        return (
+          <Typography 
+            key={part.key}
+            variant="body2" 
+            sx={{ 
+              whiteSpace: 'pre-wrap',
+              mb: 1,
+              '& strong': { fontWeight: 600 },
+              '& em': { fontStyle: 'italic' }
+            }}
+          >
+            {part.content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')}
+          </Typography>
+        );
+      } else {
+                 return (
+           <Box
+             key={part.key}
+             sx={{
+               position: 'relative',
+               maxHeight: '200px',
+               overflow: 'auto',
+               borderRadius: 1,
+               mb: 2,
+               '& pre': {
+                 margin: '0 !important',
+               }
+             }}
+           >
+             <CodeRenderer
+               code={part.content.code}
+               language={part.content.language}
+               showLineNumbers={false}
+             />
+             <Box
+               sx={{
+                 position: 'absolute',
+                 top: 8,
+                 right: 8,
+                 display: 'flex',
+                 gap: 1
+               }}
+             >
+               <Tooltip title="Copy code">
+                 <IconButton
+                   size="small"
+                   onClick={() => copyToClipboard(part.content.code)}
+                   sx={{
+                     bgcolor: 'rgba(0, 0, 0, 0.3)',
+                     color: 'white',
+                     '&:hover': {
+                       bgcolor: 'rgba(0, 0, 0, 0.5)'
+                     }
+                   }}
+                 >
+                   <Copy size={14} />
+                 </IconButton>
+               </Tooltip>
+               <Tooltip title="Open in modal">
+                 <IconButton
+                   size="small"
+                   onClick={() => openCodeModal(part.content.code)}
+                   sx={{
+                     bgcolor: 'rgba(0, 0, 0, 0.3)',
+                     color: 'white',
+                     '&:hover': {
+                       bgcolor: 'rgba(0, 0, 0, 0.5)'
+                     }
+                   }}
+                 >
+                   <Code size={14} />
+                 </IconButton>
+               </Tooltip>
+             </Box>
+           </Box>
+        );
+      }
+    });
   };
 
   const renderMessage = (message) => {
@@ -316,43 +409,72 @@ agent.track('user_action', {
             wordBreak: 'break-word'
           }}
         >
-          {message.type === 'instruction' && message.metadata.code ? (
+          {(message.type === 'instruction' || message.type === 'code') && message.metadata.code ? (
             <Box>
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
                 {message.content}
               </Typography>
-              <Paper
+              <Box
                 sx={{
-                  p: 2,
-                  bgcolor: isDarkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.05)',
-                  borderRadius: 1,
                   position: 'relative',
-                  fontFamily: 'monospace',
-                  fontSize: '0.85rem',
-                  overflow: 'auto'
+                  maxHeight: '200px',
+                  overflow: 'auto',
+                  borderRadius: 1,
+                  '& pre': {
+                    margin: '0 !important',
+                  }
                 }}
               >
-                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                  {message.metadata.code}
-                </pre>
-                <Tooltip title="Copy code">
-                  <IconButton
-                    size="small"
-                    onClick={() => copyToClipboard(message.metadata.copyText)}
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      bgcolor: 'rgba(0, 0, 0, 0.1)',
-                      '&:hover': {
-                        bgcolor: 'rgba(0, 0, 0, 0.2)'
-                      }
-                    }}
-                  >
-                    <Copy size={14} />
-                  </IconButton>
-                </Tooltip>
-              </Paper>
+                <CodeRenderer
+                  code={message.metadata.code}
+                  language={message.metadata.language || 'javascript'}
+                  showLineNumbers={false}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    display: 'flex',
+                    gap: 1
+                  }}
+                >
+                  <Tooltip title="Copy code">
+                    <IconButton
+                      size="small"
+                      onClick={() => copyToClipboard(message.metadata.code)}
+                      sx={{
+                        bgcolor: 'rgba(0, 0, 0, 0.3)',
+                        color: 'white',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                      }}
+                    >
+                      <Copy size={14} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Open in modal">
+                    <IconButton
+                      size="small"
+                      onClick={() => openCodeModal(message.metadata.code)}
+                      sx={{
+                        bgcolor: 'rgba(0, 0, 0, 0.3)',
+                        color: 'white',
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                      }}
+                    >
+                      <Code size={14} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            </Box>
+          ) : message.type === 'markdown-with-code' && message.metadata.codeBlocks ? (
+            <Box>
+              {renderMarkdownWithCode(message.content, message.metadata.codeBlocks)}
             </Box>
           ) : (
             <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -456,7 +578,7 @@ agent.track('user_action', {
     <Box
       sx={{
         position: 'fixed',
-        zIndex: 10000,
+        zIndex: 10,
         ...getPositionStyles(),
         width: 520,
         height: 600,
@@ -552,8 +674,8 @@ agent.track('user_action', {
           <div ref={messagesEndRef} />
         </Box>
 
-        {/* Connection Status (when in agent setup flow) */}
-        {(currentFlow === 'instructions' || currentFlow === 'followup') && (
+        {/* Connection Status */}
+        {onConnectionCheck && (
           <Box sx={{ p: 2, borderTop: `1px solid ${theme.borderColor}` }}>
             <Stack direction="row" spacing={2} alignItems="center">
               <Chip
@@ -561,17 +683,21 @@ agent.track('user_action', {
                 label={getConnectionStatusText()}
                 color={getConnectionStatusColor()}
                 variant="outlined"
-                sx={{ flex: 1 }}
+                sx={{ flex: 1, color: 'primary.main', borderRadius: '0px', borderColor: 'transparent' }}
               />
               <Button
-                variant="contained"
+                variant="outlined"
+                color="primary"
                 onClick={onConnectionCheck}
                 disabled={connectionStatus === 'checking'}
                 sx={{
-                  bgcolor: '#4A90E2',
+                  borderColor: 'transparent',
+                  color: 'primary.main',
                   '&:hover': {
-                    bgcolor: '#357ABD'
-                  }
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
+                  },
+                  backgroundColor: 'rgba(117,120,255, 0.2)',
                 }}
               >
                 Check Connection
@@ -587,11 +713,7 @@ agent.track('user_action', {
               fullWidth
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                currentFlow === 'questions' 
-                  ? questions[questionIndex]?.placeholder || "Type your answer..."
-                  : "Ask me anything..."
-              }
+              placeholder="Ask me anything..."
               variant="outlined"
               size="small"
               disabled={isLoading}
@@ -637,6 +759,99 @@ agent.track('user_action', {
           </form>
         </Box>
       </Card>
+
+      {/* Code Modal */}
+      <Dialog
+        open={codeModalOpen}
+        onClose={() => setCodeModalOpen(false)}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: theme.bgcolor,
+            color: theme.color,
+            minHeight: '30vh',
+            height: 'auto',
+            maxHeight: '50vh',
+            zIndex: 50
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderBottom: `1px solid ${theme.borderColor}`,
+            color: theme.color
+          }}
+        >
+          <Typography variant="h6">Code Preview</Typography>
+          <IconButton
+            onClick={() => setCodeModalOpen(false)}
+            sx={{ color: theme.color }}
+          >
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <Box
+            sx={{
+              position: 'relative',
+              minHeight: '400px',
+              overflow: 'auto',
+              '& pre': {
+                margin: '0 !important',
+                minHeight: '400px'
+              }
+            }}
+          >
+            <CodeRenderer
+              code={codeModalContent}
+              language="javascript"
+              showLineNumbers={true}
+            />
+            <Tooltip title="Copy code">
+              <IconButton
+                onClick={() => copyToClipboard(codeModalContent)}
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  bgcolor: 'rgba(0, 0, 0, 0.3)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.5)'
+                  }
+                }}
+              >
+                <Copy size={16} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.borderColor}` }}>
+          <Button
+            onClick={() => copyToClipboard(codeModalContent)}
+            startIcon={<Copy size={16} />}
+            sx={{ color: theme.color }}
+          >
+            Copy Code
+          </Button>
+          <Button
+            onClick={() => setCodeModalOpen(false)}
+            variant="contained"
+            sx={{
+              bgcolor: '#4A90E2',
+              '&:hover': {
+                bgcolor: '#357ABD'
+              }
+            }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
