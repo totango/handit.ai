@@ -41,11 +41,26 @@ import { ConnectAgentDialog } from '@/components/dashboard/agents/connect-agent-
 export function MainNav({ items, title, onNewEvaluator }) {
   const [openNav, setOpenNav] = React.useState(false);
   const path = usePathname();
-  const { data: agents = [] } = useGetAgentsQuery();
   const searchParams = useSearchParams();
   const router = useRouter();
+  
+  // State to track if we're in walkthrough mode
+  const [isInWalkthrough, setIsInWalkthrough] = React.useState(false);
+  
+  // Fetch both regular and demo agents
+  const { data: regularAgents = [] } = useGetAgentsQuery({});
+  const { data: demoAgents = [] } = useGetAgentsQuery({ tourAgent: true });
+  const [agents, setAgents] = React.useState([]);
+  // Use demo agents when in walkthrough, regular agents otherwise
+  React.useEffect(() => {
+    if (isInWalkthrough && demoAgents.length > 0) {
+      setAgents(demoAgents);
+    } else if (!isInWalkthrough) {
+      setAgents(regularAgents);
+    }
+  }, [isInWalkthrough, demoAgents, regularAgents]);
+  
   const [connectDialogOpen, setConnectDialogOpen] = React.useState(false);
-  const [tabValue, setTabValue] = React.useState(1);
   const { data: userData, error, isLoading } = useGetUserQuery();
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
   const [showSaveDialog, setShowSaveDialog] = React.useState(false);
@@ -211,6 +226,73 @@ export function MainNav({ items, title, onNewEvaluator }) {
       setUploadLoading(false);
     }
   };
+
+  // Listen for onboarding tour events to switch between regular and demo agents
+  React.useEffect(() => {
+    const checkWalkthroughState = () => {
+      try {
+        console.log('state');
+
+        const savedState = localStorage.getItem('onboardingState');
+        if (savedState) {
+          const state = JSON.parse(savedState);
+          console.log('state', state);
+          const inWalkthrough = state.isActive && state.tourId === 'welcome-concept-walkthrough';
+          if (inWalkthrough !== isInWalkthrough) {
+            setIsInWalkthrough(inWalkthrough);
+          }
+        } else if (isInWalkthrough) {
+          setIsInWalkthrough(false);
+        }
+      } catch (error) {
+        console.error('Error checking walkthrough state:', error);
+        setIsInWalkthrough(false);
+      }
+    };
+
+    // Initial check
+    checkWalkthroughState();
+
+    // Listen for start tour event - immediate switch to demo agents
+    const handleStartTour = (event) => {
+      const { tourId } = event.detail;
+      if (tourId === 'welcome-concept-walkthrough') {
+        console.log('Main nav switching to demo agents');
+        setIsInWalkthrough(true);
+      }
+    };
+
+    // Debounce state changes to prevent flicker
+    let debounceTimeout;
+    const handleOnboardingStateChange = (event) => {
+      const { tourId } = event.detail;
+      console.log('event', event);
+      // Clear any pending timeout
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+      
+      // Only react to inactive state (tour ending) to switch back to regular agents
+      if (tourId !== 'welcome-concept-walkthrough') {
+        debounceTimeout = setTimeout(() => {
+          console.log('Main nav switching back to regular agents');
+          setIsInWalkthrough(false);
+        }, 200); // Small delay to avoid flicker
+      }
+      // Ignore active state changes to prevent flicker during step transitions
+    };
+
+    window.addEventListener('onboarding:start-tour', handleStartTour);
+    window.addEventListener('onboarding:change-tour', handleOnboardingStateChange);
+
+    return () => {
+      window.removeEventListener('onboarding:start-tour', handleStartTour);
+      window.removeEventListener('onboarding:change-tour', handleOnboardingStateChange);
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [isInWalkthrough]);
 
   return (
     <React.Fragment>

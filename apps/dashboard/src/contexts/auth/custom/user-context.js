@@ -84,9 +84,6 @@ export function UserProvider({ children }) {
   // Listen for user data changes (e.g., onboarding progress updates)
   React.useEffect(() => {
     const handleUserDataChanged = (event) => {
-      console.log('User context: User data changed event received:', event.detail);
-      console.log('User context: Current user before refresh:', state.user?.onboardingCurrentTour);
-      
       checkSession().then((userData) => {
         console.log('User context: Session refreshed, new user data:', userData?.onboardingCurrentTour);
       }).catch((err) => {

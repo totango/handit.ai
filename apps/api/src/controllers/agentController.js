@@ -32,7 +32,8 @@ export const getAllAgents = async (req, res) => {
   try {
     const { userObject } = req;
     const { companyId } = userObject;
-    const agents = await getAllAgentsFunction(companyId);
+    const tourAgent = req.query.tourAgent === 'true';
+    const agents = await getAllAgentsFunction(companyId, tourAgent);
     res.status(200).json(agents);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -96,8 +97,12 @@ export const updateConnection = async (req, res) => {
   }
 };
 
-export const getAllAgentsFunction = async (companyId) => {
-  const agents = await Agent.findAll({ where: { companyId } });
+export const getAllAgentsFunction = async (companyId, tourAgent = false) => {
+  if (tourAgent) {
+    const agents = await Agent.findAll({ where: { tourAgent: true } });
+    return agents;
+  }
+  const agents = await Agent.findAll({ where: { companyId, tourAgent } });
   return agents;
 };
 
@@ -151,7 +156,6 @@ export const getAgentByIdFunction = async (req, id) => {
     const agent = await Agent.findOne({
       where: {
         id: req.params.id,
-        companyId,
       },
       include: [
         {
@@ -170,8 +174,13 @@ export const getAgentByIdFunction = async (req, id) => {
       ],
     });
 
-    if (!agent) {
+    if (!agent.tourAgent && agent.companyId !== companyId) {
       throw new Error('Agent not found');
+    }
+
+    if (!agent) {
+      console.log('agent not found');
+      return null;
     }
 
     return agent;

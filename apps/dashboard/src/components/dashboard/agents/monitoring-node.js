@@ -311,10 +311,28 @@ export const MonitoringNode = React.memo(({ id, data, isConnectable }) => {
     return data.sequence.filter(step => !visibleSteps.includes(step));
   };
 
-  // Calculate step visibility
-  const visibleSteps = getVisibleSteps();
-  const remainingSteps = getRemainingSteps();
-  const showMoreButton = data.sequence?.length > 0;
+
+  // Determine test ID for onboarding
+  const getTestId = () => {
+    if (data.type === 'model') {
+      // Check if this is the first model node in sequence
+      const sequenceValue = data.sequence?.[0] || data.allSteps?.[0];
+      if (sequenceValue === 1) {
+        // Check status - if failed, it's the first failed node
+        if (data.status === 'failed' || data.status === 'error') {
+          return 'llm-node-failed-first';
+        } else {
+          // Otherwise it's the first success node
+          return 'llm-node-success-first';
+        }
+      }
+
+      if (data.status === 'failed' || data.status === 'error') {
+        return 'llm-node-failed-first';
+      } 
+    }
+    return undefined;
+  };
 
   return (
     <Card
@@ -337,6 +355,7 @@ export const MonitoringNode = React.memo(({ id, data, isConnectable }) => {
         transition: 'all 0.3s ease',
       }}
       onClick={data.onClick}
+      data-testid={getTestId()}
     >
       {/* Step Badge */}
       {(
