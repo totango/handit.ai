@@ -450,7 +450,6 @@ export const getAgentByIdFunction = async (req, res) => {
     const agent = await Agent.findOne({
       where: {
         id: req.params.agentId,
-        companyId,
       },
       include: [
         {
@@ -467,6 +466,11 @@ export const getAgentByIdFunction = async (req, res) => {
         },
       ],
     });
+
+    if (!agent.tourAgent && agent.companyId !== companyId) {
+      console.log('agent not found');
+      return null;
+    }
 
     if (!agent) {
       throw new Error('Agent not found');

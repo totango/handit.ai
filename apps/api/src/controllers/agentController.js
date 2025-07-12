@@ -175,7 +175,8 @@ export const getAgentByIdFunction = async (req, id) => {
     });
 
     if (!agent.tourAgent && agent.companyId !== companyId) {
-      throw new Error('Agent not found');
+      console.log('agent not found');
+      return null;
     }
 
     if (!agent) {

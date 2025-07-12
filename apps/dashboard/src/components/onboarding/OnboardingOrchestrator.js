@@ -520,7 +520,7 @@ const OnboardingOrchestrator = ({
                 onClick: () => {
                   // Hide current banner immediately when any action is clicked
                   banners.hideAllBanners();
-
+                  console.log('action', action);
                   if (action.action === 'nextStep') {
                     // Handle special case for closing connect dialog
                     if (currentStep?.id === 'close-connect-dialog') {
@@ -559,11 +559,19 @@ const OnboardingOrchestrator = ({
                     // Use transition method to avoid emitting completion event
                     onboardingService.transitionTour();
                     const nextStep = onboardingService.startTour(action.nextTourId);
-
+                    console.log('nextStep', nextStep);
+                    console.log('action.nextTourId', action);
                     if (nextStep) {
                       setCurrentStep(nextStep);
                       const tourInfo = onboardingService.getCurrentTourInfo();
                       setTourInfo(tourInfo);
+
+                      console.log('action.nextTourId', action.nextTourId);
+                      window.dispatchEvent(
+                        new CustomEvent('onboarding:change-tour', {
+                          detail: { tourId: action.nextTourId },
+                        })
+                      );
 
                       // Show assistant if tour settings specify it
                       if (tourInfo?.settings?.showAssistant) {
@@ -954,7 +962,7 @@ const OnboardingOrchestrator = ({
           onClick: () => {
             // Hide current banner immediately when any action is clicked
             banners.hideAllBanners();
-
+            console.log('action', action);
             if (action.action === 'nextStep') {
               // Handle special case for closing connect dialog
               if (currentStep?.id === 'close-connect-dialog') {
@@ -990,7 +998,11 @@ const OnboardingOrchestrator = ({
               // Use transition method to avoid emitting completion event
               onboardingService.transitionTour();
               const nextStep = onboardingService.startTour(action.nextTourId);
-
+              window.dispatchEvent(
+                new CustomEvent('onboarding:change-tour', {
+                  detail: { tourId: action.nextTourId },
+                })
+              );
               if (nextStep) {
                 setCurrentStep(nextStep);
                 const tourInfo = onboardingService.getCurrentTourInfo();
