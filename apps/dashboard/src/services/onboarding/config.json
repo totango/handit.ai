@@ -496,153 +496,10 @@
           },
           {
             "stepNumber": 3,
-            "id": "fill-agent-form",
-            "type": "banner",
-            "title": "Fill Out Agent Information",
-            "target": "body",
-            "placement": "top-center",
-            "content": {
-              "heading": "📝 Tell Us About Your Agent",
-              "description": "Fill out the three questions: use case, programming language, and description.",
-              "variant": "info",
-              "showCloseButton": false,
-              "autoHide": false,
-              "icon": "📝"
-            },
-            "actions": [
-              {
-                "text": "Got it",
-                "type": "primary",
-                "action": "nextStep",
-                "analytics": "form_instructions_acknowledged"
-              }
-            ],
-            "duration": null,
-            "autoAdvance": false
-          },
-          {
-            "stepNumber": 4,
-            "id": "generate-setup-button",
-            "type": "cursor-only",
-            "title": "Generate Your Setup Guide",
-            "target": "[data-testid='generate-setup-button']",
-            "placement": "top",
-            "content": {
-              "heading": "Generate Setup Guide",
-              "description": "Click to generate personalized instructions"
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": true,
-            "advanceOnClick": {
-              "target": "[data-testid='generate-setup-button']",
-              "description": "Click the Generate Setup button"
-            },
-            "waitForElement": {
-              "target": "[data-testid='generate-setup-button']:not([disabled])",
-              "timeout": 30000,
-              "checkInterval": 1000
-            },
-            "cursorGuidance": {
-              "enabled": true,
-              "delay": 2000,
-              "steps": [
-                {
-                  "target": "[data-testid='generate-setup-button']",
-                  "targetText": "Generate Setup",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "🚀 Generate Your Guide",
-                    "description": "Generate personalized setup instructions.",
-                    "tip": "Button enables when all fields are filled",
-                    "position": "top",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 5,
-            "id": "view-instructions",
-            "type": "cursor-only",
-            "title": "View Your Instructions", 
-            "target": "[data-testid='view-instructions-button']",
-            "placement": "top",
-            "content": {
-              "heading": "View Your Instructions",
-              "description": "Click to see your setup guide"
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": true,
-            "advanceOnClick": {
-              "target": "[data-testid='view-instructions-button']",
-              "description": "Click the View Instructions button"
-            },
-            "advanceDelay": 2000,
-            "waitForElement": {
-              "target": "[data-testid='view-instructions-button']", 
-              "timeout": 15000,
-              "checkInterval": 500
-            },
-            "cursorGuidance": {
-              "enabled": true,
-              "delay": 500,
-              "steps": [
-                {
-                  "target": "[data-testid='view-instructions-button']",
-                  "targetText": "View Instructions",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "📖 View Your Guide",
-                    "description": "See your personalized setup instructions.",
-                    "tip": "Copy code snippets and follow steps",
-                    "position": "top",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 6,
-            "id": "follow-instructions-banner",
-            "type": "banner",
-            "title": "Follow The Setup Instructions",
-            "target": "body",
-            "placement": "center",
-            "content": {
-              "heading": "📋 Follow Your Setup Guide",
-              "description": "Follow the instructions above. Copy code snippets, install SDK, and integrate HandIt.",
-              "variant": "info",
-              "showCloseButton": false,
-              "autoHide": false,
-              "icon": "📋"
-            },
-            "actions": [
-              {
-                "text": "Done",
-                "type": "primary",
-                "action": "nextStep",
-                "analytics": "setup_instructions_followed"
-              }
-            ],
-            "duration": null,
-            "autoAdvance": false
-          },
-          {
-            "stepNumber": 7,
             "id": "test-connection-button",
             "type": "cursor-only",
             "title": "Test Your Connection",
-            "target": "[data-testid='test-connection-button']",
+            "target": "[data-testid='guide-test-connection-button']",
             "placement": "left",
             "content": {
               "heading": "Test Your Connection",
@@ -656,14 +513,14 @@
               "delay": 1000,
               "steps": [
                 {
-                  "target": "[data-testid='test-connection-button']",
+                  "target": "[data-testid='guide-test-connection-button']",
                   "targetText": "Test Connection",
                   "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
                   "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "🔗 Test Your Connection",
-                    "description": "Verify your agent is connected to HandIt.",
+                    "description": "After following the steps above, test your connection here to verify your agent is connected to Handit.",
                     "tip": "Continues automatically if successful",
                     "position": "right",
                     "showNearTarget": true
@@ -674,15 +531,15 @@
             }
           },
           {
-            "stepNumber": 8,
+            "stepNumber": 4,
             "id": "setup-complete",
             "type": "banner",
             "title": "Setup Complete",
             "target": "body",
             "placement": "center",
             "content": {
-              "heading": "🎉 Connection Successful!",
-              "description": "Agent connected! Now let's set up evaluation to monitor quality.",
+              "heading": "🎉 Congratulations!",
+              "description": "Your agent is successfully connected to Handit! You're now ready to set up evaluation and monitoring to track your agent's performance and quality.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,

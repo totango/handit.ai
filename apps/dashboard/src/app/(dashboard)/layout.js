@@ -93,24 +93,6 @@ function LayoutInner({ children }) {
     <DynamicLayout>
       {children}
 
-      {/* Floating onboarding trigger - backup option */}
-      {!showOnboarding && (
-        <Tooltip title="Start HandIt Onboarding">
-          <Fab
-            color="primary"
-            size="small"
-            onClick={() => setShowOnboarding(true)}
-            sx={{
-              position: 'fixed',
-              bottom: 24,
-              right: 24,
-              zIndex: 1000,
-            }}
-          >
-            <Rocket size={20} />
-          </Fab>
-        </Tooltip>
-      )}
 
       {/* Onboarding System - Always render so it can listen for sidebar events */}
       <OnboardingOrchestrator

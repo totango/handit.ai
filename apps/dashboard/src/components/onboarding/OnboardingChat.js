@@ -31,12 +31,10 @@ import {
 import CodeRenderer from './CodeRenderer';
 
 const OnboardingChat = ({ 
-  onConnectionCheck,
-  connectionStatus = 'disconnected', // 'disconnected', 'checking', 'connected', 'error'
   mode = 'assistant', // 'assistant' or 'agent-setup'
   onComplete,
   isDarkMode = false,
-  position = 'bottom-left', // 'bottom-left', 'bottom-right', 'top-left', 'top-right', 'center'
+  position = 'center', // Default to center
   visible = false,
   onClose,
   questions = []
@@ -44,11 +42,12 @@ const OnboardingChat = ({
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const [isVisible, setIsVisible] = useState(visible);
   const [sessionId, setSessionId] = useState(null);
   const [codeModalOpen, setCodeModalOpen] = useState(false);
   const [codeModalContent, setCodeModalContent] = useState('');
+  const [guideContent, setGuideContent] = useState(''); // Store guide content for banner
+  const [chatHeight, setChatHeight] = useState(200); // Track chat height
   const messagesEndRef = useRef(null);
 
   const theme = {
@@ -56,8 +55,8 @@ const OnboardingChat = ({
     color: '#ffffff',
     borderColor: 'rgba(255, 255, 255, 0.1)',
     inputBg: 'rgba(255, 255, 255, 0.05)',
-    messageBg: 'rgba(255, 255, 255, 0.1)',
-    aiMessageBg: 'rgba(74, 144, 226, 0.2)',
+    messageBg: '#000000', // User messages - black
+    aiMessageBg: 'rgba(255, 255, 255, 0.1)', // Agent messages - light grey
   };
 
   const scrollToBottom = () => {
@@ -66,16 +65,33 @@ const OnboardingChat = ({
 
   useEffect(() => {
     scrollToBottom();
+    // Recalculate height when messages change
+    const newHeight = calculateHeight();
+    setChatHeight(newHeight);
   }, [messages]);
 
   useEffect(() => {
     setIsVisible(visible);
+    
+    // Recalculate height when visibility changes
+    if (visible) {
+      const newHeight = calculateHeight();
+      setChatHeight(newHeight);
+      window.dispatchEvent(new CustomEvent('onboarding:chat-opened'));
+    } else {
+      window.dispatchEvent(new CustomEvent('onboarding:chat-closed'));
+    }
   }, [visible]);
 
   useEffect(() => {
     // Only add initial greeting if no messages exist
     if (messages.length === 0) {
-      addMessage('ai', "Hi! I'm your Handit assistant. I can help you with onboarding questions, guide you through connecting your agent, or answer any questions about using Handit. How can I help you today?");
+      addMessage('ai', "Hi! I'm your Handit assistant. I can help you with onboarding questions, guide you through connecting your agent, or answer any questions about using Handit. How can I help you today?", 'text', {}, false);
+      // Initial height calculation
+      setTimeout(() => {
+        const newHeight = calculateHeight();
+        setChatHeight(newHeight);
+      }, 100);
     }
   }, []);
 
@@ -93,18 +109,29 @@ const OnboardingChat = ({
         };
         setMessages(prev => [...prev, userMessage]);
         
-                 // Call AI agent with the message
-         setIsLoading(true);
-         try {
-           const aiResponse = await callAIAgent(event.detail.message);
-           const processedResponse = processAIResponse(aiResponse);
-           
-           addMessage('ai', processedResponse.content, processedResponse.type, processedResponse.metadata);
-         } catch (error) {
-           addMessage('ai', "I'm sorry, I encountered an error. Please try again or check your connection.");
-         } finally {
-           setIsLoading(false);
-         }
+        // Call AI agent with the message
+        setIsLoading(true);
+        
+        // Emit loading state change event to prevent banner re-renders
+        window.dispatchEvent(new CustomEvent('onboarding:loading-state-change', {
+          detail: { loading: true }
+        }));
+        
+        try {
+          const aiResponse = await callAIAgent(event.detail.message);
+          const processedResponse = processAIResponse(aiResponse);
+          
+          addMessage('ai', processedResponse.content, processedResponse.type, processedResponse.metadata, true); // From backend
+        } catch (error) {
+          addMessage('ai', "I'm sorry, I encountered an error. Please try again or check your connection.", 'text', {}, false); // Not from backend
+        } finally {
+          setIsLoading(false);
+          
+          // Emit loading state change event to allow banner updates
+          window.dispatchEvent(new CustomEvent('onboarding:loading-state-change', {
+            detail: { loading: false }
+          }));
+        }
       }
     };
 
@@ -114,68 +141,119 @@ const OnboardingChat = ({
     };
   }, [mode, sessionId]);
 
+  const addMessage = (sender, content, type = 'text', metadata = {}, fromBackend = false) => {
+    // If this is an AI message with onboarding flag, store content for guide and don't display it
+    if (sender === 'ai' && metadata.showOnboardingGuide) {
+      setGuideContent(content);
+      
+      // Only add the default guide intro message
+      setTimeout(() => {
+        const guideMessageId = Date.now() + Math.random();
+        const guideMessage = {
+          id: guideMessageId,
+          sender: 'ai',
+          content: "Let me walk you through the process of creating your agent. This guide will show you step-by-step how to set up monitoring, connect your agent, and configure evaluations.",
+          type: 'text',
+          metadata: { isGuideIntro: true, showOnboardingGuide: true },
+          timestamp: new Date(),
+          fromBackend: false
+        };
+        setMessages(prev => [...prev, guideMessage]);
+      }, 300);
+      return; // Don't add the original message
+    }
 
-
-  const addMessage = (sender, content, type = 'text', metadata = {}) => {
+    const messageId = Date.now() + Math.random();
     const message = {
-      id: Date.now() + Math.random(),
+      id: messageId,
       sender,
       content,
       type,
       metadata,
-      timestamp: new Date()
+      timestamp: new Date(),
+      fromBackend // Track if message came from backend
     };
+    
     setMessages(prev => [...prev, message]);
   };
 
-  const parseMarkdownCodeBlocks = (content) => {
-    // Regex to match code blocks with language specification
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  // Calculate dynamic height based on message count and content
+  const calculateHeight = () => {
+    const inputHeight = 80; // Input area height (increased for padding)
+    const baseMessageHeight = 60; // Base height per message (more realistic)
+    const extraPadding = 40; // Extra padding for container margins
+    const minContentHeight = 120; // Minimum content area
+    
+    // Calculate estimated content height based on message count and content length
+    let estimatedContentHeight = minContentHeight;
+    
+    if (messages.length > 0) {
+      // More sophisticated height calculation
+      const totalMessages = messages.length + (isLoading ? 1 : 0);
+      
+      // Base height calculation with consideration for content length
+      const avgContentLength = messages.reduce((sum, msg) => sum + (msg.content?.length || 0), 0) / messages.length;
+      const heightMultiplier = Math.max(1, Math.min(2, avgContentLength / 100)); // Scale based on content length
+      
+      estimatedContentHeight = totalMessages * baseMessageHeight * heightMultiplier;
+    }
+    
+    const totalHeight = estimatedContentHeight + inputHeight + extraPadding;
+    const maxHeight = Math.min(window.innerHeight * 0.8, 600); // Slightly increased max height
+    const minHeight = 200; // Minimum height to prevent too small chat
+    
+    return Math.max(minHeight, Math.min(totalHeight, maxHeight));
+  };
+
+  // Calculate dynamic width based on screen size
+  const calculateWidth = () => {
+    const maxWidth = Math.min(window.innerWidth * 0.9, 550); // Increased max width to 550px
+    const minWidth = 380; // Increased minimum width
+    return Math.max(minWidth, maxWidth);
+  };
+
+  const processAIResponse = (response) => {
+    if (!response.answer) {
+      return {
+        content: "I'm sorry, I didn't receive a proper response. Please try again.",
+        type: 'text',
+        metadata: {}
+      };
+    }
+
+    // Check if response contains code blocks
+    const codeBlockRegex = /```(\w+)?\s*\n([\s\S]*?)```/g;
     const codeBlocks = [];
     let match;
     
-    while ((match = codeBlockRegex.exec(content)) !== null) {
+    while ((match = codeBlockRegex.exec(response.answer)) !== null) {
       codeBlocks.push({
         language: match[1] || 'text',
         code: match[2].trim()
       });
     }
-    
-    return codeBlocks;
-  };
 
-  const processAIResponse = (response) => {
-    const content = response.answer || response.response || response.message;
-    
-    // Check if response has explicit code property
-    if (response.hasCode || response.code) {
-      return {
-        content,
-        type: 'code',
-        metadata: {
-          code: response.code,
-          language: response.language || 'javascript'
-        }
-      };
-    }
-    
-    // Check for markdown code blocks
-    const codeBlocks = parseMarkdownCodeBlocks(content);
+    // Check for onBoarding flag
+    const hasOnboardingFlag = response.onBoarding === true;
+    console.log('hasOnboardingFlag', hasOnboardingFlag);
+
     if (codeBlocks.length > 0) {
       return {
-        content,
+        content: response.answer,
         type: 'markdown-with-code',
-        metadata: {
-          codeBlocks
+        metadata: { 
+          codeBlocks,
+          showOnboardingGuide: hasOnboardingFlag
         }
       };
     }
-    
-    // Regular text response
+
     return {
-      content,
+      content: response.answer,
       type: 'text',
-      metadata: {}
+      metadata: {
+        showOnboardingGuide: hasOnboardingFlag
+      }
     };
   };
 
@@ -222,19 +300,27 @@ const OnboardingChat = ({
 
     setIsLoading(true);
     
+    // Emit loading state change event to prevent banner re-renders
+    window.dispatchEvent(new CustomEvent('onboarding:loading-state-change', {
+      detail: { loading: true }
+    }));
+    
     try {
       const aiResponse = await callAIAgent(userMessage);
       const processedResponse = processAIResponse(aiResponse);
       
-      addMessage('ai', processedResponse.content, processedResponse.type, processedResponse.metadata);
+      addMessage('ai', processedResponse.content, processedResponse.type, processedResponse.metadata, true); // From backend
     } catch (error) {
-      addMessage('ai', "I'm sorry, I encountered an error. Please try again or check your connection.");
+      addMessage('ai', "I'm sorry, I encountered an error. Please try again or check your connection.", 'text', {}, false); // Not from backend
     } finally {
       setIsLoading(false);
+      
+      // Emit loading state change event to allow banner updates
+      window.dispatchEvent(new CustomEvent('onboarding:loading-state-change', {
+        detail: { loading: false }
+      }));
     }
   };
-
-
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
@@ -245,173 +331,174 @@ const OnboardingChat = ({
     setCodeModalOpen(true);
   };
 
-  const renderMarkdownWithCode = (content, codeBlocks) => {
-    // Split content by code blocks to render markdown and code separately
-    const parts = [];
-    let lastIndex = 0;
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    let match;
-    let codeBlockIndex = 0;
-
-    while ((match = codeBlockRegex.exec(content)) !== null) {
-      // Add text before code block
-      if (match.index > lastIndex) {
-        const textPart = content.substring(lastIndex, match.index);
-        parts.push({
-          type: 'text',
-          content: textPart,
-          key: `text-${parts.length}`
-        });
-      }
-
-      // Add code block
-      parts.push({
-        type: 'code',
-        content: codeBlocks[codeBlockIndex],
-        key: `code-${codeBlockIndex}`
-      });
-
-      lastIndex = match.index + match[0].length;
-      codeBlockIndex++;
-    }
-
-    // Add remaining text after last code block
-    if (lastIndex < content.length) {
-      const textPart = content.substring(lastIndex);
-      parts.push({
-        type: 'text',
-        content: textPart,
-        key: `text-${parts.length}`
-      });
-    }
-
-    return parts.map((part) => {
-      if (part.type === 'text') {
-        return (
-          <Typography 
-            key={part.key}
-            variant="body2" 
-            sx={{ 
-              whiteSpace: 'pre-wrap',
-              mb: 1,
-              '& strong': { fontWeight: 600 },
-              '& em': { fontStyle: 'italic' }
-            }}
-          >
-            {part.content.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1')}
-          </Typography>
-        );
-      } else {
-                 return (
-           <Box
-             key={part.key}
-             sx={{
-               position: 'relative',
-               maxHeight: '200px',
-               overflow: 'auto',
-               borderRadius: 1,
-               mb: 2,
-               '& pre': {
-                 margin: '0 !important',
-               }
-             }}
-           >
-             <CodeRenderer
-               code={part.content.code}
-               language={part.content.language}
-               showLineNumbers={false}
-             />
-             <Box
-               sx={{
-                 position: 'absolute',
-                 top: 8,
-                 right: 8,
-                 display: 'flex',
-                 gap: 1
-               }}
-             >
-               <Tooltip title="Copy code">
-                 <IconButton
-                   size="small"
-                   onClick={() => copyToClipboard(part.content.code)}
-                   sx={{
-                     bgcolor: 'rgba(0, 0, 0, 0.3)',
-                     color: 'white',
-                     '&:hover': {
-                       bgcolor: 'rgba(0, 0, 0, 0.5)'
-                     }
-                   }}
-                 >
-                   <Copy size={14} />
-                 </IconButton>
-               </Tooltip>
-               <Tooltip title="Open in modal">
-                 <IconButton
-                   size="small"
-                   onClick={() => openCodeModal(part.content.code)}
-                   sx={{
-                     bgcolor: 'rgba(0, 0, 0, 0.3)',
-                     color: 'white',
-                     '&:hover': {
-                       bgcolor: 'rgba(0, 0, 0, 0.5)'
-                     }
-                   }}
-                 >
-                   <Code size={14} />
-                 </IconButton>
-               </Tooltip>
-             </Box>
-           </Box>
-        );
-      }
-    });
+  const handleShowOnboardingGuide = () => {
+    // Emit event to show the full guide banner
+    window.dispatchEvent(new CustomEvent('onboarding:show-full-guide', {
+      detail: { content: guideContent }
+    }));
+    // Close the chat which will restore previous state
+    handleClose();
   };
 
-  const renderMessage = (message) => {
-    const isAi = message.sender === 'ai';
-    
-    return (
-      <Box
-        key={message.id}
+  // Component for rendering the onboarding guide button
+  const OnboardingGuideButton = () => (
+    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-start' }}>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={handleShowOnboardingGuide}
         sx={{
-          display: 'flex',
-          justifyContent: isAi ? 'flex-start' : 'flex-end',
-          mb: 1,
-          alignItems: 'flex-start',
-          gap: 1
+          backgroundColor: '#4A90E2', // Blue background
+          color: 'white', // White text
+          fontSize: '0.75rem',
+          py: 0.5,
+          px: 1.5,
+          borderRadius: '8px',
+          textTransform: 'none',
+          minWidth: 'auto',
+          boxShadow: 'none',
+          border: 'none',
+          '&:hover': {
+            backgroundColor: '#357ABD', // Darker blue on hover
+            boxShadow: 'none',
+          }
         }}
       >
-        {isAi && (
-          <Box
-            sx={{
-              bgcolor: '#4A90E2',
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              mt: 0.5
-            }}
-          >
-            <Robot size={16} color="white" />
+        Show me the guide
+      </Button>
+    </Box>
+  );
+
+  const renderMarkdownWithCode = (content, codeBlocks) => {
+    if (!codeBlocks || codeBlocks.length === 0) {
+      return (
+        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+          {content}
+        </Typography>
+      );
+    }
+
+    let processedContent = content;
+    const elements = [];
+    let lastIndex = 0;
+
+    // Replace code blocks with placeholders and collect them
+    codeBlocks.forEach((block, index) => {
+      const codeBlockRegex = new RegExp(`\`\`\`${block.language}?\\s*\\n[\\s\\S]*?\`\`\``, 'g');
+      const match = codeBlockRegex.exec(processedContent);
+      
+      if (match) {
+        // Add text before the code block
+        if (match.index > lastIndex) {
+          const textBefore = processedContent.substring(lastIndex, match.index);
+          if (textBefore.trim()) {
+            elements.push(
+              <Typography key={`text-${index}`} variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
+                {textBefore}
+              </Typography>
+            );
+          }
+        }
+
+        // Add the code block
+        elements.push(
+          <Box key={`code-${index}`} sx={{ position: 'relative', mb: 2 }}>
+            <Box
+              sx={{
+                maxHeight: '200px',
+                overflow: 'auto',
+                borderRadius: 1,
+                '& pre': {
+                  margin: '0 !important',
+                }
+              }}
+            >
+              <CodeRenderer
+                code={block.code}
+                language={block.language}
+                showLineNumbers={false}
+              />
+            </Box>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                display: 'flex',
+                gap: 1
+              }}
+            >
+              <Tooltip title="Copy code">
+                <IconButton
+                  size="small"
+                  onClick={() => copyToClipboard(block.code)}
+                  sx={{
+                    bgcolor: 'rgba(0, 0, 0, 0.3)',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                  }}
+                >
+                  <Copy size={14} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Open in modal">
+                <IconButton
+                  size="small"
+                  onClick={() => openCodeModal(block.code)}
+                  sx={{
+                    bgcolor: 'rgba(0, 0, 0, 0.3)',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                  }}
+                >
+                  <Code size={14} />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
-        )}
-        
+        );
+
+        lastIndex = match.index + match[0].length;
+      }
+    });
+
+    // Add any remaining text
+    if (lastIndex < processedContent.length) {
+      const remainingText = processedContent.substring(lastIndex);
+      if (remainingText.trim()) {
+        elements.push(
+          <Typography key="text-final" variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            {remainingText}
+          </Typography>
+        );
+      }
+    }
+
+    return <Box>{elements}</Box>;
+  };
+
+  // Component for rendering AI messages (no animation)
+  const AIMessage = ({ message }) => {
+    return (
+      <Box>
         <Paper
           sx={{
-            p: 1.5,
-            maxWidth: '70%',
-            bgcolor: isAi ? theme.aiMessageBg : theme.messageBg,
-            borderRadius: isAi ? '20px 20px 20px 8px' : '20px 20px 8px 20px',
+            px: 1.5, // Reduced padding
+            py: 1, // Reduced padding
+            maxWidth: '85%', // Increased max width since no avatars
+            bgcolor: theme.aiMessageBg,
+            borderRadius: '16px 16px 16px 6px', // Reduced border radius
             color: theme.color,
             wordBreak: 'break-word'
           }}
         >
           {(message.type === 'instruction' || message.type === 'code') && message.metadata.code ? (
             <Box>
-              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, fontSize: '0.8rem' }}>
                 {message.content}
               </Typography>
               <Box
@@ -446,12 +533,14 @@ const OnboardingChat = ({
                       sx={{
                         bgcolor: 'rgba(0, 0, 0, 0.3)',
                         color: 'white',
+                        width: 20,
+                        height: 20,
                         '&:hover': {
                           bgcolor: 'rgba(0, 0, 0, 0.5)'
                         }
                       }}
                     >
-                      <Copy size={14} />
+                      <Copy size={12} />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Open in modal">
@@ -461,12 +550,14 @@ const OnboardingChat = ({
                       sx={{
                         bgcolor: 'rgba(0, 0, 0, 0.3)',
                         color: 'white',
+                        width: 20,
+                        height: 20,
                         '&:hover': {
                           bgcolor: 'rgba(0, 0, 0, 0.5)'
                         }
                       }}
                     >
-                      <Code size={14} />
+                      <Code size={12} />
                     </IconButton>
                   </Tooltip>
                 </Box>
@@ -477,382 +568,327 @@ const OnboardingChat = ({
               {renderMarkdownWithCode(message.content, message.metadata.codeBlocks)}
             </Box>
           ) : (
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}>
               {message.content}
             </Typography>
           )}
         </Paper>
         
-        {!isAi && (
-          <Box
-            sx={{
-              bgcolor: '#666666',
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              mt: 0.5
-            }}
-          >
-            <User size={16} color="white" />
+        {/* Show onboarding guide button if flag is set */}
+        {message.metadata.showOnboardingGuide && (
+          <Box sx={{ mt: 1 }}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => {
+                // Close chat and open the comprehensive guide banner
+                handleClose();
+                // Dispatch event to show the full guide banner
+                window.dispatchEvent(new CustomEvent('onboarding:show-full-guide', {
+                  detail: { content: guideContent }
+                }));
+              }}
+              sx={{
+                bgcolor: '#4A90E2',
+                color: 'white',
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                px: 2,
+                py: 0.5,
+                '&:hover': {
+                  bgcolor: '#357ABD'
+                }
+              }}
+            >
+              Show me the guide
+            </Button>
           </Box>
         )}
       </Box>
     );
   };
 
-  const getConnectionStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'success';
-      case 'checking': return 'info';
-      case 'error': return 'error';
-      default: return 'warning';
-    }
-  };
-
-  const getConnectionStatusText = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'Connected';
-      case 'checking': return 'Checking...';
-      case 'error': return 'Connection Error';
-      default: return 'Not Connected';
-    }
-  };
-
-  const getConnectionStatusIcon = () => {
-    switch (connectionStatus) {
-      case 'connected': return <CheckCircle size={16} />;
-      case 'checking': return <CircularProgress size={16} />;
-      case 'error': return <XCircle size={16} />;
-      default: return <Warning size={16} />;
-    }
+  const renderMessage = (message) => {
+    const isAi = message.sender === 'ai';
+    
+    return (
+      <Box
+        key={message.id}
+        sx={{
+          display: 'flex',
+          justifyContent: isAi ? 'flex-start' : 'flex-end',
+          mb: 0.5, // Reduced margin
+        }}
+      >
+        {isAi ? (
+          <AIMessage message={message} />
+        ) : (
+          <Paper
+            sx={{
+              px: 1.5, // Reduced padding
+              py: 1, // Reduced padding
+              maxWidth: '85%', // Increased max width since no avatars
+              bgcolor: theme.messageBg,
+              borderRadius: '16px 16px 6px 16px', // Reduced border radius
+              color: theme.color,
+              wordBreak: 'break-word'
+            }}
+          >
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}>
+              {message.content}
+            </Typography>
+          </Paper>
+        )}
+      </Box>
+    );
   };
 
   const getPositionStyles = () => {
-    switch (position) {
-      case 'bottom-left':
-        return {
-          bottom: 20,
-          left: 20,
-        };
-      case 'bottom-right':
-        return {
-          bottom: 20,
-          right: 20,
-        };
-      case 'top-left':
-        return {
-          top: 20,
-          left: 20,
-        };
-      case 'top-right':
-        return {
-          top: 20,
-          right: 20,
-        };
-      case 'center':
-        return {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        };
-      default:
-        return {
-          bottom: 20,
-          left: 20,
-        };
-    }
+    return {
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+    };
   };
 
   const handleClose = () => {
     setIsVisible(false);
+    // Reset chat messages to start fresh next time
+    setMessages([]);
+    // Reset other chat state
+    setSessionId(null);
+    setGuideContent('');
+    setInputValue('');
+    // Emit event to restore onboarding elements
+    window.dispatchEvent(new CustomEvent('onboarding:chat-closed'));
     onClose?.();
   };
 
   if (!isVisible) return null;
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        zIndex: 10,
-        ...getPositionStyles(),
-        width: 520,
-        height: 600,
-        borderRadius: '5px',
-      }}
-    >
-              <Card
+    <>
+      {/* Full-screen backdrop with blur effect */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          backgroundColor: 'rgba(0, 0, 0, 0.3)', // Semi-transparent overlay
+          backdropFilter: 'blur(8px)', // Blur the entire background
+          WebkitBackdropFilter: 'blur(8px)', // Safari support
+        }}
+        onClick={handleClose}
+      />
+      
+      <Box
+        sx={{
+          position: 'fixed',
+          zIndex: 10000,
+          ...getPositionStyles(),
+          width: calculateWidth(),
+          height: chatHeight,
+          borderRadius: '8px', // Reduced border radius
+          // Add subtle animation for floating appearance
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)', // Removed backdrop filter from here
+          animation: 'floatIn 0.3s ease-out',
+          '@keyframes floatIn': {
+            '0%': {
+              opacity: 0,
+              transform: 'translate(-50%, -50%) scale(0.95)',
+            },
+            '100%': {
+              opacity: 1,
+              transform: 'translate(-50%, -50%) scale(1)',
+            },
+          },
+        }}
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+      >
+        <Card
           sx={{
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
             bgcolor: theme.bgcolor,
-            boxShadow: '0 12px 48px rgba(0, 0, 0, 0.4)',
-            borderRadius: '5px',
+            borderRadius: '8px', // Reduced border radius
             border: '1px solid rgba(255, 255, 255, 0.1)',
+            overflow: 'hidden',
           }}
         >
-        {/* Header */}
-        <Box 
-          sx={{ 
-            p: 2, 
-            borderBottom: `1px solid ${theme.borderColor}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: theme.color,
-              fontSize: '1rem',
-              fontWeight: 600
-            }}
-          >
-            Handit Assistant
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={handleClose}
-            sx={{
-              color: theme.color,
-              '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.1)'
-              }
-            }}
-          >
-            <X size={16} />
-          </IconButton>
-        </Box>
-              {/* Chat Messages */}
-        <Box
-          sx={{
-            flex: 1,
-            overflow: 'auto',
-            p: 2,
-          }}
-        >
-          {messages.map(renderMessage)}
-          {isLoading && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 1 }}>
-              <Box
-                sx={{
-                  bgcolor: '#4A90E2',
-                  borderRadius: '50%',
-                  width: 32,
-                  height: 32,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                <Robot size={16} color="white" />
-              </Box>
-              <Paper
-                sx={{
-                  p: 1.5,
-                  bgcolor: theme.aiMessageBg,
-                  borderRadius: '20px 20px 20px 8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <CircularProgress size={16} />
-                <Typography variant="body2" sx={{ color: theme.color }}>
-                  Thinking...
-                </Typography>
-              </Paper>
-            </Box>
-          )}
-          <div ref={messagesEndRef} />
-        </Box>
-
-        {/* Connection Status */}
-        {onConnectionCheck && (
-          <Box sx={{ p: 2, borderTop: `1px solid ${theme.borderColor}` }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Chip
-                icon={getConnectionStatusIcon()}
-                label={getConnectionStatusText()}
-                color={getConnectionStatusColor()}
-                variant="outlined"
-                sx={{ flex: 1, color: 'primary.main', borderRadius: '0px', borderColor: 'transparent' }}
-              />
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={onConnectionCheck}
-                disabled={connectionStatus === 'checking'}
-                sx={{
-                  borderColor: 'transparent',
-                  color: 'primary.main',
-                  '&:hover': {
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
-                  },
-                  backgroundColor: 'rgba(117,120,255, 0.2)',
-                }}
-              >
-                Check Connection
-              </Button>
-            </Stack>
-          </Box>
-        )}
-
-        {/* Chat Input */}
-        <Box sx={{ p: 2, borderTop: `1px solid ${theme.borderColor}` }}>
-          <form onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Ask me anything..."
-              variant="outlined"
-              size="small"
-              disabled={isLoading}
-              sx={{
-                borderRadius: '5px',
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: theme.inputBg,
-                  borderRadius: '5px',
-                  '& fieldset': { borderColor: theme.borderColor },
-                  '&:hover fieldset': { borderColor: theme.borderColor },
-                  '&.Mui-focused fieldset': { borderColor: '#4A90E2' },
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: theme.color,
-                  fontSize: '0.875rem',
-                  py: 0.8,
-                  '&::placeholder': {
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    opacity: 1
-                  }
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      type="submit"
-                      size="small"
-                      disabled={!inputValue.trim() || isLoading}
-                      sx={{
-                        color: inputValue.trim() && !isLoading ? '#4A90E2' : theme.borderColor,
-                        '&:hover': {
-                          bgcolor: 'rgba(74, 144, 226, 0.1)'
-                        }
-                      }}
-                    >
-                      <PaperPlaneTilt size={16} />
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-            />
-          </form>
-        </Box>
-      </Card>
-
-      {/* Code Modal */}
-      <Dialog
-        open={codeModalOpen}
-        onClose={() => setCodeModalOpen(false)}
-        maxWidth="lg"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: theme.bgcolor,
-            color: theme.color,
-            minHeight: '30vh',
-            height: 'auto',
-            maxHeight: '50vh',
-            zIndex: 50
-          }
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: `1px solid ${theme.borderColor}`,
-            color: theme.color
-          }}
-        >
-          <Typography variant="h6">Code Preview</Typography>
-          <IconButton
-            onClick={() => setCodeModalOpen(false)}
-            sx={{ color: theme.color }}
-          >
-            <X size={20} />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ p: 0 }}>
+          {/* Chat Messages */}
           <Box
             sx={{
-              position: 'relative',
-              minHeight: '400px',
+              flex: 1,
               overflow: 'auto',
-              '& pre': {
-                margin: '0 !important',
-                minHeight: '400px'
-              }
+              px: 1.5, // Reduced padding
+              py: 1.5, // Increased top padding to compensate for no header
+              minHeight: 0, // Important for flex child to be scrollable
+              // Hide scrollbar while keeping scroll functionality
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              '-ms-overflow-style': 'none', // IE and Edge
+              'scrollbar-width': 'none', // Firefox
             }}
           >
-            <CodeRenderer
-              code={codeModalContent}
-              language="javascript"
-              showLineNumbers={true}
-            />
-            <Tooltip title="Copy code">
-              <IconButton
-                onClick={() => copyToClipboard(codeModalContent)}
+            {messages.map(renderMessage)}
+            {isLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 0.5 }}>
+                <Paper
+                  sx={{
+                    px: 1.5,
+                    py: 1, // Reduced padding
+                    bgcolor: theme.aiMessageBg, // Updated to match agent messages
+                    borderRadius: '16px 16px 16px 6px', // Reduced border radius
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  <CircularProgress size={12} />
+                  <Typography variant="body2" sx={{ color: theme.color, fontSize: '0.8rem' }}>
+                    Thinking...
+                  </Typography>
+                </Paper>
+              </Box>
+            )}
+            <div ref={messagesEndRef} />
+          </Box>
+
+          {/* Chat Input */}
+          <Box sx={{ px: 1.5, py: 1, flexShrink: 0 }}>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                fullWidth
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Ask me anything..."
+                variant="outlined"
+                size="small"
+                disabled={isLoading}
                 sx={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  bgcolor: 'rgba(0, 0, 0, 0.3)',
-                  color: 'white',
-                  '&:hover': {
-                    bgcolor: 'rgba(0, 0, 0, 0.5)'
+                  borderRadius: '5px',
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: theme.inputBg,
+                    borderRadius: '5px',
+                    minHeight: '36px', // Reduced height
+                    '& fieldset': { borderColor: theme.borderColor },
+                    '&:hover fieldset': { borderColor: theme.borderColor },
+                    '&.Mui-focused fieldset': { borderColor: '#4A90E2' },
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: theme.color,
+                    fontSize: '0.8rem', // Reduced font size
+                    py: 0.5, // Reduced padding
+                    '&::placeholder': {
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      opacity: 1
+                    }
                   }
                 }}
-              >
-                <Copy size={16} />
-              </IconButton>
-            </Tooltip>
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        type="submit"
+                        size="small"
+                        disabled={!inputValue.trim() || isLoading}
+                        sx={{
+                          color: theme.borderColor,
+                          width: 24,
+                          height: 24,
+                          '&:hover': {
+                            bgcolor: 'rgba(74, 144, 226, 0.1)'
+                          }
+                        }}
+                      >
+                        <PaperPlaneTilt size={12} />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </form>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: `1px solid ${theme.borderColor}` }}>
-          <Button
-            onClick={() => copyToClipboard(codeModalContent)}
-            startIcon={<Copy size={16} />}
-            sx={{ color: theme.color }}
-          >
-            Copy Code
-          </Button>
-          <Button
-            onClick={() => setCodeModalOpen(false)}
-            variant="contained"
+        </Card>
+
+        {/* Code Modal */}
+        <Dialog
+          open={codeModalOpen}
+          onClose={() => setCodeModalOpen(false)}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{
+            sx: {
+              bgcolor: theme.bgcolor,
+              color: theme.color,
+              minHeight: '30vh',
+              height: 'auto',
+              maxHeight: '50vh',
+              zIndex: 50000
+            }
+          }}
+        >
+          <DialogTitle
             sx={{
-              bgcolor: '#4A90E2',
-              '&:hover': {
-                bgcolor: '#357ABD'
-              }
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderBottom: `1px solid ${theme.borderColor}`,
+              color: theme.color
             }}
           >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+            <Typography variant="h6">Code Preview</Typography>
+            <IconButton
+              onClick={() => setCodeModalOpen(false)}
+              sx={{ color: theme.color }}
+            >
+              <X size={20} />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: 0 }}>
+            <Box
+              sx={{
+                position: 'relative',
+                minHeight: '400px',
+                overflow: 'auto',
+                '& pre': {
+                  margin: '0 !important',
+                  minHeight: '400px'
+                }
+              }}
+            >
+              <CodeRenderer
+                code={codeModalContent}
+                language="javascript"
+                showLineNumbers={true}
+              />
+              <Tooltip title="Copy code">
+                <IconButton
+                  onClick={() => copyToClipboard(codeModalContent)}
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    bgcolor: 'rgba(0, 0, 0, 0.3)',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                  }}
+                >
+                  <Copy size={16} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      </Box>
+    </>
   );
 };
 

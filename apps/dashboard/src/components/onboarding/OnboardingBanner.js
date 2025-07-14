@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import StableBannerContainer from './StableBannerContainer';
 import {
   Box,
   Card,
@@ -54,7 +55,7 @@ import {
   return { displayedText, isTyping, isComplete };
 };
 
-const OnboardingBanner = ({ 
+const OnboardingBanner = React.memo(({ 
   open,
   onClose,
   title,
@@ -66,7 +67,6 @@ const OnboardingBanner = ({
   arrow = 'none', // 'top', 'bottom', 'left', 'right', 'none'
   actions = [], // Array of action buttons
   showCloseButton = true,
-  icon,
   typingSpeed = 30, // Speed of typing animation in milliseconds
 }) => {
   const [visible, setVisible] = useState(open);
@@ -200,13 +200,14 @@ const OnboardingBanner = ({
           transform: position.transform,
           zIndex: 9997,
           maxWidth: 400,
+          borderRadius: '5px',
         }}
       >
         <Grow in={visible} timeout={300}>
           <Card
             sx={{
               ...variantStyles,
-              borderRadius: 2,
+              borderRadius: '5px',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               overflow: 'hidden',
               position: 'relative',
@@ -246,6 +247,7 @@ const OnboardingBanner = ({
                       color: '#888', 
                       p: 0.5,
                       ml: 1,
+                      borderRadius: '5px',
                       '&:hover': {
                         color: 'white'
                       }
@@ -294,6 +296,7 @@ const OnboardingBanner = ({
                         bgcolor: 'rgba(255, 255, 255, 0.1)',
                         border: 'none',
                         px: 2,
+                        borderRadius: '5px',
                         py: 0.5,
                         '&:hover': {
                           bgcolor: 'rgba(255, 255, 255, 0.2)',
@@ -315,42 +318,95 @@ const OnboardingBanner = ({
       </Box>
     </Fade>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if essential props change
+  return (
+    prevProps.open === nextProps.open &&
+    prevProps.title === nextProps.title &&
+    prevProps.message === nextProps.message &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.position?.top === nextProps.position?.top &&
+    prevProps.position?.left === nextProps.position?.left &&
+    prevProps.autoHide === nextProps.autoHide &&
+    prevProps.actions?.length === nextProps.actions?.length
+  );
+});
 
 // Hook for managing multiple banners
 export const useOnboardingBanners = () => {
   const [banners, setBanners] = useState([]);
+  const bannersRef = useRef([]);
+  const [renderKey, setRenderKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const loadingTimeoutRef = useRef(null);
+
+  // Listen for loading state changes
+  useEffect(() => {
+    const handleLoadingStateChange = (event) => {
+      const { loading } = event.detail;
+      
+      if (loading) {
+        // Clear any existing timeout
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+        }
+        setIsLoading(true);
+      } else {
+        // Delay setting loading to false to prevent flicker
+        loadingTimeoutRef.current = setTimeout(() => {
+          setIsLoading(false);
+        }, 100);
+      }
+    };
+
+    window.addEventListener('onboarding:loading-state-change', handleLoadingStateChange);
+    return () => {
+      window.removeEventListener('onboarding:loading-state-change', handleLoadingStateChange);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Update both state and ref when banners change
+  const updateBanners = (newBanners) => {
+    bannersRef.current = newBanners;
+    setBanners(newBanners);
+  };
 
   const showBanner = (banner) => {
     const id = Date.now() + Math.random();
-    setBanners(prev => [...prev, { ...banner, id, open: true }]);
+    const newBanners = [...bannersRef.current, { ...banner, id, open: true }];
+    updateBanners(newBanners);
     return id;
   };
 
   const hideBanner = (id) => {
-    setBanners(prev => prev.filter(banner => banner.id !== id));
+    const newBanners = bannersRef.current.filter(banner => banner.id !== id);
+    updateBanners(newBanners);
   };
 
   const hideAllBanners = () => {
-    setBanners([]);
+    updateBanners([]);
   };
 
-  const BannerContainer = () => (
-    <>
-      {banners.map(banner => (
-        <OnboardingBanner
-          key={banner.id}
-          {...banner}
-          onClose={() => hideBanner(banner.id)}
-        />
-      ))}
-    </>
-  );
+  // Force re-render without changing banner content
+  const forceRender = () => {
+    setRenderKey(prev => prev + 1);
+  };
+
+  const BannerContainer = React.memo(() => (
+    <StableBannerContainer
+      banners={bannersRef.current}
+      onCloseBanner={hideBanner}
+    />
+  ));
 
   return {
     showBanner,
     hideBanner,
     hideAllBanners,
+    forceRender,
     BannerContainer
   };
 };

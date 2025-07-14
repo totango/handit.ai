@@ -35,7 +35,7 @@ import {
   Rocket,
   Shield,
   Eye,
-  Chart,
+  ChartLine,
 } from '@phosphor-icons/react';
 import onboardingService from '../../services/onboarding/onboardingService';
 
@@ -60,7 +60,7 @@ const iconMap = {
   'Rocket': Rocket,
   'Shield': Shield,
   'Eye': Eye,
-  'Chart': Chart,
+  'Chart': ChartLine,
 };
 
 // Helper function to render icon from string or component
