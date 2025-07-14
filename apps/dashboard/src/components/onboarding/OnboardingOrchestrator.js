@@ -12,10 +12,15 @@ import {
   Stack,
   TextField,
   Typography,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import { X, Copy } from '@phosphor-icons/react';
 
 import onboardingService from '../../services/onboarding/onboardingService';
 import { OnboardingAssistant, OnboardingMenu, useInvisibleMouse, useOnboardingBanners } from './index';
+
+
 
 const OnboardingOrchestrator = ({
   autoStart = false,
@@ -34,6 +39,7 @@ const OnboardingOrchestrator = ({
 
   // Component states
   const [assistantVisible, setAssistantVisible] = useState(false);
+  const [chatIsOpen, setChatIsOpen] = useState(false); // Track chat state
   const banners = useOnboardingBanners();
   const mouse = useInvisibleMouse();
 
@@ -309,6 +315,28 @@ const OnboardingOrchestrator = ({
     }
   }, [isActive]);
 
+  // Listen for chat open/close events to hide/show onboarding elements
+  useEffect(() => {
+    const handleChatOpened = () => {
+      setChatIsOpen(true);
+      // Hide all banners when chat opens
+      banners.hideAllBanners();
+    };
+
+    const handleChatClosed = () => {
+      setChatIsOpen(false);
+      // Banners will be restored automatically by the onboarding flow
+    };
+
+    window.addEventListener('onboarding:chat-opened', handleChatOpened);
+    window.addEventListener('onboarding:chat-closed', handleChatClosed);
+
+    return () => {
+      window.removeEventListener('onboarding:chat-opened', handleChatOpened);
+      window.removeEventListener('onboarding:chat-closed', handleChatClosed);
+    };
+  }, [banners]);
+
   // Global flag to force navigation open only when assistant is visible
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -371,6 +399,33 @@ const OnboardingOrchestrator = ({
     [currentStep, tourInfo, assistantVisible, banners, handleTourEndWithNextTourCheck]
   );
 
+  // Handle loading state changes to prevent banner re-renders
+  const handleLoadingStateChange = useCallback((event) => {
+    // Don't re-render banners during loading states
+    if (event.detail?.loading) {
+      // Prevent banner updates during loading
+      return;
+    }
+  }, []);
+
+  // Handle step change events
+  const handleStepChanged = useCallback((event) => {
+    const { step } = event.detail;
+    if (step) {
+      setCurrentStep(step);
+      setTourInfo(onboardingService.getCurrentTourInfo());
+
+      // Update localStorage with new step
+      const onboardingState = {
+        isActive: true,
+        tourId: tourInfo?.id || onboardingService.getCurrentTourInfo()?.id,
+        currentStepId: step.id,
+        assistantVisible: assistantVisible,
+      };
+      localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
+    }
+  }, [tourInfo, assistantVisible]);
+
   // Initialize service
   useEffect(() => {
     onboardingService.init(userState);
@@ -387,6 +442,8 @@ const OnboardingOrchestrator = ({
 
     window.addEventListener('openOnboardingMenu', handleOpenOnboardingMenu);
     window.addEventListener('onboarding:connection-success', handleConnectionSuccess);
+    window.addEventListener('onboarding:loading-state-change', handleLoadingStateChange);
+    window.addEventListener('onboarding:step-changed', handleStepChanged);
 
     // Check if user is new (onboardingCurrentTour is null) and start onboarding immediately
     // Only start if we haven't already started onboarding for this new user
@@ -414,8 +471,10 @@ const OnboardingOrchestrator = ({
       // Cleanup listeners
       window.removeEventListener('openOnboardingMenu', handleOpenOnboardingMenu);
       window.removeEventListener('onboarding:connection-success', handleConnectionSuccess);
+      window.removeEventListener('onboarding:loading-state-change', handleLoadingStateChange);
+      window.removeEventListener('onboarding:step-changed', handleStepChanged);
     };
-  }, [userState, autoStart, triggerOnMount, handleConnectionSuccess]);
+      }, [userState, autoStart, triggerOnMount, handleConnectionSuccess, handleLoadingStateChange, handleStepChanged]);
   // Navigation functions
   const handleNext = useCallback(() => {
     // Clear any existing banners and highlighting before advancing
@@ -1156,8 +1215,8 @@ const OnboardingOrchestrator = ({
         userCompletedTours={userState.completedTours || []}
       />
 
-      {/* Assistant - Always show during onboarding */}
-      {(assistantVisible || (currentStep && isActive)) && (
+      {/* Assistant - Always show during onboarding but hide when chat is open */}
+      {(assistantVisible || (currentStep && isActive)) && !chatIsOpen && (
         <OnboardingAssistant
           visible={true}
           currentStep={tourInfo ? tourInfo.currentStep - 1 : 0}
@@ -1173,11 +1232,12 @@ const OnboardingOrchestrator = ({
       {/* Step Content */}
       {renderStepContent()}
 
-      {/* Banner Container */}
+      {/* Banner Container - banners are hidden via hideAllBanners() when chat opens */}
       <banners.BannerContainer />
 
-      {/* Mouse Component */}
-      <mouse.MouseComponent />
+      {/* Mouse Component - hide when chat is open */}
+      {!chatIsOpen && <mouse.MouseComponent />}
+
     </>
   );
 };
