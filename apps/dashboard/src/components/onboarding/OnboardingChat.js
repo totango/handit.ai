@@ -86,8 +86,6 @@ const OnboardingChat = ({
   useEffect(() => {
     // Only add initial greeting if no messages exist
     if (messages.length === 0) {
-      addMessage('ai', "Hi! I'm your Handit assistant. I can help you with onboarding questions, guide you through connecting your agent, or answer any questions about using Handit. How can I help you today?", 'text', {}, false);
-      // Initial height calculation
       setTimeout(() => {
         const newHeight = calculateHeight();
         setChatHeight(newHeight);
@@ -200,7 +198,7 @@ const OnboardingChat = ({
     
     const totalHeight = estimatedContentHeight + inputHeight + extraPadding;
     const maxHeight = Math.min(window.innerHeight * 0.8, 600); // Slightly increased max height
-    const minHeight = 200; // Minimum height to prevent too small chat
+    const minHeight = 100; // Minimum height to prevent too small chat
     
     return Math.max(minHeight, Math.min(totalHeight, maxHeight));
   };
@@ -578,7 +576,7 @@ const OnboardingChat = ({
         {message.metadata.showOnboardingGuide && (
           <Box sx={{ mt: 1 }}>
             <Button
-              variant="contained"
+              variant="outlined"
               size="small"
               onClick={() => {
                 // Close chat and open the comprehensive guide banner

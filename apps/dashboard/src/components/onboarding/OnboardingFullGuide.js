@@ -11,6 +11,7 @@ import {
   Paper,
   Divider,
   Tooltip,
+  Chip,
 } from '@mui/material';
 import {
   X,
@@ -18,11 +19,30 @@ import {
   Code,
   CheckCircle,
   ArrowRight,
+  Key,
 } from '@phosphor-icons/react';
 import CodeRenderer from './CodeRenderer';
+import { useGetUserQuery } from '../../services/auth/authService';
 
 const OnboardingFullGuide = ({ visible, onClose, content = '' }) => {
   const [isVisible, setIsVisible] = useState(visible);
+  const { data: userData } = useGetUserQuery();
+  
+  // Get current environment
+  const environment = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('environment') || 'production';
+    }
+    return 'production';
+  }, []);
+
+  // Get the appropriate API token based on environment
+  const apiToken = React.useMemo(() => {
+    if (environment === 'staging') {
+      return userData?.company?.stagingApiToken;
+    }
+    return userData?.company?.apiToken;
+  }, [environment, userData?.company]);
 
   useEffect(() => {
     setIsVisible(visible);
@@ -59,88 +79,133 @@ const OnboardingFullGuide = ({ visible, onClose, content = '' }) => {
     onClose?.();
   };
 
-  const renderGuideContent = () => {
-    if (!content) {
+  const renderMarkdownContent = (markdownContent) => {
+    if (!markdownContent) {
       return (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            No guide content available
-          </Typography>
-        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+          No setup guide available
+        </Typography>
       );
     }
 
-    // Parse content for code blocks and sections
-    const sections = content.split('\n\n');
+    const elements = [];
+    let lastIndex = 0;
+
+    // Parse markdown content
+    const lines = markdownContent.split('\n');
+    let currentSection = [];
     
-    return (
-      <Box>
-        {sections.map((section, index) => {
-          // Check if section contains code (simplified detection)
-          if (section.includes('```')) {
-            const codeMatch = section.match(/```(\w+)?\n([\s\S]*?)\n?```/);
-            if (codeMatch) {
-              const language = codeMatch[1] || 'javascript';
-              const code = codeMatch[2];
-              const description = section.replace(/```[\s\S]*?```/, '').trim();
-              
-              return (
-                <Box key={index} sx={{ mb: 3 }}>
-                  {description && (
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                      {description}
-                    </Typography>
-                  )}
-                  <Box sx={{ position: 'relative' }}>
-                    <Paper
-                      sx={{
-                        overflow: 'hidden',
-                        bgcolor: '#1e1e1e',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                      }}
-                    >
-                      <CodeRenderer
-                        code={code}
-                        language={language}
-                        showLineNumbers={true}
-                      />
-                    </Paper>
-                    <Tooltip title="Copy code">
-                      <IconButton
-                        onClick={() => copyToClipboard(code)}
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          bgcolor: 'rgba(0, 0, 0, 0.6)',
-                          color: 'white',
-                          '&:hover': {
-                            bgcolor: 'rgba(0, 0, 0, 0.8)'
-                          }
-                        }}
-                      >
-                        <Copy size={16} />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-              );
-            }
-          }
-          
-          // Regular text section
-          if (section.trim()) {
-            return (
-              <Typography key={index} variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
-                {section}
-              </Typography>
-            );
-          }
-          
-          return null;
-        })}
-      </Box>
-    );
+    lines.forEach((line, index) => {
+      // Handle headers (# ## ###)
+      const headerMatch = line.match(/^(#{1,3})\s+(.+)$/);
+      if (headerMatch) {
+        // Add previous section if exists
+        if (currentSection.length > 0) {
+          elements.push(
+            <Typography key={`section-${elements.length}`} variant="body1" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>
+              {currentSection.join('\n')}
+            </Typography>
+          );
+          currentSection = [];
+        }
+
+        const level = headerMatch[1].length;
+        const text = headerMatch[2];
+        const variant = level === 1 ? 'h5' : level === 2 ? 'h6' : 'subtitle1';
+        
+        elements.push(
+          <Typography 
+            key={`header-${elements.length}`} 
+            variant={variant} 
+            fontWeight="600" 
+            sx={{ mt: elements.length > 0 ? 3 : 0, mb: 2, color: '#4A90E2' }}
+          >
+            {text}
+          </Typography>
+        );
+        return;
+      }
+
+      // Handle code blocks
+      if (line.startsWith('```')) {
+        // Add previous section if exists
+        if (currentSection.length > 0) {
+          elements.push(
+            <Typography key={`section-${elements.length}`} variant="body1" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>
+              {currentSection.join('\n')}
+            </Typography>
+          );
+          currentSection = [];
+        }
+
+        // Find end of code block
+        const language = line.substring(3).trim() || 'text';
+        const codeLines = [];
+        let codeIndex = index + 1;
+        
+        while (codeIndex < lines.length && !lines[codeIndex].startsWith('```')) {
+          codeLines.push(lines[codeIndex]);
+          codeIndex++;
+        }
+
+        if (codeLines.length > 0) {
+          const code = codeLines.join('\n');
+          elements.push(
+            <Box key={`code-${elements.length}`} sx={{ mb: 3, position: 'relative' }}>
+              <Paper
+                sx={{
+                  overflow: 'hidden',
+                  bgcolor: '#1e1e1e',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                }}
+              >
+                <CodeRenderer
+                  code={code}
+                  language={language}
+                  showLineNumbers={false}
+                />
+              </Paper>
+              <Tooltip title="Copy code">
+                <IconButton
+                  onClick={() => copyToClipboard(code)}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    bgcolor: 'rgba(0, 0, 0, 0.6)',
+                    color: 'white',
+                    width: 24,
+                    height: 24,
+                    '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' }
+                  }}
+                >
+                  <Copy size={12} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          );
+        }
+        
+        // Skip to after the closing ```
+        return;
+      }
+
+      // Regular text line
+      if (line.trim() || currentSection.length > 0) {
+        currentSection.push(line);
+      }
+    });
+
+    // Add final section if exists
+    if (currentSection.length > 0) {
+      elements.push(
+        <Typography key={`section-${elements.length}`} variant="body1" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>
+          {currentSection.join('\n')}
+        </Typography>
+      );
+    }
+
+    return <Box>{elements}</Box>;
   };
 
   if (!isVisible) return null;
@@ -155,7 +220,7 @@ const OnboardingFullGuide = ({ visible, onClose, content = '' }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 9999,
+          zIndex: 100,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           backdropFilter: 'blur(4px)',
         }}
@@ -212,11 +277,17 @@ const OnboardingFullGuide = ({ visible, onClose, content = '' }) => {
             pb: 10, // Extra padding for fixed button
           }}
         >
-          {/* AI Assistant Response Section */}
+          {/* API Token Section */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CheckCircle size={20} color="#4A90E2" />
-              AI Assistant Response
+              <Key size={20} color="#4A90E2" />
+              Your API Token
+              <Chip 
+                label={environment === 'staging' ? 'Staging' : 'Production'} 
+                size="small" 
+                color={environment === 'staging' ? 'warning' : 'primary'} 
+                variant="outlined"
+              />
             </Typography>
             <Paper
               sx={{
@@ -224,122 +295,79 @@ const OnboardingFullGuide = ({ visible, onClose, content = '' }) => {
                 bgcolor: 'grey.50',
                 border: '1px solid',
                 borderColor: 'grey.200',
+                position: 'relative',
               }}
             >
-              {renderGuideContent()}
+              {apiToken ? (
+                <>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Use this API token in your agent configuration:
+                  </Typography>
+                  <Box sx={{ position: 'relative' }}>
+                    <CodeRenderer
+                      code={apiToken}
+                      language="text"
+                      showLineNumbers={false}
+                    />
+                    <Tooltip title="Copy API token">
+                      <IconButton
+                        onClick={() => copyToClipboard(apiToken)}
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          bgcolor: 'rgba(0, 0, 0, 0.6)',
+                          color: 'white',
+                          width: 24,
+                          height: 24,
+                          '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' }
+                        }}
+                      >
+                        <Copy size={12} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  API token not available. Please check your account settings.
+                </Typography>
+              )}
             </Paper>
           </Box>
 
-          {/* Step-by-step Setup Guide */}
+          {/* AI Assistant Guide Section */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CheckCircle size={20} color="#4A90E2" />
+              Setup Guide
+            </Typography>
+            <Paper
+              sx={{
+                p: 3,
+                bgcolor: 'grey.50',
+                border: '1px solid',
+                borderColor: 'grey.200',
+              }}
+            >
+              {renderMarkdownContent(content)}
+            </Paper>
+          </Box>
+
+          {/* Test Connection Step */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <ArrowRight size={20} color="#4A90E2" />
-              Step-by-Step Setup
+              Test Your Connection
             </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* Step 1 */}
-              <Paper sx={{ p: 2, border: '1px solid', borderColor: 'grey.200' }}>
-                <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
-                  1. Install the Handit SDK
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Add monitoring to your agent with our lightweight SDK
-                </Typography>
-                <Box sx={{ position: 'relative' }}>
-                  <CodeRenderer
-                    code="npm install handit-sdk"
-                    language="bash"
-                    showLineNumbers={false}
-                  />
-                  <Tooltip title="Copy command">
-                    <IconButton
-                      onClick={() => copyToClipboard('npm install handit-sdk')}
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        bgcolor: 'rgba(0, 0, 0, 0.6)',
-                        color: 'white',
-                        width: 24,
-                        height: 24,
-                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' }
-                      }}
-                    >
-                      <Copy size={12} />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Paper>
-
-              {/* Step 2 */}
-              <Paper sx={{ p: 2, border: '1px solid', borderColor: 'grey.200' }}>
-                <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
-                  2. Initialize Monitoring
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Add the monitoring code to your agent and configure tracking
-                </Typography>
-                <Box sx={{ position: 'relative' }}>
-                  <CodeRenderer
-                    code={`import { HandIt } from '@handit/sdk';
-
-const handit = new HandIt({
-  apiKey: 'your-api-key',
-  projectId: 'your-project-id'
-});
-
-// Track your AI calls
-const response = await handit.track('agent-call', {
-  input: userQuery,
-  model: 'gpt-4',
-  function: yourAIFunction
-});`}
-                    language="javascript"
-                    showLineNumbers={false}
-                  />
-                  <Tooltip title="Copy code">
-                    <IconButton
-                      onClick={() => copyToClipboard(`import { HandIt } from '@handit/sdk';
-
-const handit = new HandIt({
-  apiKey: 'your-api-key',
-  projectId: 'your-project-id'
-});
-
-// Track your AI calls
-const response = await handit.track('agent-call', {
-  input: userQuery,
-  model: 'gpt-4',
-  function: yourAIFunction
-});`)}
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        bgcolor: 'rgba(0, 0, 0, 0.6)',
-                        color: 'white',
-                        width: 24,
-                        height: 24,
-                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.8)' }
-                      }}
-                    >
-                      <Copy size={12} />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </Paper>
-
-              {/* Step 3 */}
-              <Paper sx={{ p: 2, border: '1px solid', borderColor: 'grey.200' }}>
-                <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
-                  3. Test Connection
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Use the "Test Connection" button below to verify your setup is working
-                </Typography>
-              </Paper>
-            </Box>
+            <Paper sx={{ p: 2, border: '1px solid', borderColor: 'grey.200' }}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Once you've followed the setup guide above and integrated the API token, use the "Test Connection" button below to verify everything is working correctly.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                This will check if your agent can successfully communicate with Handit's monitoring system.
+              </Typography>
+            </Paper>
           </Box>
         </Box>
 
@@ -369,11 +397,12 @@ const response = await handit.track('agent-call', {
           </Button>
           
           <Button
-            variant="contained"
+            variant="outlined"
             onClick={handleTestConnection}
             data-testid="guide-test-connection-button"
             sx={{
-              bgcolor: '#4A90E2',
+              bgcolor: 'primary.main',
+              color: 'black',
               '&:hover': { bgcolor: '#357ABD' },
               minWidth: 140,
             }}

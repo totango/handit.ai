@@ -45,7 +45,7 @@ const InvisibleMouse = ({
                 position: 'absolute',
                 top: 16,
                 left: 0,
-                zIndex: 2,
+                zIndex: 100000,
                 filter: 'drop-shadow(1px 1px 3px rgba(0, 0, 0, 0.4))',
               }}
             >
@@ -74,7 +74,7 @@ const InvisibleMouse = ({
                 position: 'absolute',
                 top: '28px',
                 left: '18px',
-                zIndex: 1,
+                zIndex: 100000,
               }}
             >
               HandIt
@@ -105,7 +105,7 @@ const InvisibleMouse = ({
               position: 'fixed',
               left: trailPos.x,
               top: trailPos.y,
-              zIndex: 9995 + index,
+              zIndex: 100000 + index,
               pointerEvents: 'none',
               opacity: (index + 1) / trailPositions.length * 0.3,
               transform: 'translate(-50%, -50%)',
@@ -125,7 +125,7 @@ const InvisibleMouse = ({
             position: 'fixed',
             left: currentPosition.x,
             top: currentPosition.y,
-            zIndex: 10000,
+            zIndex: 100000,
             cursor: 'none',
             transform: 'translate(-50%, -50%)',
             transition: isAnimating ? 'none' : `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
