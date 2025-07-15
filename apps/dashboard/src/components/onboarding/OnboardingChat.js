@@ -232,8 +232,7 @@ const OnboardingChat = ({
     }
 
     // Check for onBoarding flag
-    const hasOnboardingFlag = response.onBoarding === true;
-    console.log('hasOnboardingFlag', hasOnboardingFlag);
+    const hasOnboardingFlag = response.on_boarding_observability_finished === true;
 
     if (codeBlocks.length > 0) {
       return {
@@ -346,7 +345,7 @@ const OnboardingChat = ({
         variant="outlined"
         onClick={handleShowOnboardingGuide}
         sx={{
-          backgroundColor: '#4A90E2', // Blue background
+          backgroundColor: 'var(--mui-palette-primary-main)', // Blue background
           color: 'white', // White text
           fontSize: '0.75rem',
           py: 0.5,
@@ -587,14 +586,14 @@ const OnboardingChat = ({
                 }));
               }}
               sx={{
-                bgcolor: '#4A90E2',
-                color: 'white',
+                bgcolor: 'var(--mui-palette-secondary-main)',
+                color: 'black',
                 textTransform: 'none',
                 fontSize: '0.75rem',
                 px: 2,
                 py: 0.5,
                 '&:hover': {
-                  bgcolor: '#357ABD'
+                  bgcolor: 'var(--mui-palette-primary-main)'
                 }
               }}
             >

@@ -163,7 +163,7 @@
                     "title": "Click on this Trace",
                     "description": "See the complete execution flow with every node, input, and output.",
                     "tip": "Every decision is tracked",
-                    "position": "right",
+                    "position": "top",
                     "showNearTarget": true
                   },
                   "delay": 100
@@ -335,10 +335,10 @@
                   "animation": { "duration": 1200, "easing": "ease-in-out", "path": "curved" },
                   "action": { "type": "hover" },
                   "instruction": {
-                    "title": "Click on this Improvement",
-                    "description": "HandIt automatically improves prompts based on detected errors. Here you'll see the improved prompts, metrics, and deployment options.",
+                    "title": "Click on this LLM Node",
+                    "description": "Handit automatically improves prompts based on detected errors. Here you'll see the improved prompts, metrics, and deployment options.",
                     "tip": "Continuous improvement without manual work",
-                    "position": "right",
+                    "position": "top",
                     "showNearTarget": true
                   },
                   "delay": 100
@@ -520,7 +520,7 @@
                   "action": { "type": "hover" },
                   "instruction": {
                     "title": "🔗 Test Your Connection",
-                    "description": "After following the steps above, test your connection here to verify your agent is connected to Handit.",
+                    "description": "After following the steps above, test your connection here.",
                     "tip": "Continues automatically if successful",
                     "position": "right",
                     "showNearTarget": true
@@ -532,6 +532,41 @@
           },
           {
             "stepNumber": 4,
+            "id": "close-setup-guide",
+            "type": "cursor-only",
+            "title": "Close the Setup Guide",
+            "target": "[data-testid='guide-close-button']",
+            "placement": "left",
+            "content": {
+              "heading": "Close the Setup Guide",
+              "description": "Click here to close the setup guide and continue."
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-testid='guide-close-button']",
+                  "targetText": "Close",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Close the Setup Guide",
+                    "description": "Click the close button to finish this part of onboarding.",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 5,
             "id": "setup-complete",
             "type": "banner",
             "title": "Setup Complete",

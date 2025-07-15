@@ -366,9 +366,12 @@ const OnboardingOrchestrator = ({
   // Handle connection success event
   const handleConnectionSuccess = useCallback(
     (event) => {
+      console.log('handleConnectionSuccess', event);
+      console.log('currentStep', currentStep);
       // Only advance if we're on the test-connection-button step and connection was successful
       if (currentStep?.id === 'test-connection-button' && event.detail?.success) {
         // Remove highlighting
+        console.log('unhighlightMenuItem');
         unhighlightMenuItem();
 
         // Hide instruction banners
