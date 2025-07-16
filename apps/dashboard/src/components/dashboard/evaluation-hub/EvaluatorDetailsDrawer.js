@@ -668,7 +668,7 @@ export default function EvaluatorDetailsDrawer({ open, onClose, evaluator, onUpd
           <Button 
             onClick={handleCreateToken} 
             disabled={!tokenForm.name || !tokenForm.token || !tokenForm.providerId || creatingToken} 
-            variant="contained"
+            variant="outlined"
             data-testid="save-token-button"
           >
             {creatingToken ? 'Creating...' : 'Save'}

@@ -609,32 +609,6 @@
         "steps": [
           {
             "stepNumber": 1,
-            "id": "close-connect-dialog",
-            "type": "banner",
-            "title": "Close Connection Dialog",
-            "target": "body",
-            "placement": "center",
-            "content": {
-              "heading": "🎯 Let's Set Up Evaluation",
-              "description": "Close the connection dialog so we can set up evaluation.",
-              "variant": "info",
-              "showCloseButton": false,
-              "autoHide": false,
-              "icon": "🎯"
-            },
-            "actions": [
-              {
-                "text": "Continue",
-                "type": "primary",
-                "action": "nextStep",
-                "analytics": "close_connection_dialog_continue"
-              }
-            ],
-            "duration": null,
-            "autoAdvance": false
-          },
-          {
-            "stepNumber": 2,
             "id": "navigate-to-evaluation-suite",
             "type": "cursor-only",
             "title": "Navigate to Evaluation Suite",
@@ -674,7 +648,7 @@
             }
           },
           {
-            "stepNumber": 3,
+            "stepNumber": 2,
             "id": "find-last-evaluator",
             "type": "cursor-only",
             "title": "Select Last Evaluator",
@@ -719,7 +693,7 @@
             }
           },
           {
-            "stepNumber": 4,
+            "stepNumber": 3,
             "id": "add-token-button",
             "type": "cursor-only",
             "title": "Add Token",
@@ -764,7 +738,7 @@
             }
           },
           {
-            "stepNumber": 5,
+            "stepNumber": 4,
             "id": "fill-token-details",
             "type": "banner",
             "title": "Fill Token Details",
@@ -790,7 +764,7 @@
             "autoAdvance": false
           },
           {
-            "stepNumber": 6,
+            "stepNumber": 5,
             "id": "save-token-button",
             "type": "cursor-only",
             "title": "Save Token",
@@ -835,7 +809,7 @@
             }
           },
           {
-            "stepNumber": 7,
+            "stepNumber": 6,
             "id": "associate-llm-node-button",
             "type": "cursor-only",
             "title": "Associate LLM Node",
@@ -880,7 +854,7 @@
             }
           },
           {
-            "stepNumber": 8,
+            "stepNumber": 7,
             "id": "select-nodes-banner",
             "type": "banner",
             "title": "Select Nodes to Evaluate",
@@ -906,7 +880,7 @@
             "autoAdvance": false
           },
           {
-            "stepNumber": 9,
+            "stepNumber": 8,
             "id": "save-association-button",
             "type": "cursor-only",
             "title": "Save Association",
@@ -951,7 +925,7 @@
             }
           },
           {
-            "stepNumber": 10,
+            "stepNumber": 9,
             "id": "evaluation-complete",
             "type": "banner",
             "title": "Evaluation Setup Complete",
