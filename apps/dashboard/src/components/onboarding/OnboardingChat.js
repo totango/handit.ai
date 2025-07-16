@@ -71,6 +71,12 @@ const OnboardingChat = ({
   }, [messages]);
 
   useEffect(() => {
+    // Recalculate height when loading state changes
+    const newHeight = calculateHeight();
+    setChatHeight(newHeight);
+  }, [isLoading]);
+
+  useEffect(() => {
     setIsVisible(visible);
     
     // Recalculate height when visibility changes
@@ -185,15 +191,20 @@ const OnboardingChat = ({
     // Calculate estimated content height based on message count and content length
     let estimatedContentHeight = minContentHeight;
     
-    if (messages.length > 0) {
+    if (messages.length > 0 || isLoading) {
       // More sophisticated height calculation
-      const totalMessages = messages.length + (isLoading ? 1 : 0);
+      const totalMessages = messages.length;
       
-      // Base height calculation with consideration for content length
-      const avgContentLength = messages.reduce((sum, msg) => sum + (msg.content?.length || 0), 0) / messages.length;
-      const heightMultiplier = Math.max(1, Math.min(2, avgContentLength / 100)); // Scale based on content length
-      
-      estimatedContentHeight = totalMessages * baseMessageHeight * heightMultiplier;
+      if (totalMessages > 0) {
+        // Base height calculation with consideration for content length
+        const avgContentLength = messages.reduce((sum, msg) => sum + (msg.content?.length || 0), 0) / messages.length;
+        const heightMultiplier = Math.max(1, Math.min(2, avgContentLength / 100)); // Scale based on content length
+        
+        estimatedContentHeight = totalMessages * baseMessageHeight * heightMultiplier;
+      } else if (isLoading) {
+        // If only loading (no messages yet), use a smaller height
+        estimatedContentHeight = minContentHeight;
+      }
     }
     
     const totalHeight = estimatedContentHeight + inputHeight + extraPadding;
