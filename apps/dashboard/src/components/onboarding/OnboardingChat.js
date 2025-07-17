@@ -28,7 +28,9 @@ import {
   X,
   Code,
 } from '@phosphor-icons/react';
+import { useRouter } from 'next/navigation';
 import CodeRenderer from './CodeRenderer';
+import docsService from '../../services/docsService';
 
 const OnboardingChat = ({ 
   mode = 'assistant', // 'assistant' or 'agent-setup'
@@ -48,6 +50,7 @@ const OnboardingChat = ({
   const [codeModalContent, setCodeModalContent] = useState('');
   const [guideContent, setGuideContent] = useState(''); // Store guide content for banner
   const [chatHeight, setChatHeight] = useState(200); // Track chat height
+  const router = useRouter();
   const messagesEndRef = useRef(null);
 
   const theme = {
@@ -340,10 +343,14 @@ const OnboardingChat = ({
   };
 
   const handleShowOnboardingGuide = () => {
-    // Emit event to show the full guide banner
-    window.dispatchEvent(new CustomEvent('onboarding:show-full-guide', {
-      detail: { content: guideContent }
-    }));
+    // Save the generated documentation
+    if (guideContent) {
+      docsService.saveGeneratedDocs(guideContent);
+    }
+    
+    // Navigate to docs page
+    router.push('/docs');
+    
     // Close the chat which will restore previous state
     handleClose();
   };
@@ -589,12 +596,16 @@ const OnboardingChat = ({
               variant="outlined"
               size="small"
               onClick={() => {
-                // Close chat and open the comprehensive guide banner
+                // Save the generated documentation
+                if (guideContent) {
+                  docsService.saveGeneratedDocs(guideContent);
+                }
+                
+                // Navigate to docs page
+                router.push('/docs');
+                
+                // Close chat
                 handleClose();
-                // Dispatch event to show the full guide banner
-                window.dispatchEvent(new CustomEvent('onboarding:show-full-guide', {
-                  detail: { content: guideContent }
-                }));
               }}
               sx={{
                 bgcolor: 'var(--mui-palette-secondary-main)',

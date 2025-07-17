@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import OnboardingChat from './OnboardingChat';
-import OnboardingFullGuide from './OnboardingFullGuide';
 import onboardingService from '../../services/onboarding/onboardingService';
+import docsService from '../../services/docsService';
 
 const OnboardingChatContainer = ({ 
   onConnectionCheck,
@@ -11,8 +12,7 @@ const OnboardingChatContainer = ({
 }) => {
   const [assistantVisible, setAssistantVisible] = useState(false);
   const [assistantPosition, setAssistantPosition] = useState('bottom-right');
-  const [guideVisible, setGuideVisible] = useState(false);
-  const [guideContent, setGuideContent] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     const handleOpenChat = (event) => {
@@ -28,8 +28,14 @@ const OnboardingChatContainer = ({
 
     const handleShowFullGuide = (event) => {
       const { content } = event.detail;
-      setGuideContent(content || '');
-      setGuideVisible(true);
+      
+      // Save the generated documentation
+      if (content) {
+        docsService.saveGeneratedDocs(content);
+      }
+      
+      // Navigate to docs page
+      router.push('/docs');
       
       // Progress onboarding to next step (should go directly to test-connection-button)
       const nextStep = onboardingService.nextStep();
@@ -82,16 +88,6 @@ const OnboardingChatContainer = ({
         connectionStatus={connectionStatus}
         onComplete={onComplete}
         questions={questions}
-      />
-
-      {/* Full Setup Guide */}
-      <OnboardingFullGuide
-        visible={guideVisible}
-        content={guideContent}
-        onClose={() => {
-          setGuideVisible(false);
-          setGuideContent('');
-        }}
       />
     </>
   );

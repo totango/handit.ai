@@ -20,6 +20,12 @@ export const layoutConfig = {
       title: 'General',
       items: [
         {
+          key: 'docs',
+          title: 'My Docs',
+          href: paths.dashboard.docs,
+          icon: 'file',
+        },
+        {
           key: 'onboarding-guide',
           title: 'Need a guide?',
           icon: 'question',
