@@ -27,6 +27,7 @@ import { FloppyDisk } from '@phosphor-icons/react';
 import { Plus } from '@phosphor-icons/react';
 import { Upload as UploadIcon } from '@phosphor-icons/react';
 
+
 import { AgentSwitch } from '../agent-switch';
 import { MobileNav } from '../mobile-nav';
 import { UserPopover } from '../user-popover/user-popover';
@@ -367,6 +368,11 @@ export function MainNav({ items, title, onNewEvaluator }) {
             {path.includes('agents/edit') && (
               <Typography variant="h4" component="h1" sx={{ pl: 5 }}>
                 Update Agent
+              </Typography>
+            )}
+            {path === '/docs' && (
+              <Typography variant="h4" component="h1" sx={{ pl: 5 }}>
+                My Docs
               </Typography>
             )}
             {(path.includes('ag-monitoring') || path.includes('ag-tracing') || path.includes('model-versions') || path.includes('prompt-versions')) && (

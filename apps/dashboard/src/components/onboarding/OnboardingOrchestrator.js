@@ -368,8 +368,13 @@ const OnboardingOrchestrator = ({
     (event) => {
       console.log('handleConnectionSuccess', event);
       console.log('currentStep', currentStep);
-      // Only advance if we're on the test-connection-button step and connection was successful
-      if (currentStep?.id === 'test-connection-button' && event.detail?.success) {
+      // Check if we should advance: either on the test-connection-button step or on docs page during onboarding
+      const shouldAdvance = (
+        currentStep?.id === 'test-connection-button' || 
+        (window.location.pathname === '/docs' && currentStep && event.detail?.success)
+      ) && event.detail?.success;
+      
+      if (shouldAdvance) {
         // Remove highlighting
         console.log('unhighlightMenuItem');
         unhighlightMenuItem();

@@ -92,7 +92,7 @@ export const me = async (req, res) => {
     return res.status(200).json([]);
   }
   // send models with datasets
-  const models = await Model.findAll({ where: { modelGroupId: modelGroupsIds }, include: 'datasets', order: [['createdAt', 'ASC']] });
+  const models = await Model.findAll({ where: { modelGroupId: modelGroupsIds, isReviewer: false }, include: 'datasets', order: [['createdAt', 'ASC']] });
 
   let modelsData = []
 
