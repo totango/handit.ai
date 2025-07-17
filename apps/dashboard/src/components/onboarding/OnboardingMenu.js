@@ -151,11 +151,14 @@ const OnboardingMenu = ({
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    // TODO: Implement API call here
-    console.log('Chat input:', chatInput);
+    // Open OnboardingChat with the submitted question
+    window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
+      detail: { mode: 'assistant', message: chatInput.trim() } 
+    }));
     
-    // For now, just clear the input
+    // Clear the input and close the menu
     setChatInput('');
+    onClose();
   };
 
   const handleChatKeyPress = (e) => {

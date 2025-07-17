@@ -1,6 +1,9 @@
 'use strict';
 
 import { Model } from 'sequelize';
+import {
+  singleEvaluate,
+} from '../src/services/evaluationService.js';
 
 export default (sequelize, DataTypes) => {
   class ModelEvaluationPrompt extends Model {
@@ -101,6 +104,47 @@ export default (sequelize, DataTypes) => {
               threshold: 1,
             });
           }
+
+          await setImmediate(async () => {
+            // get last 5 model logs of the model
+            const modelLogs = await sequelize.models.ModelLog.findAll({
+              where: {
+                modelId: modelEvaluationPrompt.modelId,
+              },
+              order: [['createdAt', 'DESC']],
+              limit: 5,
+            });
+
+            const model = await sequelize.models.Model.findByPk(modelEvaluationPrompt.modelId);
+            if (!model) {
+              return;
+            }
+
+            const reviewers = await model.getReviewers();
+              for (let i = 0; i < reviewers.length; i++) {
+                const reviewer = reviewers[i];
+
+                const reviewerInstance = await sequelize.models.Model.findOne({
+                  where: {
+                    id: reviewer.reviewerId,
+                  },
+                });
+
+                for (let j = 0; j < modelLogs.length; j++) {
+                  const modelLog = modelLogs[j];
+                  const modelId = modelLog.modelId;
+                  const model = await sequelize.models.Model.findByPk(modelId);
+                  const prompts = await model.evaluationPrompts();
+                  await singleEvaluate(
+                    modelLog,
+                    reviewerInstance,
+                    prompts,
+                    model.flags?.isN8N,
+                    sequelize.models.EvaluationLog
+                  );
+                }   
+              }
+          });
         }
       }
     }

@@ -532,41 +532,6 @@
           },
           {
             "stepNumber": 4,
-            "id": "close-setup-guide",
-            "type": "cursor-only",
-            "title": "Close the Setup Guide",
-            "target": "[data-testid='guide-close-button']",
-            "placement": "left",
-            "content": {
-              "heading": "Close the Setup Guide",
-              "description": "Click here to close the setup guide and continue."
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": false,
-            "cursorGuidance": {
-              "enabled": true,
-              "delay": 1000,
-              "steps": [
-                {
-                  "target": "[data-testid='guide-close-button']",
-                  "targetText": "Close",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "Close the Setup Guide",
-                    "description": "Click the close button to finish this part of onboarding.",
-                    "position": "right",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 5,
             "id": "setup-complete",
             "type": "banner",
             "title": "Setup Complete",
@@ -596,8 +561,8 @@
       },
       {
         "id": "evaluation-suite-navigation",
-        "name": "Evaluation Suite Navigation",
-        "description": "Navigate to evaluation suite and create an evaluator",
+        "name": "Evaluation Setup",
+        "description": "Set up automated evaluation with LLM judges",
         "type": "guided",
         "icon": "ShieldCheck",
         "settings": {
@@ -609,36 +574,115 @@
         "steps": [
           {
             "stepNumber": 1,
-            "id": "navigate-to-evaluation-suite",
+            "id": "evaluation-explanation-banner",
+            "type": "banner",
+            "title": "Understanding Evaluation",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🔍 What is Evaluation?",
+              "description": "Evaluation uses LLM judges to automatically assess your agent's responses for quality, accuracy, and relevance. These AI evaluators run continuously in the background, analyzing your agent's performance and identifying areas for improvement.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🔍"
+            },
+            "actions": [
+              {
+                "text": "Set Up Evaluators",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "evaluation_explanation_continue"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 2,
+            "id": "open-evaluators-chat",
+            "type": "banner",
+            "title": "Connect Evaluators",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🤖 Let's Connect Your Evaluators",
+              "description": "Our AI assistant will help you set up the right evaluators for your agent.",
+              "variant": "info",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🤖"
+            },
+            "actions": [
+              {
+                "text": "Open Chat Assistant",
+                "type": "primary",
+                "action": "openChat",
+                "chatMessage": "I want to connect evaluators",
+                "analytics": "evaluators_chat_opened"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 3,
+            "id": "evaluators-ready-banner",
+            "type": "banner",
+            "title": "Evaluators Ready",
+            "target": "body",
+            "placement": "center",
+            "content": {
+              "heading": "🚀 Your Evaluators Are Ready!",
+              "description": "Now that your evaluators are set up, let's see how evaluations look in your traces.",
+              "variant": "success",
+              "showCloseButton": false,
+              "autoHide": false,
+              "icon": "🚀"
+            },
+            "actions": [
+              {
+                "text": "View Evaluations in Traces",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "view_evaluations_in_traces"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 4,
+            "id": "navigate-to-tracing",
             "type": "cursor-only",
-            "title": "Navigate to Evaluation Suite",
-            "target": "[data-nav-item='Evaluation Suite']",
+            "title": "Navigate to Tracing",
+            "target": "[data-nav-item='Tracing']",
             "placement": "right",
             "content": {
-              "heading": "Click on Evaluation Suite",
-              "description": "Navigate to create an evaluator"
+              "heading": "Click on Tracing",
+              "description": "Let's see your agent evaluations in action"
             },
             "actions": [],
             "duration": null,
             "autoAdvance": false,
             "advanceOnClick": {
-              "target": "[data-nav-item='Evaluation Suite']",
-              "description": "Click on the Evaluation Suite menu item"
+              "target": "[data-nav-item='Tracing']",
+              "description": "Click on the Tracing menu item to view evaluations"
             },
             "cursorGuidance": {
               "enabled": true,
               "delay": 1000,
               "steps": [
                 {
-                  "target": "[data-nav-item='Evaluation Suite']",
-                  "targetText": "Evaluation Suite",
+                  "target": "[data-nav-item='Tracing']",
+                  "targetText": "Tracing",
                   "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
                   "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
                   "action": { "type": "hover" },
                   "instruction": {
-                    "title": "Click on Evaluation Suite",
-                    "description": "Create and manage quality evaluators.",
-                    "tip": "Monitor your agent's performance",
+                    "title": "Click on Tracing",
+                    "description": "View your agent's execution traces with evaluation results.",
+                    "tip": "See evaluations in action",
                     "position": "right",
                     "showNearTarget": true
                   },
@@ -648,159 +692,43 @@
             }
           },
           {
-            "stepNumber": 2,
-            "id": "find-last-evaluator",
+            "stepNumber": 5,
+            "id": "click-first-trace-entry",
             "type": "cursor-only",
-            "title": "Select Last Evaluator",
-            "target": "[data-is-last-evaluator='true']",
-            "placement": "bottom",
+            "title": "View First Trace",
+            "target": "[data-testid='trace-row-first']",
+            "placement": "right",
             "content": {
-              "heading": "Click on the Last Evaluator",
-              "description": "Click the last evaluator to see how they work"
+              "heading": "Click on First Trace Entry",
+              "description": "See detailed evaluation results for this execution"
             },
             "actions": [],
             "duration": null,
-            "autoAdvance": true,
+            "autoAdvance": false,
             "advanceOnClick": {
-              "target": "[data-is-last-evaluator='true']",
-              "description": "Click on the last evaluator row"
+              "target": "[data-testid='trace-row-first']",
+              "description": "Click on the first trace entry to view evaluation details"
             },
             "waitForElement": {
-              "target": "[data-is-last-evaluator='true']",
+              "target": "[data-testid='trace-row-first']",
               "timeout": 15000,
               "checkInterval": 1000
             },
             "cursorGuidance": {
               "enabled": true,
-              "delay": 2000,
-              "steps": [
-                {
-                  "target": "[data-is-last-evaluator='true']",
-                  "targetText": "Last Evaluator",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "📊 Click on this Evaluator",
-                    "description": "See how quality evaluation works.",
-                    "tip": "Learn about evaluator details",
-                    "position": "bottom",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 3,
-            "id": "add-token-button",
-            "type": "cursor-only",
-            "title": "Add Token",
-            "target": "[data-testid='add-token-button']",
-            "placement": "bottom",
-            "content": {
-              "heading": "Add a Token",
-              "description": "Add an API token for this evaluator"
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": true,
-            "advanceOnClick": {
-              "target": "[data-testid='add-token-button']",
-              "description": "Click the Add Token button"
-            },
-            "waitForElement": {
-              "target": "[data-testid='add-token-button']",
-              "timeout": 10000,
-              "checkInterval": 1000
-            },
-            "cursorGuidance": {
-              "enabled": true,
               "delay": 1000,
               "steps": [
                 {
-                  "target": "[data-testid='add-token-button']",
-                  "targetText": "Add Token",
+                  "target": "[data-testid='trace-row-first']",
+                  "targetText": "First Trace",
                   "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
                   "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
                   "action": { "type": "hover" },
                   "instruction": {
-                    "title": "🔑 Add API Token",
-                    "description": "Add token for the evaluator to use.",
-                    "tip": "Token enables LLM API calls",
-                    "position": "bottom",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 4,
-            "id": "fill-token-details",
-            "type": "banner",
-            "title": "Fill Token Details",
-            "target": "body",
-            "placement": "center",
-            "content": {
-              "heading": "📝 Add Your API Token",
-              "description": "Fill out: provider, name, and token value.",
-              "variant": "info",
-              "showCloseButton": false,
-              "autoHide": false,
-              "icon": "📝"
-            },
-            "actions": [
-              {
-                "text": "Done",
-                "type": "primary",
-                "action": "nextStep",
-                "analytics": "token_details_filled"
-              }
-            ],
-            "duration": null,
-            "autoAdvance": false
-          },
-          {
-            "stepNumber": 5,
-            "id": "save-token-button",
-            "type": "cursor-only",
-            "title": "Save Token",
-            "target": "[data-testid='save-token-button']",
-            "placement": "top",
-            "content": {
-              "heading": "Save the Token",
-              "description": "Click Save to create the token"
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": true,
-            "advanceOnClick": {
-              "target": "[data-testid='save-token-button']",
-              "description": "Click the Save button"
-            },
-            "waitForElement": {
-              "target": "[data-testid='save-token-button']:not([disabled])",
-              "timeout": 30000,
-              "checkInterval": 1000
-            },
-            "cursorGuidance": {
-              "enabled": true,
-              "delay": 1000,
-              "steps": [
-                {
-                  "target": "[data-testid='save-token-button']",
-                  "targetText": "Save",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "💾 Save Token",
-                    "description": "Save and auto-select as default token.",
-                    "tip": "Token stored securely",
-                    "position": "top",
+                    "title": "Click on this Trace Entry",
+                    "description": "See how your evaluators assessed this agent execution.",
+                    "tip": "View evaluation scores and feedback",
+                    "position": "right",
                     "showNearTarget": true
                   },
                   "delay": 200
@@ -810,122 +738,6 @@
           },
           {
             "stepNumber": 6,
-            "id": "associate-llm-node-button",
-            "type": "cursor-only",
-            "title": "Associate LLM Node",
-            "target": "[data-testid='associate-new-llm-node-button']",
-            "placement": "bottom",
-            "content": {
-              "heading": "Associate LLM Node",
-              "description": "Connect evaluator to your agent's LLM nodes"
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": true,
-            "advanceOnClick": {
-              "target": "[data-testid='associate-new-llm-node-button']",
-              "description": "Click the Associate New LLM Node button"
-            },
-            "waitForElement": {
-              "target": "[data-testid='associate-new-llm-node-button']",
-              "timeout": 15000,
-              "checkInterval": 1000
-            },
-            "cursorGuidance": {
-              "enabled": true,
-              "delay": 2000,
-              "steps": [
-                {
-                  "target": "[data-testid='associate-new-llm-node-button']",
-                  "targetText": "Associate New LLM Node",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "🔗 Connect to LLM Nodes",
-                    "description": "Connect evaluator to your agent's nodes.",
-                    "tip": "Choose nodes to monitor",
-                    "position": "bottom",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 7,
-            "id": "select-nodes-banner",
-            "type": "banner",
-            "title": "Select Nodes to Evaluate",
-            "target": "body",
-            "placement": "center",
-            "content": {
-              "heading": "🎯 Choose Your Nodes",
-              "description": "Select the nodes you want this evaluator to monitor.",
-              "variant": "info",
-              "showCloseButton": false,
-              "autoHide": false,
-              "icon": "🎯"
-            },
-            "actions": [
-              {
-                "text": "Done",
-                "type": "primary",
-                "action": "nextStep",
-                "analytics": "nodes_selected"
-              }
-            ],
-            "duration": null,
-            "autoAdvance": false
-          },
-          {
-            "stepNumber": 8,
-            "id": "save-association-button",
-            "type": "cursor-only",
-            "title": "Save Association",
-            "target": "[data-testid='save-association-button']",
-            "placement": "top",
-            "content": {
-              "heading": "Save the Association",
-              "description": "Click Save to connect evaluator to selected nodes"
-            },
-            "actions": [],
-            "duration": null,
-            "autoAdvance": true,
-            "advanceOnClick": {
-              "target": "[data-testid='save-association-button']",
-              "description": "Click the Save button"
-            },
-            "waitForElement": {
-              "target": "[data-testid='save-association-button']:not([disabled])",
-              "timeout": 30000,
-              "checkInterval": 1000
-            },
-            "cursorGuidance": {
-              "enabled": true,
-              "delay": 1000,
-              "steps": [
-                {
-                  "target": "[data-testid='save-association-button']",
-                  "targetText": "Save",
-                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
-                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
-                  "action": { "type": "hover" },
-                  "instruction": {
-                    "title": "💾 Save Association",
-                    "description": "Connect evaluator to selected nodes.",
-                    "tip": "HandIt will start monitoring these nodes",
-                    "position": "top",
-                    "showNearTarget": true
-                  },
-                  "delay": 200
-                }
-              ]
-            }
-          },
-          {
-            "stepNumber": 9,
             "id": "evaluation-complete",
             "type": "banner",
             "title": "Evaluation Setup Complete",
@@ -933,7 +745,7 @@
             "placement": "center",
             "content": {
               "heading": "🎉 Congratulations!",
-              "description": "HandIt will automatically evaluate ~30% of entries and optimize prompts when needed.",
+              "description": "Now that your entries are being traced and evaluated, HandIt will automatically optimize your prompts based on the evaluation results and performance insights.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
