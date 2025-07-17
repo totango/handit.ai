@@ -326,6 +326,30 @@ const OnboardingOrchestrator = ({
     const handleChatClosed = () => {
       setChatIsOpen(false);
       // Banners will be restored automatically by the onboarding flow
+      
+      // Check if we should advance to next step when chat closes
+      if (currentStep?.id === 'open-evaluators-chat') {
+        // Advance to next step
+        onboardingService.nextStep();
+        const nextStep = onboardingService.getCurrentStep();
+
+        if (nextStep) {
+          // Update state and localStorage for the next step
+          setCurrentStep(nextStep);
+          setTourInfo(onboardingService.getCurrentTourInfo());
+
+          const onboardingState = {
+            isActive: true,
+            tourId: tourInfo?.tourId,
+            currentStepId: nextStep.id,
+            assistantVisible: assistantVisible,
+          };
+          localStorage.setItem('onboardingState', JSON.stringify(onboardingState));
+        } else {
+          // No more steps, complete tour
+          handleTourEndWithNextTourCheck();
+        }
+      }
     };
 
     window.addEventListener('onboarding:chat-opened', handleChatOpened);
@@ -335,7 +359,7 @@ const OnboardingOrchestrator = ({
       window.removeEventListener('onboarding:chat-opened', handleChatOpened);
       window.removeEventListener('onboarding:chat-closed', handleChatClosed);
     };
-  }, [banners]);
+  }, [banners, currentStep, tourInfo, assistantVisible, handleTourEndWithNextTourCheck]);
 
   // Global flag to force navigation open only when assistant is visible
   useEffect(() => {
@@ -1092,6 +1116,48 @@ const OnboardingOrchestrator = ({
             } else if (action.action === 'finishTour') {
               onboardingService.completeTour('tour_complete');
               handleTourEndWithNextTourCheck();
+            } else if (action.action === 'openChat') {
+              // Open chat with specified message
+              window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
+                detail: { mode: 'assistant', message: action.chatMessage || 'How can I help you?' } 
+              }));
+            } else if (action.action === 'apiCall') {
+              // Make API call
+              const makeApiCall = async () => {
+                try {
+                  const token = localStorage.getItem('custom-auth-token');
+                  const headers = {
+                    'Content-Type': 'application/json',
+                  };
+                  
+                  if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                  }
+
+                  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${action.endpoint}`, {
+                    method: action.method || 'GET',
+                    headers,
+                    body: action.method === 'POST' ? JSON.stringify({}) : undefined
+                  });
+                  
+                  if (response.ok) {
+                    // API call successful, advance to next step
+                    onboardingService.nextStep();
+                    setCurrentStep(onboardingService.getCurrentStep());
+                    setTourInfo(onboardingService.getCurrentTourInfo());
+
+                    if (!onboardingService.getCurrentStep()) {
+                      handleTourEndWithNextTourCheck();
+                    }
+                  } else {
+                    console.error('API call failed:', response.status);
+                  }
+                } catch (error) {
+                  console.error('Error making API call:', error);
+                }
+              };
+              
+              makeApiCall();
             }
           },
         })),

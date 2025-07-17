@@ -31,6 +31,7 @@ import {
 import { useRouter } from 'next/navigation';
 import CodeRenderer from './CodeRenderer';
 import docsService from '../../services/docsService';
+import { useGetUserQuery } from '@/services/auth/authService';
 
 const OnboardingChat = ({ 
   mode = 'assistant', // 'assistant' or 'agent-setup'
@@ -52,6 +53,7 @@ const OnboardingChat = ({
   const [chatHeight, setChatHeight] = useState(200); // Track chat height
   const router = useRouter();
   const messagesEndRef = useRef(null);
+  const { data: userData, error, isLoading: isUserLoading } = useGetUserQuery();
 
   const theme = {
     bgcolor: '#333333',
@@ -247,7 +249,7 @@ const OnboardingChat = ({
 
     // Check for onBoarding flag
     const hasOnboardingFlag = response.on_boarding_observability_finished === true;
-
+    const hasEvaluatorsFlag = response.evaluators_added === true;
     if (codeBlocks.length > 0) {
       return {
         content: response.answer,
@@ -263,7 +265,8 @@ const OnboardingChat = ({
       content: response.answer,
       type: 'text',
       metadata: {
-        showOnboardingGuide: hasOnboardingFlag
+        showOnboardingGuide: hasOnboardingFlag,
+        showCloseChat: hasEvaluatorsFlag
       }
     };
   };
@@ -272,14 +275,23 @@ const OnboardingChat = ({
     try {
       const aiApiUrl = process.env.NEXT_PUBLIC_AI_AGENT_URL || 'http://localhost:3006/api/ai/chat';
       
+      // Get the authorization token from localStorage
+      const token = localStorage.getItem('custom-auth-token');
+      console.log('userData', userData);
+      console.log('token', token);
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+ 
+      
       const response = await fetch(aiApiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           question,
           sessionId: sessionId || undefined,
+          handitToken: userData?.company?.apiToken,
         }),
       });
 
@@ -354,35 +366,6 @@ const OnboardingChat = ({
     // Close the chat which will restore previous state
     handleClose();
   };
-
-  // Component for rendering the onboarding guide button
-  const OnboardingGuideButton = () => (
-    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-start' }}>
-      <Button
-        size="small"
-        variant="outlined"
-        onClick={handleShowOnboardingGuide}
-        sx={{
-          backgroundColor: 'var(--mui-palette-primary-main)', // Blue background
-          color: 'white', // White text
-          fontSize: '0.75rem',
-          py: 0.5,
-          px: 1.5,
-          borderRadius: '8px',
-          textTransform: 'none',
-          minWidth: 'auto',
-          boxShadow: 'none',
-          border: 'none',
-          '&:hover': {
-            backgroundColor: '#357ABD', // Darker blue on hover
-            boxShadow: 'none',
-          }
-        }}
-      >
-        Show me the guide
-      </Button>
-    </Box>
-  );
 
   const renderMarkdownWithCode = (content, codeBlocks) => {
     if (!codeBlocks || codeBlocks.length === 0) {
@@ -620,6 +603,31 @@ const OnboardingChat = ({
               }}
             >
               Show me the guide
+            </Button>
+          </Box>
+        )}
+        {message.metadata.showCloseChat && (
+          <Box sx={{ mt: 1 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                // Close chat
+                handleClose();
+              }}
+              sx={{
+                bgcolor: 'var(--mui-palette-secondary-main)',
+                color: 'black',
+                textTransform: 'none',
+                fontSize: '0.75rem',
+                px: 2,
+                py: 0.5,
+                '&:hover': {
+                  bgcolor: 'var(--mui-palette-primary-main)'
+                }
+              }}
+            >
+              Close chat
             </Button>
           </Box>
         )}

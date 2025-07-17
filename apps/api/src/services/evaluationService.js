@@ -375,6 +375,18 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
           ].filter((item) => item !== null && item !== undefined && item !== ''),
         },
       ];
+      let defaultModel = evaluator.evaluationPrompt?.defaultProviderModel;
+      const provider = evaluator.evaluationPrompt?.defaultIntegrationToken?.provider?.name;
+      if (!defaultModel) {
+        if (provider === 'OpenAI') {
+          defaultModel = 'gpt-4o';
+        } else if (provider === 'TogetherAI') {
+          defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+        } else if (provider === 'GoogleAI') {
+          defaultModel = 'gemini-2.0-flash';
+        }
+      }
+
       const completion = await generateAIResponse({
         messages: message,
         numberOfAttachments: imageAttachments.length,
@@ -386,7 +398,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
         isN8N: isN8N,
         token: evaluator.evaluationPrompt?.defaultIntegrationToken?.token,
         provider: evaluator.evaluationPrompt?.defaultIntegrationToken?.provider?.name,
-        model: evaluator.evaluationPrompt?.defaultProviderModel,
+        model: defaultModel,
       });
 
 
