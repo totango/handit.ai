@@ -57,7 +57,7 @@ class UserService {
     }
     
     try {
-      const response = await makeApiCall('/users/me/onboarding', {
+      const response = await makeApiCall('users/me/onboarding', {
         method: 'PUT',
         body: {
           onboardingCurrentTour
