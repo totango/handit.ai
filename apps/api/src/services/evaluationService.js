@@ -384,6 +384,8 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
           defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
         } else if (provider === 'GoogleAI') {
           defaultModel = 'gemini-2.0-flash';
+        } else if (provider === 'AWSBedrock') {
+          defaultModel = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
         }
       }
 
@@ -397,6 +399,7 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
         }),
         isN8N: isN8N,
         token: evaluator.evaluationPrompt?.defaultIntegrationToken?.token,
+        tokenData: evaluator.evaluationPrompt?.defaultIntegrationToken?.data,
         provider: evaluator.evaluationPrompt?.defaultIntegrationToken?.provider?.name,
         model: defaultModel,
       });

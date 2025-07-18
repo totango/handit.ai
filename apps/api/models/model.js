@@ -71,7 +71,7 @@ export default (sequelize, DataTypes) => {
                 {
                   model: sequelize.models.IntegrationToken,
                   as: 'defaultIntegrationToken',
-                  attributes: ['id', 'name', 'providerId', 'token'],
+                  attributes: ['id', 'name', 'providerId', 'token', 'data'],
                   include: [
                     {
                       model: sequelize.models.Provider,
@@ -620,6 +620,7 @@ export default (sequelize, DataTypes) => {
           let optimizationToken;
           let defaultModel;
           let provider;
+          let optimizationTokenData;
           if (this.flags?.isN8N) {
             optimizationToken = process.env.TOGETHER_API_KEY;
             defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8'; // TODO: change to the default model of the company
@@ -627,6 +628,7 @@ export default (sequelize, DataTypes) => {
           } else {
             const token = await company.getOptimizationToken();
             optimizationToken = token.token;
+            optimizationTokenData = token.data;
             defaultModel = company.optimizationModel;
             provider = token.provider.name;
             if (!defaultModel) {
@@ -649,6 +651,7 @@ export default (sequelize, DataTypes) => {
               this.version,
               this.id,
               optimizationToken,
+              optimizationTokenData,
               provider,
               defaultModel
             );
@@ -777,6 +780,7 @@ export default (sequelize, DataTypes) => {
       let token;
       let defaultModel;
       let provider;
+      let tokenData;
       if (this.flags?.isN8N) {
         token = process.env.TOGETHER_API_KEY;
         defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
@@ -784,6 +788,7 @@ export default (sequelize, DataTypes) => {
       } else {
         const optimizationToken = await company.getOptimizationToken();
         token = optimizationToken.token;
+        tokenData = optimizationToken.data;
         defaultModel = company.optimizationModel;
         provider = optimizationToken.provider.name;
         if (!defaultModel) {
@@ -791,6 +796,10 @@ export default (sequelize, DataTypes) => {
             defaultModel = 'gpt-4o-mini';
           } else if (provider === 'TogetherAI') {
             defaultModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+          } else if (provider === 'AWSBedrock') {
+            defaultModel = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
+          } else if (provider === 'GoogleAI') {
+            defaultModel = 'gemini-2.0-flash';
           }
         }
       }
@@ -799,6 +808,7 @@ export default (sequelize, DataTypes) => {
         prompt,
         suggestions,
         token,
+        tokenData,
         provider,
         defaultModel
       );
