@@ -1,6 +1,6 @@
 import Together from "together-ai";
 import OpenAI from 'openai';
-//import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 
@@ -115,7 +115,7 @@ export const generateAIResponse = async ({
         response_format: responseFormat ? zodResponseFormat(responseFormat, 'responseFormat') : null
       });
     } else if (provider === 'GoogleAI') {
-      /*const genAI = new GoogleGenAI({apiKey: token || process.env.GOOGLE_AI_API_KEY});
+      const genAI = new GoogleGenAI({apiKey: token || process.env.GOOGLE_AI_API_KEY});
       
       // Convert OpenAI messages format to Google AI format
       let prompt = '';
@@ -176,7 +176,7 @@ export const generateAIResponse = async ({
           completion_tokens: 0,
           total_tokens: 0
         }
-      };*/
+      };
     } else if (provider === 'TogetherAI') {
       const together = new Together({
         apiKey: token,
