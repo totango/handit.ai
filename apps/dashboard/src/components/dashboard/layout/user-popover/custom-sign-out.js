@@ -62,10 +62,8 @@ export function CustomSignOut() {
       }
 
       // Refresh the auth state
-      await checkSession?.();
+      //await checkSession?.();
 
-      // Refresh the router and redirect to sign-in
-      router.refresh();
       router.push(paths.auth.custom.signIn);
 
     } catch (err) {
