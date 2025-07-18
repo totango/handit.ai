@@ -49,12 +49,12 @@ export function MainNav({ items, title, onNewEvaluator }) {
   const [isInWalkthrough, setIsInWalkthrough] = React.useState(false);
   
   // Fetch both regular and demo agents
-  const { data: regularAgents = [], refetch: refetchRegularAgents } = useGetAgentsQuery({});
+  const { data: regularAgents = [], refetch: refetchRegularAgents, isLoading: isLoadingRegularAgents } = useGetAgentsQuery({});
   const { data: demoAgents = [], refetch: refetchDemoAgents } = useGetAgentsQuery({ tourAgent: true });
   const [agents, setAgents] = React.useState([]);
   // Use demo agents when in walkthrough, regular agents otherwise
   React.useEffect(() => {
-    if (isInWalkthrough && demoAgents.length > 0) {
+    if ((isInWalkthrough && demoAgents.length > 0) || (regularAgents.length === 0 && !isLoadingRegularAgents)) {
       setAgents(demoAgents);
     } else if (!isInWalkthrough) {
       setAgents(regularAgents);

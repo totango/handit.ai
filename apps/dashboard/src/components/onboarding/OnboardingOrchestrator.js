@@ -177,7 +177,6 @@ const OnboardingOrchestrator = ({
   // Start onboarding flow
   const startOnboarding = useCallback((tourId = onboardingService.getInitialTourId()) => {
     const step = onboardingService.startTour(tourId);
-
     if (step) {
       setCurrentStep(step);
       const tourInfo = onboardingService.getCurrentTourInfo();
@@ -498,6 +497,9 @@ const OnboardingOrchestrator = ({
     if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current && enableAutomaticStart && !isLoadingAutomaticStart) {
       hasStartedNewUserOnboarding.current = true;
       startOnboarding(onboardingService.getInitialTourId());
+      new CustomEvent('onboarding:start-tour', {
+        detail: { tourId: onboardingService.getInitialTourId() },
+      })
       return;
     }
 
