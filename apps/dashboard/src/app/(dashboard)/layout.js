@@ -21,6 +21,7 @@ import { AuthGuard } from '@/components/auth/auth-guard';
 import { DynamicLayout } from '@/components/dashboard/layout/dynamic-layout';
 import { OnboardingOrchestrator, OnboardingChatContainer } from '@/components/onboarding';
 import { useUser } from '@/hooks/use-user';
+import { useGetAgentsQuery } from '@/services/agentsService';
 import userService from '../../services/userService';
 
 /**
@@ -46,6 +47,14 @@ function LayoutInner({ children }) {
   const { user, checkSession } = useUser();
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [connectionStatus, setConnectionStatus] = React.useState('disconnected');
+  
+  // Check if user has agents to determine if we should auto-start onboarding
+  const { data: userAgents = [], isLoading: isLoadingAgents } = useGetAgentsQuery({});
+  const hasAgents = userAgents.length > 0;
+  
+  // Convert to generic onboarding parameters
+  const enableAutomaticStart = !hasAgents; // Enable auto-start only if user has no agents
+  const isLoadingAutomaticStart = isLoadingAgents;
 
   // Debug logging for user state changes
   React.useEffect(() => {
@@ -105,6 +114,8 @@ function LayoutInner({ children }) {
           firstName: user?.firstName,
           lastName: user?.lastName
         }}
+        enableAutomaticStart={enableAutomaticStart}
+        isLoadingAutomaticStart={isLoadingAutomaticStart}
         updateOnboardingProgress={(tourId) => userService.updateOnboardingProgress(tourId)}
         onComplete={() => setShowOnboarding(false)}
         onSkip={() => setShowOnboarding(false)}

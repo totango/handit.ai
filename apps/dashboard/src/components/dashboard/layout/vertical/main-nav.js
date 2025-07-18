@@ -49,8 +49,8 @@ export function MainNav({ items, title, onNewEvaluator }) {
   const [isInWalkthrough, setIsInWalkthrough] = React.useState(false);
   
   // Fetch both regular and demo agents
-  const { data: regularAgents = [] } = useGetAgentsQuery({});
-  const { data: demoAgents = [] } = useGetAgentsQuery({ tourAgent: true });
+  const { data: regularAgents = [], refetch: refetchRegularAgents } = useGetAgentsQuery({});
+  const { data: demoAgents = [], refetch: refetchDemoAgents } = useGetAgentsQuery({ tourAgent: true });
   const [agents, setAgents] = React.useState([]);
   // Use demo agents when in walkthrough, regular agents otherwise
   React.useEffect(() => {
@@ -283,17 +283,26 @@ export function MainNav({ items, title, onNewEvaluator }) {
       // Ignore active state changes to prevent flicker during step transitions
     };
 
+    // Listen for connection success to refetch agents
+    const handleConnectionSuccess = () => {
+      // Refetch both regular and demo agents when connection is successful
+      refetchRegularAgents();
+      refetchDemoAgents();
+    };
+
     window.addEventListener('onboarding:start-tour', handleStartTour);
     window.addEventListener('onboarding:change-tour', handleOnboardingStateChange);
+    window.addEventListener('onboarding:connection-success', handleConnectionSuccess);
 
     return () => {
       window.removeEventListener('onboarding:start-tour', handleStartTour);
       window.removeEventListener('onboarding:change-tour', handleOnboardingStateChange);
+      window.removeEventListener('onboarding:connection-success', handleConnectionSuccess);
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
       }
     };
-  }, [isInWalkthrough]);
+  }, [isInWalkthrough, refetchRegularAgents, refetchDemoAgents]);
 
   return (
     <React.Fragment>
@@ -357,7 +366,7 @@ export function MainNav({ items, title, onNewEvaluator }) {
             )}
             {path.includes('evaluation-hub') && (
               <Typography variant="h4" component="h1" sx={{ pl: 5 }}>
-                Evaluation Hub
+                Evaluation Suite
               </Typography>
             )}
             {path === '/agents' && (
