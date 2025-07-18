@@ -1,9 +1,9 @@
 
 <p align="center">
   <!-- shows in LIGHT mode only -->
-  <img src="./apps/dashboard/public/assets/overview/Logo and applications Handit-01.png#gh-light-mode-only" width="400" height="200" style="object-fit: cover; object-position: center;" alt="Handit logo" />
+  <img src="./apps/dashboard/public/assets/overview/Logo and applications Handit-01.png#gh-light-mode-only" width="400" style="object-fit: cover; object-position: center;" alt="Handit logo" />
   <!-- shows in DARK mode only -->
-  <img src="./apps/dashboard/public/assets/overview/Logo and applications Handit-03.png#gh-dark-mode-only" width="400" height="200" style="object-fit: cover; object-position: center;" alt="Handit logo (dark)" />
+  <img src="./apps/dashboard/public/assets/overview/Logo and applications Handit-03.png#gh-dark-mode-only" width="400" style="object-fit: cover; object-position: center;" alt="Handit logo (dark)" />
 </p>
 
 <p align="center">
@@ -539,7 +539,7 @@ The system is now automatically generating and testing improved prompts. Monitor
 - View detailed prompt comparisons
 - See statistical confidence and recommendations
 
-![Handit automatically improves AI agents through evaluation and optimization](./apps/dashboard/public/assets/overview/prompt-comparasion.png)
+![Handit automatically improves AI agents through evaluation and optimization](./apps/dashboard/public/assets/overview/prompt-comparison.png)
 
 ### Step 3: Deploy Optimizations
 
