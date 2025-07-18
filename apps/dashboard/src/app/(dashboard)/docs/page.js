@@ -518,11 +518,8 @@ const DocsPage = () => {
           <Stack direction="row" spacing={3} alignItems="center" justifyContent="space-between" sx={{ marginLeft: '280px' }}>
             <Box>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'oklch(0.929 0.013 255.508)' }}>
-                <CheckCircle size={20} color="oklch(0.929 0.013 255.508)" />
-                Test Connection
               </Typography>
               <Typography variant="body2" sx={{ color: 'oklch(0.729 0.013 255.508)' }}>
-                Verify your setup is working correctly
               </Typography>
             </Box>
             <div style={{ display: 'flex', alignItems: 'center', gap: 3, }}>

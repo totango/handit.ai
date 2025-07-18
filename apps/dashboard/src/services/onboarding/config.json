@@ -589,7 +589,7 @@
             },
             "actions": [
               {
-                "text": "Set Up Evaluators",
+                "text": "Visit Evaluation Hub",
                 "type": "primary",
                 "action": "nextStep",
                 "analytics": "evaluation_explanation_continue"
@@ -600,6 +600,46 @@
           },
           {
             "stepNumber": 2,
+            "id": "navigate-to-evaluation-hub",
+            "type": "cursor-only",
+            "title": "Navigate to Evaluation Suite",
+            "target": "[data-nav-item='Evaluation Suite']",
+            "placement": "right",
+            "content": {
+              "heading": "Click on Evaluation Suite",
+              "description": "Let's explore the evaluation management interface"
+            },
+            "actions": [],
+            "duration": null,
+            "autoAdvance": false,
+            "advanceOnClick": {
+              "target": "[data-nav-item='Evaluation Suite']",
+              "description": "Click on the Evaluation Suite menu item"
+            },
+            "cursorGuidance": {
+              "enabled": true,
+              "delay": 1000,
+              "steps": [
+                {
+                  "target": "[data-nav-item='Evaluation Suite']",
+                  "targetText": "Evaluation Suite",
+                  "highlight": { "style": "glow", "intensity": "high", "duration": 4000 },
+                  "animation": { "duration": 1500, "easing": "ease-in-out", "path": "curved" },
+                  "action": { "type": "hover" },
+                  "instruction": {
+                    "title": "Click on Evaluation Suite",
+                    "description": "This is where you can manage all your evaluators and see their performance.",
+                    "tip": "Your evaluation control center",
+                    "position": "right",
+                    "showNearTarget": true
+                  },
+                  "delay": 200
+                }
+              ]
+            }
+          },
+          {
+            "stepNumber": 3,
             "id": "open-evaluators-chat",
             "type": "banner",
             "title": "Connect Evaluators",
@@ -626,7 +666,33 @@
             "autoAdvance": false
           },
           {
-            "stepNumber": 3,
+            "stepNumber": 4,
+            "id": "manual-alternative-banner",
+            "type": "banner",
+            "title": "Manual Alternative",
+            "target": "body",
+            "placement": "top-center",
+            "content": {
+              "heading": "💡 Manual Alternative",
+              "description": "You can also create, edit and setup all your evaluators manually from this Evaluation Suite page if you prefer.",
+              "variant": "info",
+              "showCloseButton": true,
+              "autoHide": false,
+              "icon": "💡"
+            },
+            "actions": [
+              {
+                "text": "Continue with Setup",
+                "type": "primary",
+                "action": "nextStep",
+                "analytics": "manual_alternative_continue"
+              }
+            ],
+            "duration": null,
+            "autoAdvance": false
+          },
+          {
+            "stepNumber": 5,
             "id": "evaluators-ready-banner",
             "type": "banner",
             "title": "Evaluators Ready",
@@ -652,7 +718,7 @@
             "autoAdvance": false
           },
           {
-            "stepNumber": 4,
+            "stepNumber": 6,
             "id": "navigate-to-tracing",
             "type": "cursor-only",
             "title": "Navigate to Tracing",
@@ -692,7 +758,7 @@
             }
           },
           {
-            "stepNumber": 5,
+            "stepNumber": 7,
             "id": "click-first-trace-entry",
             "type": "cursor-only",
             "title": "View First Trace",
@@ -737,7 +803,7 @@
             }
           },
           {
-            "stepNumber": 6,
+            "stepNumber": 8,
             "id": "evaluation-complete",
             "type": "banner",
             "title": "Evaluation Setup Complete",

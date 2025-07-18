@@ -26,6 +26,8 @@ const OnboardingOrchestrator = ({
   autoStart = false,
   triggerOnMount = true,
   userState = {},
+  enableAutomaticStart = true,
+  isLoadingAutomaticStart = false,
   onComplete = () => {},
   onSkip = () => {},
   updateOnboardingProgress = () => {},
@@ -352,14 +354,27 @@ const OnboardingOrchestrator = ({
       }
     };
 
+    const handleEvaluatorsDetected = () => {
+      // Check if onboarding is currently active
+      if (isActive && currentStep) {
+        // Small delay to show the message, then auto-close chat and advance
+        setTimeout(() => {
+          // Tell the chat component to close itself
+          window.dispatchEvent(new CustomEvent('onboarding:close-chat'));
+        }, 2000); // 2 second delay to let user see the confirmation
+      }
+    };
+
     window.addEventListener('onboarding:chat-opened', handleChatOpened);
     window.addEventListener('onboarding:chat-closed', handleChatClosed);
+    window.addEventListener('onboarding:evaluators-detected', handleEvaluatorsDetected);
 
     return () => {
       window.removeEventListener('onboarding:chat-opened', handleChatOpened);
       window.removeEventListener('onboarding:chat-closed', handleChatClosed);
+      window.removeEventListener('onboarding:evaluators-detected', handleEvaluatorsDetected);
     };
-  }, [banners, currentStep, tourInfo, assistantVisible, handleTourEndWithNextTourCheck]);
+  }, [banners, currentStep, tourInfo, assistantVisible, handleTourEndWithNextTourCheck, isActive]);
 
   // Global flag to force navigation open only when assistant is visible
   useEffect(() => {
@@ -479,7 +494,8 @@ const OnboardingOrchestrator = ({
 
     // Check if user is new (onboardingCurrentTour is null) and start onboarding immediately
     // Only start if we haven't already started onboarding for this new user
-    if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current) {
+    // AND automatic start is enabled (passed from parent to determine business logic)
+    if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current && enableAutomaticStart && !isLoadingAutomaticStart) {
       hasStartedNewUserOnboarding.current = true;
       startOnboarding(onboardingService.getInitialTourId());
       return;
@@ -506,7 +522,7 @@ const OnboardingOrchestrator = ({
       window.removeEventListener('onboarding:loading-state-change', handleLoadingStateChange);
       window.removeEventListener('onboarding:step-changed', handleStepChanged);
     };
-      }, [userState, autoStart, triggerOnMount, handleConnectionSuccess, handleLoadingStateChange, handleStepChanged]);
+      }, [userState, autoStart, triggerOnMount, enableAutomaticStart, isLoadingAutomaticStart, handleConnectionSuccess, handleLoadingStateChange, handleStepChanged]);
   // Navigation functions
   const handleNext = useCallback(() => {
     // Clear any existing banners and highlighting before advancing
@@ -1121,6 +1137,25 @@ const OnboardingOrchestrator = ({
               window.dispatchEvent(new CustomEvent('openOnboardingChat', { 
                 detail: { mode: 'assistant', message: action.chatMessage || 'How can I help you?' } 
               }));
+              
+              // Show additional banner if specified
+              if (action.showAdditionalBanner) {
+                const additionalPosition = calculateBannerPositionForPlacement(action.showAdditionalBanner.placement);
+                
+                // Small delay to avoid banner collision with chat opening
+                setTimeout(() => {
+                  banners.showBanner({
+                    title: action.showAdditionalBanner.content.heading,
+                    message: action.showAdditionalBanner.content.description,
+                    position: additionalPosition,
+                    variant: action.showAdditionalBanner.content.variant || 'info',
+                    autoHide: action.showAdditionalBanner.content.autoHide !== false,
+                    autoHideDelay: action.showAdditionalBanner.content.autoHideDelay || 10000,
+                    showCloseButton: action.showAdditionalBanner.content.showCloseButton !== false,
+                    icon: action.showAdditionalBanner.content.icon,
+                  });
+                }, 1000); // Delay to let chat open first
+              }
             } else if (action.action === 'apiCall') {
               // Make API call
               const makeApiCall = async () => {

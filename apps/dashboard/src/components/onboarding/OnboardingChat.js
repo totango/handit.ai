@@ -55,6 +55,19 @@ const OnboardingChat = ({
   const messagesEndRef = useRef(null);
   const { data: userData, error, isLoading: isUserLoading } = useGetUserQuery();
 
+  const handleClose = () => {
+    setIsVisible(false);
+    // Reset chat messages to start fresh next time
+    setMessages([]);
+    // Reset other chat state
+    setSessionId(null);
+    setGuideContent('');
+    setInputValue('');
+    // Emit event to restore onboarding elements
+    window.dispatchEvent(new CustomEvent('onboarding:chat-closed'));
+    onClose?.();
+  };
+
   const theme = {
     bgcolor: '#333333',
     color: '#ffffff',
@@ -144,11 +157,17 @@ const OnboardingChat = ({
       }
     };
 
+    const handleCloseChat = () => {
+      handleClose();
+    };
+
     window.addEventListener('openOnboardingChat', handleOpenChat);
+    window.addEventListener('onboarding:close-chat', handleCloseChat);
     return () => {
       window.removeEventListener('openOnboardingChat', handleOpenChat);
+      window.removeEventListener('onboarding:close-chat', handleCloseChat);
     };
-  }, [mode, sessionId]);
+  }, [mode, sessionId, handleClose]);
 
   const addMessage = (sender, content, type = 'text', metadata = {}, fromBackend = false) => {
     // If this is an AI message with onboarding flag, store content for guide and don't display it
@@ -250,6 +269,18 @@ const OnboardingChat = ({
     // Check for onBoarding flag
     const hasOnboardingFlag = response.on_boarding_observability_finished === true;
     const hasEvaluatorsFlag = response.evaluators_added === true;
+    const customEvaluatorsFlag = response.custom_evaluator_management === true;
+    
+    // Emit event when evaluators are detected - let OnboardingOrchestrator handle the logic
+    if (hasEvaluatorsFlag) {
+      window.dispatchEvent(new CustomEvent('onboarding:evaluators-detected'));
+    }
+
+    if (customEvaluatorsFlag) {
+      // close chat
+      handleClose();
+    }
+    
     if (codeBlocks.length > 0) {
       return {
         content: response.answer,
@@ -266,7 +297,6 @@ const OnboardingChat = ({
       type: 'text',
       metadata: {
         showOnboardingGuide: hasOnboardingFlag,
-        showCloseChat: hasEvaluatorsFlag
       }
     };
   };
@@ -354,18 +384,6 @@ const OnboardingChat = ({
     setCodeModalOpen(true);
   };
 
-  const handleShowOnboardingGuide = () => {
-    // Save the generated documentation
-    if (guideContent) {
-      docsService.saveGeneratedDocs(guideContent);
-    }
-    
-    // Navigate to docs page
-    router.push('/docs');
-    
-    // Close the chat which will restore previous state
-    handleClose();
-  };
 
   const renderMarkdownWithCode = (content, codeBlocks) => {
     if (!codeBlocks || codeBlocks.length === 0) {
@@ -678,18 +696,6 @@ const OnboardingChat = ({
     };
   };
 
-  const handleClose = () => {
-    setIsVisible(false);
-    // Reset chat messages to start fresh next time
-    setMessages([]);
-    // Reset other chat state
-    setSessionId(null);
-    setGuideContent('');
-    setInputValue('');
-    // Emit event to restore onboarding elements
-    window.dispatchEvent(new CustomEvent('onboarding:chat-closed'));
-    onClose?.();
-  };
 
   if (!isVisible) return null;
 
