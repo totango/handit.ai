@@ -29,8 +29,10 @@ async function makeApiCall(url, options = {}) {
   try {
     const response = await fetch(`${baseUrl}${url}`, config);
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    // sign out
+    if (response.status === 401) {
+      localStorage.removeItem('custom-auth-token');
+      window.location.href = '/auth/custom/sign-in';
     }
     
     return await response.json();
