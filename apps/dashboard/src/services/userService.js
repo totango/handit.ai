@@ -100,7 +100,7 @@ class UserService {
    */
   async getMe() {
     try {
-      const response = await makeApiCall('/api/users/me', {
+      const response = await makeApiCall('/users/me', {
         method: 'GET'
       });
       return response;
@@ -117,7 +117,7 @@ class UserService {
    */
   async updateProfile(userData) {
     try {
-      const response = await makeApiCall('/api/users/me', {
+      const response = await makeApiCall('/users/me', {
         method: 'PUT',
         body: userData
       });
