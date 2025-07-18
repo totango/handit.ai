@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@ai-sdk/deepinfra": "^0.2.7",
+    "@aws-sdk/client-bedrock-runtime": "^3.848.0",
     "@google-analytics/data": "^4.10.0",
     "@google/genai": "^1.8.0",
     "@sendgrid/mail": "^8.1.3",
