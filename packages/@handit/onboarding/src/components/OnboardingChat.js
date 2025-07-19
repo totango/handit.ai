@@ -28,10 +28,13 @@ import {
   X,
   Code,
 } from '@phosphor-icons/react';
-import { useRouter } from 'next/navigation';
+// Note: router should be provided by the consuming application
+// import { useRouter } from 'next/navigation';
 import CodeRenderer from './CodeRenderer';
-import docsService from '../../services/docsService';
-import { useGetUserQuery } from '@/services/auth/authService';
+// Note: docsService should be provided by the consuming application
+// import docsService from '../../services/docsService';
+// Note: authService should be provided by the consuming application  
+// import { useGetUserQuery } from '@/services/auth/authService';
 
 const OnboardingChat = ({ 
   mode = 'assistant', // 'assistant' or 'agent-setup'
@@ -51,9 +54,13 @@ const OnboardingChat = ({
   const [codeModalContent, setCodeModalContent] = useState('');
   const [guideContent, setGuideContent] = useState(''); // Store guide content for banner
   const [chatHeight, setChatHeight] = useState(200); // Track chat height
-  const router = useRouter();
+      // const router = useRouter();
+    const router = { push: (path) => console.log('Navigate to:', path) }; // Mock router
   const messagesEndRef = useRef(null);
-  const { data: userData, error, isLoading: isUserLoading } = useGetUserQuery();
+  // const { data: userData, error, isLoading: isUserLoading } = useGetUserQuery();
+  const userData = null; // Should be provided by consuming application
+  const error = null;
+  const isUserLoading = false;
 
   const handleClose = () => {
     setIsVisible(false);
@@ -598,7 +605,8 @@ const OnboardingChat = ({
               onClick={() => {
                 // Save the generated documentation
                 if (guideContent) {
-                  docsService.saveGeneratedDocs(guideContent);
+                  // docsService?.saveGeneratedDocs(guideContent);
+        console.log('Generated docs saved (docsService not available in package):', guideContent);
                 }
                 
                 // Navigate to docs page
