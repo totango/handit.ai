@@ -50,13 +50,12 @@ function LayoutInner({ children }) {
   
   // Check if user has agents to determine if we should auto-start onboarding
   const { data: userAgents = [], isLoading: isLoadingAgents } = useGetAgentsQuery({});
-  const hasAgents = userAgents.length > 0;
   
   React.useEffect(() => {
-    if (userAgents && userAgents.length === 0) {
+    if (userAgents && userAgents.length === 0 && !isLoadingAgents) {
       setEnableAutomaticStart(true);
     }
-  }, [userAgents]);
+  }, [userAgents, isLoadingAgents]);
   // Convert to generic onboarding parameters
   const [enableAutomaticStart, setEnableAutomaticStart] = React.useState(false); // Enable auto-start only if user has no agents
 
