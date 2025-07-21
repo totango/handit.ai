@@ -69,7 +69,7 @@
             "placement": "center",
             "content": {
               "heading": "Welcome to HandIt! 👋",
-              "description": "The Open Source Engine that Auto-Improves Your AI. HandIt evaluates every decision, auto-generates better prompts, A/B-tests fixes, and lets you control deployments.",
+              "description": "HandIt catches broken AI behavior in real time, fixes it automatically, and learns from every failure—so your team ships AI you can actually trust.",
               "variant": "welcome",
               "showCloseButton": false,
               "autoHide": false,
@@ -355,7 +355,7 @@
             "placement": "top",
             "content": {
               "heading": "Self-Optimization Guide",
-              "description": "HandIt automatically improves prompts based on detected errors. Here you'll see the improved prompts, metrics, and deployment options.",
+              "description": "HandIt doesn't just monitor—it auto-fixes failures and proves every improvement. Every new request either passes or makes the system smarter.",
               "variant": "info",
               "showCloseButton": false,
               "autoHide": false,
@@ -381,7 +381,7 @@
             "placement": "center",
             "content": {
               "heading": "🎉 That's HandIt in Action!",
-              "description": "Monitoring isn't enough - you need optimization. HandIt tags failures, auto-generates fixes, A/B-tests patches, and deploys winners on your approval.",
+              "description": "HandIt is more than monitoring—it's active self-healing for your AI. Every failure is caught, fixed, and proven—so you never fly blind.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -539,7 +539,7 @@
             "placement": "center",
             "content": {
               "heading": "🎉 Congratulations!",
-              "description": "Your agent is successfully connected to Handit! You're now ready to set up evaluation and monitoring to track your agent's performance and quality.",
+              "description": "Your agent is now connected! HandIt will catch failures in real time, fix them automatically, and give you audit-ready proof.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -581,7 +581,7 @@
             "placement": "center",
             "content": {
               "heading": "🔍 What is Evaluation?",
-              "description": "Evaluation uses LLM judges to automatically assess your agent's responses for quality, accuracy, and relevance. These AI evaluators run continuously in the background, analyzing your agent's performance and identifying areas for improvement.",
+              "description": "HandIt's evaluators catch silent failures, prove every fix, and help you meet compliance—automatically. No more flying blind, no more silent failures.",
               "variant": "info",
               "showCloseButton": false,
               "autoHide": false,
@@ -647,7 +647,7 @@
             "placement": "center",
             "content": {
               "heading": "🤖 Let's Connect Your Evaluators",
-              "description": "Our AI assistant will help you set up the right evaluators for your agent.",
+              "description": "Set up evaluators to catch, fix, and learn from every AI failure—automatically.",
               "variant": "info",
               "showCloseButton": false,
               "autoHide": false,
@@ -700,7 +700,7 @@
             "placement": "center",
             "content": {
               "heading": "🚀 Your Evaluators Are Ready!",
-              "description": "Now that your evaluators are set up, let's see how evaluations look in your traces.",
+              "description": "Your evaluators are live! Every trace is now checked, fixed, and makes your system smarter.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,
@@ -811,7 +811,7 @@
             "placement": "center",
             "content": {
               "heading": "🎉 Congratulations!",
-              "description": "Now that your entries are being traced and evaluated, HandIt will automatically optimize your prompts based on the evaluation results and performance insights.",
+              "description": "HandIt now auto-fixes failures and gives you audit-ready proof—so you can trust every AI decision.",
               "variant": "success",
               "showCloseButton": false,
               "autoHide": false,

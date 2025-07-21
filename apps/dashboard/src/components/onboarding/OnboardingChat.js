@@ -803,10 +803,10 @@ const OnboardingChat = ({
                 size="small"
                 disabled={isLoading}
                 sx={{
-                  borderRadius: '5px',
+                  borderRadius: 1.5,
                   '& .MuiOutlinedInput-root': {
                     bgcolor: theme.inputBg,
-                    borderRadius: '5px',
+                    borderRadius: 1.5,
                     minHeight: '36px', // Reduced height
                     '& fieldset': { borderColor: theme.borderColor },
                     '&:hover fieldset': { borderColor: theme.borderColor },

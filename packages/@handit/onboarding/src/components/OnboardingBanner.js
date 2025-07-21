@@ -200,14 +200,14 @@ const OnboardingBanner = React.memo(({
           transform: position.transform,
           zIndex: 9997,
           maxWidth: 400,
-          borderRadius: '5px',
+          borderRadius: 1.5,
         }}
       >
         <Grow in={visible} timeout={300}>
           <Card
             sx={{
               ...variantStyles,
-              borderRadius: '5px',
+              borderRadius: 1.5,
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               overflow: 'hidden',
               position: 'relative',
@@ -247,7 +247,7 @@ const OnboardingBanner = React.memo(({
                       color: '#888', 
                       p: 0.5,
                       ml: 1,
-                      borderRadius: '5px',
+                      borderRadius: 1.5,
                       '&:hover': {
                         color: 'white'
                       }
@@ -296,7 +296,7 @@ const OnboardingBanner = React.memo(({
                         bgcolor: 'rgba(255, 255, 255, 0.1)',
                         border: 'none',
                         px: 2,
-                        borderRadius: '5px',
+                        borderRadius: 1.5,
                         py: 0.5,
                         '&:hover': {
                           bgcolor: 'rgba(255, 255, 255, 0.2)',
