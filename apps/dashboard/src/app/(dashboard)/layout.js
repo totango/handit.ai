@@ -52,9 +52,13 @@ function LayoutInner({ children }) {
   const { data: userAgents = [], isLoading: isLoadingAgents } = useGetAgentsQuery({});
   const hasAgents = userAgents.length > 0;
   
+  React.useEffect(() => {
+    if (userAgents && userAgents.length === 0) {
+      setEnableAutomaticStart(true);
+    }
+  }, [userAgents]);
   // Convert to generic onboarding parameters
-  const enableAutomaticStart = !hasAgents; // Enable auto-start only if user has no agents
-  const isLoadingAutomaticStart = isLoadingAgents;
+  const [enableAutomaticStart, setEnableAutomaticStart] = React.useState(false); // Enable auto-start only if user has no agents
 
   // Debug logging for user state changes
   React.useEffect(() => {
@@ -115,7 +119,7 @@ function LayoutInner({ children }) {
           lastName: user?.lastName
         }}
         enableAutomaticStart={enableAutomaticStart}
-        isLoadingAutomaticStart={isLoadingAutomaticStart}
+        isLoadingAutomaticStart={isLoadingAgents}
         updateOnboardingProgress={(tourId) => userService.updateOnboardingProgress(tourId)}
         onComplete={() => setShowOnboarding(false)}
         onSkip={() => setShowOnboarding(false)}
