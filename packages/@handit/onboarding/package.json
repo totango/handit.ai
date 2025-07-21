@@ -1,5 +1,5 @@
 {
-  "name": "@handit/onboarding",
+  "name": "@handit.ai/onboarding",
   "version": "1.0.0",
   "description": "Interactive onboarding components and service for AI agents",
   "type": "module",
@@ -30,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/handit/autonom",
+    "url": "git+https://github.com/handit/autonom.git",
     "directory": "packages/@handit/onboarding"
   },
   "peerDependencies": {
@@ -64,5 +64,9 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/handit/autonom/issues"
+  },
+  "homepage": "https://github.com/handit/autonom#readme"
 }
