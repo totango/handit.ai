@@ -52,9 +52,16 @@ function LayoutInner({ children }) {
   const { data: userAgents = [], isLoading: isLoadingAgents } = useGetAgentsQuery({});
   
   React.useEffect(() => {
-    if (userAgents && userAgents.length === 0 && !isLoadingAgents) {
-      setEnableAutomaticStart(true);
-    }
+    // Only run the check after a delay (e.g., 500ms)
+    const timeout = setTimeout(() => {
+      if (userAgents && userAgents.length === 0 && !isLoadingAgents) {
+        console.log('Layout: User has no agents, enabling automatic start');
+        setEnableAutomaticStart(true);
+      }
+    }, 1000); // 1000ms delay
+
+    // Cleanup the timeout if dependencies change before it fires
+    return () => clearTimeout(timeout);
   }, [userAgents, isLoadingAgents]);
   // Convert to generic onboarding parameters
   const [enableAutomaticStart, setEnableAutomaticStart] = React.useState(false); // Enable auto-start only if user has no agents
