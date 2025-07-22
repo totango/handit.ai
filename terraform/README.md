@@ -1,32 +1,102 @@
-# Handit.ai Terraform Module
+# Handit.ai Terraform Configuration
 
-This module can be referenced from the leviosa-backend Terraform configuration.
+This directory contains Terraform configuration for Handit.ai AWS resources.
 
-## Usage from leviosa-backend
+## Overview
 
-In your leviosa-backend `terraform/main.tf`:
+The Terraform setup creates minimal resources needed for Handit.ai:
+- ECR repositories for container images
+- IAM roles for GitHub Actions (if needed)
+- Service account roles for Kubernetes (if needed)
 
-```hcl
-module "handit_deployment" {
-  source = "git::https://github.com/your-org/handit.ai.git//terraform?ref=main"
-  
-  environment         = var.environment
-  eks_cluster_name   = module.eks.cluster_name
-  ecr_registry       = module.ecr.registry_url
-  namespace          = "handit"
-  
-  # Database configuration
-  postgres_host      = module.rds.endpoint
-  redis_host         = module.elasticache.endpoint
-  
-  # Image tags
-  api_image_tag      = var.handit_api_tag
-  dashboard_image_tag = var.handit_dashboard_tag
-}
+Most infrastructure is shared with Leviosa (EKS, RDS, Redis, etc).
+
+## Prerequisites
+
+- Terraform >= 1.0
+- AWS CLI configured
+- Access to production AWS account (904233102192)
+- MFA device configured
+
+## Usage
+
+### 1. Authenticate with MFA
+
+```bash
+# Source the authentication script with your MFA token
+. ./terraform-auth.sh YOUR_MFA_TOKEN
 ```
 
-## GitHub Actions in handit.ai repo
+### 2. Initialize Terraform
 
-The handit.ai repository would handle its own CI/CD:
-1. Build and push images to ECR
-2. Trigger leviosa-backend Terraform to update deployments
+```bash
+terraform init
+```
+
+### 3. Select Production Workspace
+
+```bash
+# Only production is supported
+terraform workspace select handit-prod
+```
+
+### 4. Plan and Apply
+
+```bash
+# Review changes
+terraform plan
+
+# Apply changes
+terraform apply
+```
+
+### 5. Get Deployment Information
+
+```bash
+./get-deployment-info.sh
+```
+
+## State Management
+
+- State is stored in S3: `s3://catalyst-terraform-backend/handit/terraform.tfstate`
+- State locking via DynamoDB: `catalyst-terraform-backend`
+- Workspace: `handit-prod` only
+
+## Resources Created
+
+### ECR Repositories
+- `handit-api` - API container images
+- `handit-dashboard` - Frontend container images
+
+### Shared Resources (from Leviosa)
+- EKS Cluster: `leviosa-prod-eks`
+- External Secrets: `leviosa-express-secrets`
+- Service Account: `leviosa-express-sa`
+- ALB Ingress: Shared via group `leviosa-prod`
+
+## Important Notes
+
+- **No development environment** - Only production is configured
+- **Minimal resources** - Most infrastructure is shared with Leviosa
+- **MFA required** - All operations require MFA authentication
+- **Production only** - All deployments go directly to production
+
+## Troubleshooting
+
+### Authentication Issues
+```bash
+# Verify authentication
+aws sts get-caller-identity
+
+# Re-authenticate if needed
+. ./terraform-auth.sh YOUR_MFA_TOKEN
+```
+
+### Workspace Issues
+```bash
+# List workspaces
+terraform workspace list
+
+# Create workspace if missing
+terraform workspace new handit-prod
+```

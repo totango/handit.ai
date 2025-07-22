@@ -82,12 +82,7 @@ Update the Helm values files with actual endpoints:
 
 ### Automatic Deployment (GitHub Actions)
 
-1. **Deploy to Development** (automatic on push to main):
-   ```
-   git push origin main
-   ```
-
-2. **Deploy to Production** (manual):
+1. **Deploy to Production** (manual only):
    - Go to Actions tab in GitHub
    - Select "Deploy to Leviosa EKS"
    - Click "Run workflow"
@@ -98,13 +93,7 @@ Update the Helm values files with actual endpoints:
 
 1. **Configure kubectl**:
    ```bash
-   # Development
-   aws eks update-kubeconfig \
-     --region eu-west-1 \
-     --name leviosa-dev-eks \
-     --profile leviosa-dev
-
-   # Production
+   # Production only
    aws eks update-kubeconfig \
      --region eu-west-1 \
      --name leviosa-prod-eks \
@@ -113,30 +102,24 @@ Update the Helm values files with actual endpoints:
 
 2. **Build and Push Docker Images**:
    ```bash
-   # Login to ECR
-   aws ecr get-login-password --region eu-west-1 --profile leviosa-dev | \
-     docker login --username AWS --password-stdin 537124952465.dkr.ecr.eu-west-1.amazonaws.com
+   # Login to ECR (Production)
+   aws ecr get-login-password --region eu-west-1 --profile leviosa-prod | \
+     docker login --username AWS --password-stdin 904233102192.dkr.ecr.eu-west-1.amazonaws.com
 
    # Build and push API
    docker build -t handit-api:latest ./apps/api
-   docker tag handit-api:latest 537124952465.dkr.ecr.eu-west-1.amazonaws.com/handit-api:latest
-   docker push 537124952465.dkr.ecr.eu-west-1.amazonaws.com/handit-api:latest
+   docker tag handit-api:latest 904233102192.dkr.ecr.eu-west-1.amazonaws.com/handit-api:latest
+   docker push 904233102192.dkr.ecr.eu-west-1.amazonaws.com/handit-api:latest
 
    # Build and push Dashboard
    docker build -t handit-dashboard:latest ./apps/dashboard
-   docker tag handit-dashboard:latest 537124952465.dkr.ecr.eu-west-1.amazonaws.com/handit-dashboard:latest
-   docker push 537124952465.dkr.ecr.eu-west-1.amazonaws.com/handit-dashboard:latest
+   docker tag handit-dashboard:latest 904233102192.dkr.ecr.eu-west-1.amazonaws.com/handit-dashboard:latest
+   docker push 904233102192.dkr.ecr.eu-west-1.amazonaws.com/handit-dashboard:latest
    ```
 
 3. **Deploy with Helm**:
    ```bash
-   # Development
-   helm upgrade --install handit-ai ./helm/handit-ai \
-     -f ./helm/handit-ai/values-dev.yaml \
-     --namespace handit \
-     --create-namespace
-
-   # Production
+   # Production only
    helm upgrade --install handit-ai ./helm/handit-ai \
      -f ./helm/handit-ai/values-prod.yaml \
      --namespace handit \
@@ -158,7 +141,6 @@ Update the Helm values files with actual endpoints:
    ```
 
 3. **Access the Application**:
-   - Development: https://handit.dev-unison.totango.com
    - Production: https://handit.unison.totango.com
 
 ## Troubleshooting

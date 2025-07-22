@@ -1,10 +1,11 @@
-name: Deploy Handit.ai to Amazon EKS
+name: Deploy Handit.ai to Amazon EKS (Dev - Disabled)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  # Disabled automatic deployment on push
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   build-and-deploy:
