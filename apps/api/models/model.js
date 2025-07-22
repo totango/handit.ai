@@ -45,6 +45,30 @@ export default (sequelize, DataTypes) => {
       });
     }
 
+    async addEvaluationPrompt(evaluationPrompt) {
+      const prompt = await sequelize.models.ModelEvaluationPrompt.create({
+        modelId: this.id,
+        evaluationPromptId: evaluationPrompt.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      return prompt;
+    }
+
+    async allEvaluationPrompts() {
+      const modelGroup = await this.getModelGroup();
+      const company = await modelGroup.getCompany();
+
+      const prompts = await sequelize.models.EvaluationPrompt.findAll({
+        where: {
+          companyId: company.id,
+        },
+      });
+
+      return prompts;
+    }
+
     async evaluationPrompts() {
       // check if model is optimzied get prompts of parent model
       let modelId = this.id;
@@ -66,9 +90,10 @@ export default (sequelize, DataTypes) => {
             {
               model: sequelize.models.EvaluationPrompt,
               as: 'evaluationPrompt',
-              attributes: ['id', 'name', 'prompt', 'defaultProviderModel'],
+              attributes: ['id', 'name', 'prompt', 'defaultProviderModel', 'type', 'isInformative', 'functionBody'],
               include: [
                 {
+                  required: false,
                   model: sequelize.models.IntegrationToken,
                   as: 'defaultIntegrationToken',
                   attributes: ['id', 'name', 'providerId', 'token', 'data'],
@@ -83,6 +108,7 @@ export default (sequelize, DataTypes) => {
               ],
             },
             {
+              required: false,
               model: sequelize.models.IntegrationToken,
               as: 'integrationToken',
               attributes: ['id', 'name', 'providerId'],

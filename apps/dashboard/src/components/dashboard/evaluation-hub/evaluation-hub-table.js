@@ -250,7 +250,7 @@ export function EvaluationHubTable({ onNewEvaluator }) {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {paginatedEvaluators.map((evaluator, index) => (
+                            {paginatedEvaluators.filter(e => e.type === 'prompt').map((evaluator, index) => (
                                 <TableRow
                                     key={evaluator.id}
                                     hover
