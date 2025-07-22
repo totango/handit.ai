@@ -1,0 +1,102 @@
+# Production environment values for handit-ai
+
+global:
+  environment: "prod"
+  domain: "unison.totango.com"  # Using leviosa's production domain
+  imageRegistry: "904233102192.dkr.ecr.eu-west-1.amazonaws.com"  # Leviosa prod AWS account
+  
+  postgresql:
+    host: "handit-postgres-prod.cluster-xyz789.eu-west-1.rds.amazonaws.com"  # Replace with actual RDS endpoint
+  
+  redis:
+    host: "handit-redis-prod.xyz789.euw1.cache.amazonaws.com"  # Replace with actual ElastiCache endpoint
+
+handit-api:
+  replicaCount: 3
+  image:
+    tag: "v1.0.0"  # Use specific version tags in production
+  
+  env:
+    - name: NODE_ENV
+      value: "production"
+    - name: LOG_LEVEL
+      value: "info"
+    - name: CORS_ORIGIN
+      value: "https://handit.unison.totango.com"
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 20
+
+handit-dashboard:
+  replicaCount: 3
+  image:
+    tag: "v1.0.0"
+  
+  env:
+    - name: NEXT_PUBLIC_API_URL
+      value: "https://handit-api.unison.totango.com/api"
+    - name: NEXT_PUBLIC_ENVIRONMENT
+      value: "production"
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 10
+
+handit-worker:
+  replicaCount: 2
+  image:
+    tag: "v1.0.0"
+  
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 10
+
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:904233102192:certificate/prod-cert-id"  # Replace with actual cert
+    alb.ingress.kubernetes.io/group.name: "leviosa-prod"  # Share ALB with leviosa
+    alb.ingress.kubernetes.io/group.order: "200"
+    alb.ingress.kubernetes.io/wafv2-acl-arn: "arn:aws:wafv2:eu-west-1:904233102192:regional/webacl/prod-waf/id"  # Replace with actual WAF
+    alb.ingress.kubernetes.io/load-balancer-name: "leviosa-prod-alb"
+    alb.ingress.kubernetes.io/tags: "Environment=prod,Team=handit"
+  hosts:
+    - host: handit-api.unison.totango.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: handit-api
+            port: 8080
+    - host: handit.unison.totango.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: handit-dashboard
+            port: 3000
+
+# Production-specific monitoring
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  path: /metrics
+
+# Using Leviosa's existing service account and secrets
+# No additional configuration needed

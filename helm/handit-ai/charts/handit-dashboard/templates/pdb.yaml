@@ -1,0 +1,13 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "handit-dashboard.fullname" . }}
+  labels:
+    {{- include "handit-dashboard.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "handit-dashboard.selectorLabels" . | nindent 6 }}
+{{- end }}

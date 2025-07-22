@@ -188,14 +188,31 @@ Required environment variables:
 
 ### Deployment
 
-The application is containerized with Docker:
-- Frontend runs on port 3000
-- API runs on port 3001 (mapped from 8080)
-- PostgreSQL on port 5432
-- Redis on port 6379
+The application deploys to Leviosa EKS clusters using Helm charts and GitHub Actions.
 
-Production deployment considerations:
-- Run database migrations before starting API
-- Build frontend for production with `npm run build`
-- Use environment-specific configuration
-- Enable CORS for production domains
+#### Quick Deployment Commands
+
+```bash
+# Initial setup (one-time)
+./scripts/setup-aws-resources.sh
+
+# Deploy to dev (automatic on push to main)
+git push origin main
+
+# Deploy to prod (manual via GitHub Actions)
+# Go to Actions tab → "Deploy to Leviosa EKS" → Run workflow → Select "prod"
+
+# Local deployment
+aws eks update-kubeconfig --region eu-west-1 --name leviosa-dev-eks --profile leviosa-dev
+helm upgrade --install handit-ai ./helm/handit-ai -f ./helm/handit-ai/values-dev.yaml --namespace handit
+```
+
+#### Key Files
+- `.github/workflows/deploy-to-eks.yml` - CI/CD pipeline
+- `helm/handit-ai/` - Kubernetes deployment charts
+- `terraform/setup/` - AWS infrastructure setup
+- `DEPLOYMENT.md` - Detailed deployment guide
+
+#### Environments
+- Dev: https://handit.dev-unison.totango.com (AWS: 537124952465)
+- Prod: https://handit.unison.totango.com (AWS: 904233102192)

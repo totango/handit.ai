@@ -1,0 +1,4 @@
+# Development environment
+environment = "dev"
+aws_region  = "eu-west-1"
+github_org  = "totango"  # Replace with your actual GitHub organization
