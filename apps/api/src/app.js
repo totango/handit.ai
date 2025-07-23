@@ -45,6 +45,7 @@ import evaluatorMetricRoutes from './routes/evaluatorMetricRoutes.js';
 import providersRoutes from './routes/providersRoutes.js';
 import reviewersTemplateRoutes from './routes/reviewersTemplateRoutes.js';
 import promptRoutes from './routes/promptRoutes.js';
+import notificationSystemRoutes from './routes/notificationSystemRoutes.js';
 
 dotenv.config();
 
@@ -86,8 +87,7 @@ app.use('/api/sampling', validateApiToken, samplingRoutes);
 app.use('/api/node-metrics', validateApiToken, nodeMetricsRoutes);
 app.use('/api/messages', validateApiToken, messageRouter);
 app.use('/api/agent-structure', validateApiToken, agentStructureRoutes);
-
-
+app.use('/api/notification-system', notificationSystemRoutes);
 
 
 // Apply JWT authentication middleware to all routes except auth routes
@@ -125,6 +125,7 @@ app.use('/api/integration-tokens', integrationTokenRoutes);
 app.use('/api/evaluator-metrics', evaluatorMetricRoutes);
 app.use('/api/providers', providersRoutes);
 app.use('/api/reviewers-template', reviewersTemplateRoutes);
+
 // Add sampling routes
 
 // Add setup routes
