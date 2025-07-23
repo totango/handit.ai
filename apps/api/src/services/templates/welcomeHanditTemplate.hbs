@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Welcome to handit.ai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 60px 40px;
+        background: #ffffff url('cid:bg-image') no-repeat top center;
+        background-size: cover;
+        border-radius: 16px;
+        box-sizing: border-box;
+      }
+
+      .logo {
+        display: block;
+        margin-left: auto;
+        margin-bottom: 40px;
+        width: 180px;
+        height: auto;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #00272f;
+        margin-bottom: 24px;
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #00272f;
+        margin-top: 36px;
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 15px;
+        color: #00272f;
+        margin: 12px 0;
+        line-height: 1.6;
+      }
+
+      .label {
+        font-weight: 600;
+        color: #02f7aa;
+      }
+
+      .button {
+        display: inline-block;
+        margin-top: 12px;
+        margin-bottom: 12px;
+        padding: 12px 24px;
+        background-color: #02f7aa;
+        color: #00272f !important;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+      }
+
+      .credentials-box {
+        background-color: rgba(2, 247, 170, 0.1);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid rgba(2, 247, 170, 0.2);
+      }
+
+      .credentials-box p {
+        margin: 8px 0;
+      }
+
+      .credentials-label {
+        font-weight: 600;
+        color: #00272f;
+        display: inline-block;
+        width: 100px;
+      }
+
+      .hero-section {
+        background-color: rgba(2, 247, 170, 0.05);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        border-left: 4px solid #02f7aa;
+      }
+
+      .hero-section h3 {
+        color: #00272f;
+        font-size: 18px;
+        margin: 0 0 12px 0;
+        font-weight: 600;
+      }
+
+      .hero-section p {
+        color: #00272f;
+        font-size: 15px;
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      .resource-card {
+        background-color: rgba(2, 247, 170, 0.05);
+        border-left: 3px solid #02f7aa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 12px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+      }
+
+      .resource-card:hover {
+        background-color: rgba(2, 247, 170, 0.1);
+        transform: translateX(5px);
+      }
+
+      .resource-content {
+        flex: 1;
+      }
+
+      .resource-card h3 {
+        font-size: 16px;
+        color: #00272f;
+        margin: 0 0 4px 0;
+        font-weight: 600;
+      }
+
+      .resource-card p {
+        font-size: 14px;
+        margin: 0;
+        color: #666;
+        line-height: 1.4;
+      }
+
+      .resource-arrow {
+        color: #02f7aa;
+        font-size: 20px;
+        font-weight: bold;
+        margin-left: 15px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: #00272f;
+        margin-top: 40px;
+      }
+
+      .footer a {
+        color: #00272f;
+        text-decoration: none;
+      }
+
+      .cta-section {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .cta-section .button {
+        margin: 8px;
+      }
+
+      @media screen and (max-width: 600px) {
+        .container {
+          padding: 40px 20px;
+        }
+        .logo {
+          width: 100px;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img class="logo" src="cid:logo-image" alt="handit.ai Logo" />
+
+      <h1>Welcome to handit.ai!</h1>
+      <p>Hey {{first_name}},</p>
+
+      <p>Welcome to handit.ai! We're excited to have you on board. You're now part of a community of developers and teams who are building AI systems that actually work reliably in production.</p>
+
+      <div class="hero-section">
+        <h3>🚀 What is handit.ai?</h3>
+        <p>handit.ai is the open-source engine that catches broken AI behavior in real time, fixes it automatically, and learns from every failure—so your team can ship AI you can actually trust.</p>
+      </div>
+
+
+
+      <div class="cta-section">
+        <a href="https://dashboard.handit.ai" class="button">🚀 Get Started</a>
+      </div>
+
+      <h2>🔄 How handit.ai Works</h2>
+      <p>handit.ai traces every AI interaction, evaluates performance automatically, fixes issues, and provides audit-ready proof.</p>
+
+      <h2>📚 Getting Started</h2>
+      
+      <a href="https://docs.handit.ai" style="text-decoration: none;">
+        <div class="resource-card">
+          <div class="resource-content">
+            <h3>📖 Documentation</h3>
+            <p>Everything you need to know about setting up handit.ai, creating evaluators, and optimizing your AI systems.</p>
+          </div>
+          <div class="resource-arrow">→</div>
+        </div>
+      </a>
+
+      <a href="https://dashboard.handit.ai" style="text-decoration: none;">
+        <div class="resource-card">
+          <div class="resource-content">
+            <h3>🤖 AI Onboarding Assistant</h3>
+            <p>Our AI agent will guide you through the setup process and help you create your first evaluators in minutes.</p>
+          </div>
+          <div class="resource-arrow">→</div>
+        </div>
+      </a>
+
+      <a href="https://discord.com/invite/2WwD7PYfh2" style="text-decoration: none;">
+        <div class="resource-card">
+          <div class="resource-content">
+            <h3>💬 Discord Community</h3>
+            <p>Join our Discord community for support, discussions, and to connect with other developers using handit.ai.</p>
+          </div>
+          <div class="resource-arrow">→</div>
+        </div>
+      </a>
+
+      <a href="https://calendly.com/cristhian-handit/30min" style="text-decoration: none;">
+        <div class="resource-card">
+          <div class="resource-content">
+            <h3>📅 Need Help?</h3>
+            <p>Have questions or need help setting up? We're here to help you get up and running quickly.</p>
+          </div>
+          <div class="resource-arrow">→</div>
+        </div>
+      </a>
+
+      <div class="cta-section">
+        <a href="https://dashboard.handit.ai" class="button">🚀 Start Building Reliable AI</a>
+      </div>
+
+      <p>We can't wait to see what you build with handit.ai!</p>
+
+      <p>Best,<br>
+      <strong>The handit.ai Team</strong></p>
+
+      <div class="footer">
+        &copy; {{year}} handit.ai — The open-source engine that auto-fixes your AI.<br />
+        <a href="mailto:cristhian@handit.ai">cristhian@handit.ai</a> | <a href="https://discord.com/invite/2WwD7PYfh2">Discord Community</a>
+      </div>
+    </div>
+  </body>
+</html> 

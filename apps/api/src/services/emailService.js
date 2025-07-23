@@ -611,3 +611,47 @@ export const sendWelcomeNewUserEmail = async ({
     sourceId
   });
 };
+
+export const sendWelcomeHanditEmail = async ({
+  recipientEmail,
+  firstName,
+  Email,
+  User,
+  notificationSource = 'welcome_handit',
+  sourceId = null
+}) => {
+  const subject = 'Welcome to handit.ai - The Open-Source Engine that Auto-Fixes Your AI';
+  
+  const templateData = {
+    first_name: firstName,
+    email: recipientEmail,
+    year: new Date().getFullYear()
+  };
+
+  await sendTemplatedEmail({
+    to: recipientEmail,
+    subject,
+    templateName: 'welcomeHanditTemplate',
+    templateData,
+    attachments: [
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/logo.png')).toString('base64'),
+        filename: 'logo.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'logo-image'
+      },
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/bg-real.png')).toString('base64'),
+        filename: 'bg-handit.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'bg-image'
+      }
+    ],
+    Email,
+    User,
+    notificationSource,
+    sourceId
+  });
+};
