@@ -45,6 +45,7 @@ import evaluatorMetricRoutes from './routes/evaluatorMetricRoutes.js';
 import providersRoutes from './routes/providersRoutes.js';
 import reviewersTemplateRoutes from './routes/reviewersTemplateRoutes.js';
 import promptRoutes from './routes/promptRoutes.js';
+import emailRoutes from './routes/emailRoutes.js';
 
 dotenv.config();
 
@@ -87,6 +88,7 @@ app.use('/api/node-metrics', validateApiToken, nodeMetricsRoutes);
 app.use('/api/messages', validateApiToken, messageRouter);
 app.use('/api/agent-structure', validateApiToken, agentStructureRoutes);
 
+app.use('/api/email', emailRoutes);
 
 
 

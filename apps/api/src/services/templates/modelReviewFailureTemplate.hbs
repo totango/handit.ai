@@ -58,6 +58,17 @@
         text-decoration: none;
         font-weight: 600;
         border-radius: 8px;
+        margin-right: 10px;
+      }
+
+      .button-secondary {
+        background-color: #ffffff;
+        color: #02f7aa !important;
+        border: 2px solid #02f7aa;
+      }
+
+      .button-container {
+        margin-top: 30px;
       }
 
       .footer {
@@ -81,6 +92,12 @@
           width: 100px;
           margin-top: 10px;
         }
+        
+        .button {
+          display: block;
+          margin-bottom: 10px;
+          text-align: center;
+        }
       }
     </style>
   </head>
@@ -95,7 +112,12 @@
       <p><span class="label">Node:</span> {{node_name}}</p>
       <p><span class="label">Summary:</span><br />{{{reviewer_summary}}}</p>
 
-      <a href="{{tracing_url}}" class="button">Review in Dashboard</a>
+      <div class="button-container">
+        <a href="{{tracing_url}}" class="button">Review in Dashboard</a>
+        {{#if optimize_url}}
+        <a href="{{optimize_url}}" class="button button-secondary">Optimize Prompt</a>
+        {{/if}}
+      </div>
 
       <div class="footer">
         &copy; {{year}} Handit.ai — Monitoring and optimizing AI systems in real time.<br />

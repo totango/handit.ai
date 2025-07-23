@@ -1,8 +1,11 @@
 import * as promptService from '../services/promptVersionService.js';
 import db from '../../models/index.js';
 import ABTestModel from '../../models/aBTestModel.js';
+import { runReview } from '../services/insightsService.js';
+import { enhancePrompt } from '../services/promptEnhancementService.js';
+import { isCorrect } from '../services/entries/correctnessEvaluatorService.js';
 
-const { Agent, AgentNode, Model, AgentConnection } = db;
+const { Agent, AgentNode, Model, AgentConnection, ModelLog, Insights } = db;
 
 /**
  * getModelMetrics
@@ -428,6 +431,171 @@ export async function getInsightsOfVersion(req, res, next) {
     } catch (err) {
         next(err);
     }
+}
+
+/**
+ * Optimize a prompt based on a specific modelLog error
+ * @route POST /model/:modelId/prompt/optimize-from-error
+ * @param {object} req - Express request object
+ * @param {object} res - Express response object
+ * @returns {Promise<void>}
+ */
+export async function optimizePromptFromError(req, res) {
+  try {
+    const { modelId } = req.params;
+    const { modelLogId } = req.body;
+    console.log('modelId', modelId);
+    console.log('modelLogId', modelLogId);
+    // Validate input
+    if (!modelLogId || typeof modelLogId !== 'number') {
+      return res.status(400).json({
+        success: false,
+        message: 'modelLogId is required and must be a number'
+      });
+    }
+
+    // Find the model
+    const model = await Model.findByPk(modelId);
+    if (!model) {
+      return res.status(404).json({
+        success: false,
+        message: `Model with id ${modelId} not found`
+      });
+    }
+
+    // Find the modelLog
+    const modelLog = await ModelLog.findByPk(modelLogId);
+    if (!modelLog) {
+      return res.status(404).json({
+        success: false,
+        message: `ModelLog with id ${modelLogId} not found`
+      });
+    }
+
+    // Verify the modelLog belongs to the specified model
+    if (modelLog.modelId !== parseInt(modelId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ModelLog does not belong to the specified model'
+      });
+    }
+
+    // Check if the modelLog has an error (is not correct)
+    if (isCorrect(modelLog)) {
+      return res.status(400).json({
+        success: false,
+        message: 'The specified modelLog does not contain an error'
+      });
+    }
+
+    // Get the model's company for optimization token
+    const modelGroup = await model.getModelGroup();
+    const company = await modelGroup.getCompany();
+    
+    let optimizationToken;
+    let optimizationTokenData;
+    let optimizationProvider;
+    let optimizationModel;
+
+    if (model.flags?.isN8N) {
+      optimizationToken = process.env.TOGETHER_API_KEY;
+      optimizationModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+      optimizationProvider = 'TogetherAI';
+    } else {
+      const token = await company.getOptimizationToken();
+      optimizationToken = token.token;
+      optimizationTokenData = token.data;
+      optimizationModel = company.optimizationModel;
+      optimizationProvider = token.provider.name;
+      
+      if (!optimizationModel) {
+        if (optimizationProvider === 'OpenAI') {
+          optimizationModel = 'gpt-4o-mini';
+        } else if (optimizationProvider === 'TogetherAI') {
+          optimizationModel = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+        } else if (optimizationProvider === 'AWSBedrock') {
+          optimizationModel = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
+        } else if (optimizationProvider === 'GoogleAI') {
+          optimizationModel = 'gemini-2.0-flash';
+        }
+      }
+    }
+
+    // Generate insights based on the specific modelLog error
+    await runReview(
+      modelLog,
+      null, // No specific reviewer, use default
+      ModelLog,
+      Insights,
+      model.problemType,
+      model.version,
+      model.id,
+      optimizationToken,
+      optimizationTokenData,
+      optimizationProvider,
+      optimizationModel
+    );
+
+    // Get the current prompt
+    const currentPrompt = await model.prompt();
+    if (!currentPrompt) {
+      return res.status(400).json({
+        success: false,
+        message: 'No current prompt found for the model'
+      });
+    }
+
+    // Get the newly generated insights
+    const insights = await Insights.findAll({
+      where: {
+        modelId: model.id,
+      },
+      order: [['createdAt', 'DESC']],
+      limit: 10, // Get the most recent insights
+    });
+
+    if (insights.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No insights were generated from the error'
+      });
+    }
+
+    // Apply the insights to create an optimized prompt
+    const optimizedPrompt = await enhancePrompt(
+      currentPrompt,
+      insights,
+      optimizationToken,
+      optimizationTokenData,
+      optimizationProvider,
+      optimizationModel
+    );
+
+    // Create a new prompt version with the optimized prompt
+    const newPromptVersion = await promptService.createPrompt(modelId, optimizedPrompt);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        newPrompt: optimizedPrompt,
+        insights: insights.map(insight => ({
+          id: insight.id,
+          problem: insight.problem,
+          solution: insight.solution,
+          description: insight.data?.description,
+          createdAt: insight.createdAt
+        })),
+        promptVersion: newPromptVersion
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in optimizePromptFromError:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 }
 
 /**

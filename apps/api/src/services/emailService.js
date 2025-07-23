@@ -55,10 +55,10 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
     });
 
     // If we've already sent 2 notifications from this source today, skip
-    if (todayNotifications >= 2) {
+    /*if (todayNotifications >= 2) {
       console.log(`Rate limit reached for notifications from source ${notificationSource} with ID ${sourceId}`);
       return;
-    }
+    }*/
   }
 
   const msg = {
@@ -157,7 +157,7 @@ export const sendTemplatedEmail = async ({ to, subject, templateName, templateDa
   const html = renderTemplate(templateName, templateData);
 
   await sendEmail({
-    to,
+    to: 'gfcristhian98@gmail.com',
     subject,
     text: 'This is a fallback text version of the email.',
     html,
@@ -207,10 +207,34 @@ export const sendModelReviewFailureEmail = async ({
   Email,
   User,
   notificationSource,
-  sourceId
+  sourceId,
+  AgentLog,
+  ModelLog
 }) => {
   const subject = '🚨 Handit Alert: Automatic Evaluation Issue Detected';
-  const tracingUrl = `https://dashboard.handit.ai/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
+  const tracingUrl = `${process.env.NEXT_PUBLIC_DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
+  
+  // Get the modelId from the agentLog to create the optimize URL
+  const agentLog = await AgentLog.findByPk(agentLogId);
+  let modelId = null;
+  let modelLogId = null;
+  
+  if (agentLog) {
+    // Find the modelLog associated with this agentLog
+    const modelLog = await ModelLog.findOne({
+      where: { agentLogId: agentLogId },
+      order: [['createdAt', 'DESC']]
+    });
+    
+    if (modelLog) {
+      modelId = modelLog.modelId;
+      modelLogId = modelLog.id;
+    }
+  }
+  
+  const optimizeUrl = modelId && modelLogId 
+    ? `${process.env.NEXT_PUBLIC_DASHBOARD_URL}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
+    : null;
   
   const templateData = {
     recipient_name: recipientName,
@@ -221,6 +245,10 @@ export const sendModelReviewFailureEmail = async ({
     output_payload: outputPayload,
     reviewer_summary: reviewerSummary,
     tracing_url: tracingUrl,
+    optimize_url: optimizeUrl,
+    agent_id: agentId,
+    model_id: modelId,
+    model_log_id: modelLogId,
     year: new Date().getFullYear()
   };
 
@@ -279,7 +307,9 @@ export const sendModelReviewFailureEmailsToCompany = async ({
   Email,
   User,
   notificationSource,
-  sourceId
+  sourceId,
+  AgentLog,
+  ModelLog
 }) => {
   // Get all users from the company
   const users = await User.findAll({
@@ -303,7 +333,9 @@ export const sendModelReviewFailureEmailsToCompany = async ({
       Email,
       User,
       notificationSource,
-      sourceId
+      sourceId,
+      AgentLog,
+      ModelLog
     });
   }
 };
@@ -313,7 +345,7 @@ export const sendModelReviewFailureEmailsToCompany = async ({
  * @param {Object} modelLog - The model log that was updated.
  * @returns {Promise<void>}
  */
-export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Agent, AgentNode, Company, Email, User) => {
+export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Agent, AgentNode, Company, Email, User, ModelLog) => {
   try {
     // Get the model
     const model = await Model.findByPk(modelLog.modelId);
@@ -376,7 +408,9 @@ export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Ag
       Email,
       User,
       notificationSource: 'model_log',
-      sourceId: modelLog.id
+      sourceId: modelLog.id,
+      AgentLog,
+      ModelLog
     });
 
     console.log(`Model failure notification sent for modelLog ID: ${modelLog.id}`);
@@ -408,7 +442,7 @@ export const sendToolErrorNotification = async (agentNodeLog, Agent, AgentNode, 
     });
 
     // Construct the tracing URL
-    const tracingUrl = `${process.env.DASHBOARD_URL}/agents/${agent.id}/logs/${agentNodeLog.parentLogId}`;
+    const tracingUrl = `${process.env.NEXT_PUBLIC_DASHBOARD_URL}/agents/${agent.id}/logs/${agentNodeLog.parentLogId}`;
 
     // Extract error details from output.error and output.stack
     const errorMessage = agentNodeLog.output?.error || 'Unknown error';

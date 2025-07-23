@@ -304,6 +304,30 @@ export function MainNav({ items, title, onNewEvaluator }) {
     };
   }, [isInWalkthrough, refetchRegularAgents, refetchDemoAgents]);
 
+  // Handle connection success
+  React.useEffect(() => {
+    const handleConnectionSuccess = () => {
+      setConnectDialogOpen(false);
+      // Optionally refresh the agent list or show success message
+    };
+
+    window.addEventListener('connectionSuccess', handleConnectionSuccess);
+    return () => window.removeEventListener('connectionSuccess', handleConnectionSuccess);
+  }, []);
+
+  // Handle agent selection from external events
+  React.useEffect(() => {
+    const handleSelectAgent = (event) => {
+      const { agentId } = event.detail;
+      if (agentId) {
+        handleAgentChange({ id: agentId });
+      }
+    };
+
+    window.addEventListener('selectAgent', handleSelectAgent);
+    return () => window.removeEventListener('selectAgent', handleSelectAgent);
+  }, [handleAgentChange]);
+
   return (
     <React.Fragment>
       {uploadLoading && (
