@@ -55,10 +55,10 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
     });
 
     // If we've already sent 2 notifications from this source today, skip
-    if (todayNotifications >= 2) {
+   /*if (todayNotifications >= 2) {
       console.log(`Rate limit reached for notifications from source ${notificationSource} with ID ${sourceId}`);
       return;
-    }
+    }*/
   }
 
   const msg = {
