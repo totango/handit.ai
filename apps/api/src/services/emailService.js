@@ -55,10 +55,10 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
     });
 
     // If we've already sent 2 notifications from this source today, skip
-   /*if (todayNotifications >= 2) {
+   if (todayNotifications >= 2) {
       console.log(`Rate limit reached for notifications from source ${notificationSource} with ID ${sourceId}`);
       return;
-    }*/
+    }
   }
 
   const msg = {
@@ -212,7 +212,7 @@ export const sendModelReviewFailureEmail = async ({
   ModelLog
 }) => {
   const subject = '🚨 Handit Alert: Automatic Evaluation Issue Detected';
-  const tracingUrl = `${process.env.NEXT_PUBLIC_DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
+  const tracingUrl = `${process.env.DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
   
   // Get the modelId from the agentLog to create the optimize URL
   const agentLog = await AgentLog.findByPk(agentLogId);
@@ -233,7 +233,7 @@ export const sendModelReviewFailureEmail = async ({
   }
   
   const optimizeUrl = modelId && modelLogId 
-    ? `${process.env.NEXT_PUBLIC_DASHBOARD_URL}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
+    ? `${process.env.DASHBOARD_URL}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
     : null;
   
   const templateData = {
@@ -442,7 +442,7 @@ export const sendToolErrorNotification = async (agentNodeLog, Agent, AgentNode, 
     });
 
     // Construct the tracing URL
-    const tracingUrl = `${process.env.NEXT_PUBLIC_DASHBOARD_URL}/agents/${agent.id}/logs/${agentNodeLog.parentLogId}`;
+    const tracingUrl = `${process.env.DASHBOARD_URL}/agents/${agent.id}/logs/${agentNodeLog.parentLogId}`;
 
     // Extract error details from output.error and output.stack
     const errorMessage = agentNodeLog.output?.error || 'Unknown error';
