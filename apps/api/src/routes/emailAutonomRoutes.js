@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   sendAutonomEmail,
-  sendWelcomeEmail
+  sendWelcomeEmail,
 } from '../controllers/emailAutonomController.js';
 
 const router = express.Router();

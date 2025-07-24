@@ -129,7 +129,7 @@ const OnboardingChat = ({
           metadata: {},
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, userMessage]);
+        setMessages([userMessage]);
         
         // Call AI agent with the message
         setIsLoading(true);
@@ -270,10 +270,22 @@ const OnboardingChat = ({
     const hasOnboardingFlag = response.on_boarding_observability_finished === true;
     const hasEvaluatorsFlag = response.evaluators_added === true;
     const customEvaluatorsFlag = response.custom_evaluator_management === true;
+    const optimizationCompletedFlag = response.flags?.optimization_completed === true;
+    console.log('response', response.flags);
+    console.log('optimizationCompletedFlag', optimizationCompletedFlag);
     
     // Emit event when evaluators are detected - let OnboardingOrchestrator handle the logic
     if (hasEvaluatorsFlag) {
       window.dispatchEvent(new CustomEvent('onboarding:evaluators-detected'));
+    }
+
+    // Emit event when optimization is completed
+    if (optimizationCompletedFlag) {
+      console.log('optimizationCompletedFlag', optimizationCompletedFlag);
+      window.dispatchEvent(new CustomEvent('optimizationCompleted', {
+        detail: { flags: response.flags }
+      }));
+      handleClose();
     }
 
     if (customEvaluatorsFlag) {
@@ -803,10 +815,10 @@ const OnboardingChat = ({
                 size="small"
                 disabled={isLoading}
                 sx={{
-                  borderRadius: '5px',
+                  borderRadius: 1.5,
                   '& .MuiOutlinedInput-root': {
                     bgcolor: theme.inputBg,
-                    borderRadius: '5px',
+                    borderRadius: 1.5,
                     minHeight: '36px', // Reduced height
                     '& fieldset': { borderColor: theme.borderColor },
                     '&:hover fieldset': { borderColor: theme.borderColor },

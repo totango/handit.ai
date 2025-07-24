@@ -36,12 +36,17 @@ import {
   Stack,
   TextField,
   Typography,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import { CaretDown, WarningOctagon, X as XIcon } from '@phosphor-icons/react';
 import { SmartBezierEdge } from '@tisoap/react-flow-smart-edge';
 import ReactJson from 'react-json-view';
 import { Carousel } from 'react-responsive-carousel';
 import ReactFlow, { Background, Controls, MarkerType, ReactFlowProvider } from 'reactflow';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 import { parseAttachments, parseContext, parseInputContent, parseOutputContent } from '@/lib/parsers';
 import { useUser } from '@/hooks/use-user';
@@ -696,24 +701,29 @@ const NodeDetails = ({
           </Typography>
         )}
 
-        {stepData?.actual?.summary ? (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              {stepPrefix}Evaluation Insights
-            </Typography>
-            <Typography variant="body2">{stepData?.actual?.summary}</Typography>
-          </Box>
-        ) : (
-          stepData?.actual?.evaluations && stepData?.actual?.evaluations?.length > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                {stepPrefix}Evaluation Insights
+        {stepData?.actual?.evaluations && stepData?.actual?.evaluations?.length > 0 && (
+  <Box sx={{ mb: 2 }}>
+    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+      {stepPrefix}Evaluation Insights
+    </Typography>
+    <List dense disablePadding>
+      {stepData?.actual?.evaluations.map((evaluator, index) => (
+        <ListItem key={index} sx={{ pl: 1, alignItems: 'flex-start', gap: 0 }} disableGutters>
+          <ListItemIcon sx={{ minWidth: 24, mt: 0.5, height: 'auto' }}>
+            <FiberManualRecordIcon sx={{ fontSize: 8 }} />
+          </ListItemIcon>
+          <ListItemText
+            primary={
+              <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6, alignItems: 'flex-start' }}>
+                {parseEvaluationInsight(evaluator, index)}
               </Typography>
-              {stepData?.actual?.evaluations.map((evaluator, index) => (
-                <Typography variant="body2" key={index}> - {parseEvaluationInsight(evaluator, index)}</Typography>
-              ))}
-            </Box>
-          ))}
+            }
+          />
+        </ListItem>
+      ))}
+    </List>
+  </Box>
+)}
 
         {context && (
           <Accordion

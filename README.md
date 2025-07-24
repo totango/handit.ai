@@ -1,9 +1,9 @@
 
 <p align="center">
   <!-- shows in LIGHT mode only -->
-  <img src="./apps/dashboard/public/assets/overview/Logo and applications Handit-01.png#gh-light-mode-only" width="400" style="object-fit: cover; object-position: center;" alt="Handit logo" />
+  <img src="./apps/dashboard/public/assets/overview/handit-small-3.png#gh-light-mode-only" width="400" style="object-fit: cover; object-position: center;" alt="Handit logo" />
   <!-- shows in DARK mode only -->
-  <img src="./apps/dashboard/public/assets/overview/Logo and applications Handit-03.png#gh-dark-mode-only" width="400" style="object-fit: cover; object-position: center;" alt="Handit logo (dark)" />
+  <img src="./apps/dashboard/public/assets/overview/handit-small-1.png#gh-dark-mode-only" width="400" style="object-fit: cover; object-position: center;" alt="Handit logo (dark)" />
 </p>
 
 <p align="center">

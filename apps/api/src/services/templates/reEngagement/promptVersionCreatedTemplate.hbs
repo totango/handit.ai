@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Handit Found an Improved Version of Your Prompt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 60px 30px;
+        background: #ffffff url('cid:bg-real') no-repeat top center;
+        background-size: cover;
+        box-sizing: border-box;
+        border-radius: 16px;
+      }
+
+      .logo {
+        display: block;
+        margin-left: auto;
+        margin-bottom: 40px;
+        width: 180px;
+        height: auto;
+      }
+
+      h1 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #00272f;
+        margin-bottom: 24px;
+      }
+
+      p {
+        font-size: 15px;
+        color: #00272f;
+        margin: 12px 0;
+        line-height: 1.6;
+      }
+
+      .label {
+        font-weight: 600;
+        color: #02f7aa;
+      }
+
+      .button {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 24px;
+        background-color: #02f7aa;
+        color: #00272f !important;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+      }
+
+      .button-secondary {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 12px 24px;
+        background-color: transparent;
+        color: #02f7aa !important;
+        text-decoration: none;
+        font-weight: 600;
+        border: 2px solid #02f7aa;
+        border-radius: 8px;
+      }
+
+      .stats {
+        background-color: #f8fafb;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 30px 0;
+        text-align: center;
+      }
+
+      .stat-item {
+        display: inline-block;
+        margin: 0 20px;
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: 600;
+        color: #02f7aa;
+        display: block;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: #00272f;
+        margin-top: 40px;
+      }
+
+      .footer a {
+        color: #00272f;
+        text-decoration: none;
+      }
+
+      @media screen and (max-width: 600px) {
+        .container {
+          padding: 40px 20px;
+        }
+
+        .logo {
+          width: 100px;
+          margin-top: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img class="logo" src="cid:logo" alt="Handit.ai Logo" />
+      
+      <h1>Handit Found an Improved Version of Your Prompt 🚀</h1>
+      <p>Hi {{firstName}}, Handit has automatically analyzed your AI model and created an improved prompt version.</p>
+
+      <p>
+        <strong>What Handit found:</strong> Multiple issues in your current prompt that were causing accuracy problems, 
+        and has generated an optimized version that should significantly improve your AI's performance.
+      </p>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number">Auto-fixed</span>
+          <span class="stat-label">Issues</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">Improved</span>
+          <span class="stat-label">Accuracy</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">Ready to</span>
+          <span class="stat-label">Deploy</span>
+        </div>
+      </div>
+
+      <p>
+        <strong>What's improved:</strong> The new version addresses clarity issues, reduces hallucinations, 
+        and improves response consistency. Handit's analysis shows this should boost your AI's accuracy significantly.
+      </p>
+
+      <p>
+        <strong>Next step:</strong> Review and deploy the improved version with one click. 
+        You can always rollback if needed.
+      </p>
+
+      <div style="text-align: center;">
+        <a href="{{promptVersionsUrl}}" class="button">
+          Deploy Improved Version 🚀
+        </a>
+        <br>
+        <a href="https://calendly.com/cristhian-handit/30min" class="button-secondary">
+          Book a Review Session
+        </a>
+      </div>
+
+      <p style="font-size: 14px; color: #666; margin-top: 30px;">
+        <strong>What you'll get:</strong> An AI that's more accurate, reliable, and consistent—automatically improved by Handit's analysis of your model's performance.
+      </p>
+
+      <div class="footer">
+        &copy; {{year}} Handit.ai — The open-source engine that auto-fixes your AI.<br />
+        <a href="mailto:contact@handit.ai">contact@handit.ai</a>
+      </div>
+    </div>
+  </body>
+</html> 

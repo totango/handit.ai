@@ -84,7 +84,7 @@ const OnboardingAssistant = ({
             sx={{
               bgcolor: '#333333',
               color: 'white',
-              borderRadius: '5px',
+              borderRadius: 1.5,
               overflow: 'hidden',
               minWidth: 500,
               maxWidth: 500,
@@ -159,7 +159,7 @@ const OnboardingAssistant = ({
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           bgcolor: 'rgba(255, 255, 255, 0.05)',
-                          borderRadius: '5px',
+                          borderRadius: 1.5,
                           '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.2)' },
                           '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
                           '&.Mui-focused fieldset': { borderColor: '#4A90E2' },

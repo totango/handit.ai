@@ -69,11 +69,14 @@ export default (sequelize, DataTypes) => {
         });
 
         if (!modelMetric) {
-        await sequelize.models.ModelMetric.create({
-          modelId: modelEvaluationPrompt.modelId,
-          name: prompt.name,
-          type: 'oss',
-          label: prompt.name,
+          // Determine metric type based on evaluator type
+          const metricType = prompt.type === 'function' ? 'function' : 'oss';
+          
+          await sequelize.models.ModelMetric.create({
+            modelId: modelEvaluationPrompt.modelId,
+            name: prompt.name,
+            type: metricType,
+            label: prompt.name,
             description: prompt.name,
             threshold: 1,
           });
@@ -95,10 +98,13 @@ export default (sequelize, DataTypes) => {
           });
 
           if (!modelMetric) {
+            // Determine metric type based on evaluator type
+            const metricType = prompt.type === 'function' ? 'function' : 'oss';
+            
             await sequelize.models.ModelMetric.create({
               modelId: abTest.optimizedModelId,
               name: prompt.name,
-              type: 'oss',
+              type: metricType,
               label: prompt.name,
               description: prompt.name,
               threshold: 1,

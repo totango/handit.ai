@@ -1,6 +1,7 @@
 'use strict';
 import { Model } from 'sequelize';
 import bcrypt from 'bcryptjs';
+import { sendWelcomeHanditEmail } from '../src/services/emailService.js';
 
 export default (sequelize, DataTypes) => {
   class User extends Model {
@@ -104,6 +105,29 @@ export default (sequelize, DataTypes) => {
     modelName: 'User',
     timestamps: true,
     paranoid: true,
+    hooks: {
+      afterCreate: async (user, options) => {
+        try {
+          // Get the Email and User models from the sequelize instance
+          const { Email, User } = sequelize.models;
+          
+          // Send welcome email
+          await sendWelcomeHanditEmail({
+            recipientEmail: user.email,
+            firstName: user.firstName,
+            Email,
+            User,
+            notificationSource: 'user_creation',
+            sourceId: user.id
+          });
+          
+          console.log(`Welcome email sent to ${user.email} after user creation`);
+        } catch (error) {
+          console.error('Error sending welcome email after user creation:', error);
+          // Don't throw the error to avoid breaking the user creation process
+        }
+      }
+    }
   });
   return User;
 };

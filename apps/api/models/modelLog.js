@@ -14,6 +14,7 @@ import { isCorrect } from '../src/services/entries/correctnessEvaluatorService.j
 import { redisService } from '../src/services/redisService.js';
 import { parseContext } from '../src/services/parser.js';
 import { sendModelFailureNotification } from '../src/services/emailService.js';
+import { sendPromptVersionCreatedEmail } from '../src/services/emailService.js';
 import { autoDetectAndUpdateSystemPromptStructure } from '../src/services/systemPromptStructureManagerService.js';
 
 export default (sequelize, DataTypes) => {
@@ -208,6 +209,21 @@ export default (sequelize, DataTypes) => {
                     limit: 5,
                   });
                 }
+
+                // check if model has informative evaluators
+                let informativeEvaluators = await model.allEvaluationPrompts();
+                informativeEvaluators = informativeEvaluators.filter(e => e.isInformative);
+                
+                const currentEvaluators = await model.evaluationPrompts();
+                const currentInformativeEvaluators = currentEvaluators.filter(e => e.evaluationPrompt.isInformative);
+                
+                const difference = informativeEvaluators.filter(e => !currentInformativeEvaluators.some(ce => ce.evaluationPrompt.id === e.id));
+                if (difference.length > 0) {
+                  for (let i = 0; i < difference.length; i++) {
+                    const evaluator = difference[i];
+                    await model.addEvaluationPrompt(evaluator);
+                  }
+                }
               }
 
               
@@ -253,15 +269,32 @@ export default (sequelize, DataTypes) => {
 
                 const evaluationPercentage = reviewer.evaluationPercentage;
 
-                const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
-                if (randomNumberFrom0To100 <= evaluationPercentage) {
-                  const modelId = modelLog.modelId;
-                  const model = await sequelize.models.Model.findByPk(modelId);
-                  const prompts = await model.evaluationPrompts();
+                const modelId = modelLog.modelId;
+                const model = await sequelize.models.Model.findByPk(modelId);
+                const prompts = await model.evaluationPrompts();
+                
+                // Separate AI evaluators (prompts) from function evaluators
+                const aiEvaluators = prompts.filter(prompt => prompt.evaluationPrompt.type === 'prompt');
+                const functionEvaluators = prompts.filter(prompt => prompt.evaluationPrompt.type === 'function');
+                let evaluators = [];
+                // Always run function evaluators (100% of the time)
+                if (functionEvaluators.length > 0) {
+                  evaluators = [...evaluators, ...functionEvaluators];
+                }
+                
+                // Apply percentage only to AI evaluators (prompts)
+                if (aiEvaluators.length > 0) {
+                  const randomNumberFrom0To100 = Math.floor(Math.random() * 101);
+                  if (randomNumberFrom0To100 <= evaluationPercentage) {
+                    evaluators = [...evaluators, ...aiEvaluators];
+                  }
+                }
+
+                if (evaluators.length > 0) {
                   await singleEvaluate(
                     modelLog,
                     reviewerInstance,
-                    prompts,
+                    evaluators,
                     model.flags?.isN8N,
                     sequelize.models.EvaluationLog
                   );
@@ -387,6 +420,60 @@ export default (sequelize, DataTypes) => {
                     });
 
                     await model.updateOptimizedPrompt(newPrompt);
+
+                    // Send email notification for new prompt version
+                    try {
+                      // Get the agent information
+                      const agentNode = await sequelize.models.AgentNode.findOne({
+                        where: {
+                          modelId: model.id,
+                          deletedAt: null
+                        }
+                      });
+
+                      if (agentNode) {
+                        const agent = await sequelize.models.Agent.findByPk(agentNode.agentId);
+                        const company = await sequelize.models.Company.findByPk(agent.companyId);
+                        
+                        // Get users of the company
+                        const users = await sequelize.models.User.findAll({
+                          where: {
+                            companyId: company.id,
+                            deletedAt: null
+                          }
+                        });
+
+                        // Get the prompt version
+                        const modelVersions = await sequelize.models.ModelVersions.findAll({
+                          where: {
+                            modelId: model.id
+                          },
+                          order: [['createdAt', 'DESC']],
+                          limit: 1
+                        });
+
+                        const promptVersion = modelVersions[0]?.version || '1';
+
+                        // Send email to each user
+                        for (const user of users) {
+                          await sendPromptVersionCreatedEmail({
+                            recipientEmail: user.email,
+                            firstName: user.firstName,
+                            agentName: agent.name,
+                            modelName: model.name,
+                            promptVersion: promptVersion,
+                            agentId: agent.id,
+                            modelId: model.id,
+                            Email: sequelize.models.Email,
+                            User: sequelize.models.User,
+                            notificationSource: 'prompt_version_created',
+                            sourceId: model.id
+                          });
+                        }
+                      }
+                    } catch (emailError) {
+                      console.error('Error sending prompt version created email:', emailError);
+                    }
 
                   }
                 }
