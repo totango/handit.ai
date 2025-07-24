@@ -11,10 +11,14 @@ terraform {
   backend "s3" {
     # Using the same backend as repo-intelligence
     bucket               = "catalyst-terraform-backend"
-    key                  = "handit/terraform.tfstate"
+    key                  = "leviosa-handit/terraform.tfstate"
     region               = "us-east-1"
     dynamodb_table       = "catalyst-terraform-backend"
-    role_arn             = "arn:aws:iam::185586169836:role/Devops"
-    workspace_key_prefix = "handit"
+    workspace_key_prefix = "leviosa-backend"
+    
+    assume_role = {
+      role_arn     = "arn:aws:iam::185586169836:role/Devops"
+      session_name = "terraform-backend-access"
+    }
   }
 }

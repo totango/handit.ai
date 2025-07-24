@@ -36,8 +36,8 @@ terraform init
 ### 3. Select Production Workspace
 
 ```bash
-# Only production is supported
-terraform workspace select handit-prod
+# Use the leviosa-prod workspace (shared with other services)
+terraform workspace select leviosa-prod
 ```
 
 ### 4. Plan and Apply
@@ -58,9 +58,10 @@ terraform apply
 
 ## State Management
 
-- State is stored in S3: `s3://catalyst-terraform-backend/handit/terraform.tfstate`
+- State is stored in S3: `s3://catalyst-terraform-backend/leviosa-handit/terraform.tfstate`
 - State locking via DynamoDB: `catalyst-terraform-backend`
-- Workspace: `handit-prod` only
+- Workspace: `leviosa-prod` (shared with other Leviosa services)
+- Workspace prefix: `leviosa-backend`
 
 ## Resources Created
 
