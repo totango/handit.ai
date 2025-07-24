@@ -14,6 +14,7 @@ import { isCorrect } from '../src/services/entries/correctnessEvaluatorService.j
 import { redisService } from '../src/services/redisService.js';
 import { parseContext } from '../src/services/parser.js';
 import { sendModelFailureNotification } from '../src/services/emailService.js';
+import { sendPromptVersionCreatedEmail } from '../src/services/emailService.js';
 import { autoDetectAndUpdateSystemPromptStructure } from '../src/services/systemPromptStructureManagerService.js';
 
 export default (sequelize, DataTypes) => {
@@ -419,6 +420,60 @@ export default (sequelize, DataTypes) => {
                     });
 
                     await model.updateOptimizedPrompt(newPrompt);
+
+                    // Send email notification for new prompt version
+                    try {
+                      // Get the agent information
+                      const agentNode = await sequelize.models.AgentNode.findOne({
+                        where: {
+                          modelId: model.id,
+                          deletedAt: null
+                        }
+                      });
+
+                      if (agentNode) {
+                        const agent = await sequelize.models.Agent.findByPk(agentNode.agentId);
+                        const company = await sequelize.models.Company.findByPk(agent.companyId);
+                        
+                        // Get users of the company
+                        const users = await sequelize.models.User.findAll({
+                          where: {
+                            companyId: company.id,
+                            deletedAt: null
+                          }
+                        });
+
+                        // Get the prompt version
+                        const modelVersions = await sequelize.models.ModelVersions.findAll({
+                          where: {
+                            modelId: model.id
+                          },
+                          order: [['createdAt', 'DESC']],
+                          limit: 1
+                        });
+
+                        const promptVersion = modelVersions[0]?.version || '1';
+
+                        // Send email to each user
+                        for (const user of users) {
+                          await sendPromptVersionCreatedEmail({
+                            recipientEmail: user.email,
+                            firstName: user.firstName,
+                            agentName: agent.name,
+                            modelName: model.name,
+                            promptVersion: promptVersion,
+                            agentId: agent.id,
+                            modelId: model.id,
+                            Email: sequelize.models.Email,
+                            User: sequelize.models.User,
+                            notificationSource: 'prompt_version_created',
+                            sourceId: model.id
+                          });
+                        }
+                      }
+                    } catch (emailError) {
+                      console.error('Error sending prompt version created email:', emailError);
+                    }
 
                   }
                 }

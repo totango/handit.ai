@@ -807,3 +807,255 @@ export const sendBulkReEngagementEmails = async ({
   console.log(`🎯 Bulk re-engagement campaign completed: ${results.sent} sent, ${results.failed} failed`);
   return results;
 };
+
+/**
+ * Sends an email to users with agents that don't have evaluators connected.
+ * @param {Object} options - Email options.
+ * @param {string} options.recipientEmail - Email address of the recipient.
+ * @param {string} options.firstName - First name of the recipient.
+ * @param {number} options.daysSinceAgentCreation - Number of days since agent creation.
+ * @param {string} [options.evaluationHubUrl] - URL to the evaluation hub.
+ * @param {Object} options.Email - Email model for database operations.
+ * @param {Object} options.User - User model for database operations.
+ * @param {string} [options.notificationSource] - Source of the notification.
+ * @param {number} [options.sourceId] - ID of the source.
+ * @returns {Promise<void>}
+ */
+export const sendAgentsWithoutEvaluatorsEmail = async ({
+  recipientEmail,
+  firstName,
+  daysSinceAgentCreation,
+  evaluationHubUrl = 'https://dashboard.handit.ai/evaluation-hub',
+  Email,
+  User,
+  notificationSource = 'agents_without_evaluators',
+  sourceId = null
+}) => {
+  const subject = 'Connect Evaluators to Your AI - Complete Your Setup 🎯';
+  
+  const templateData = {
+    firstName: firstName,
+    daysSinceAgentCreation: daysSinceAgentCreation,
+    evaluationHubUrl: evaluationHubUrl,
+    year: new Date().getFullYear()
+  };
+
+  await sendTemplatedEmail({
+    to: recipientEmail,
+    subject,
+    templateName: 'reEngagement/agentsWithoutEvaluatorsTemplate',
+    templateData,
+    attachments: [
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/logo.png')).toString('base64'),
+        filename: 'logo.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'logo'
+      },
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/bg-real.png')).toString('base64'),
+        filename: 'bg-real.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'bg-real'
+      }
+    ],
+    Email,
+    User,
+    notificationSource,
+    sourceId
+  });
+};
+
+/**
+ * Sends bulk emails to users with agents that don't have evaluators connected.
+ * @param {Object} options - Bulk email options.
+ * @param {Array} options.agentsWithoutEvaluators - Array of user objects with email, firstName, and daysSinceAgentCreation.
+ * @param {string} [options.evaluationHubUrl] - URL to the evaluation hub.
+ * @param {Object} options.Email - Email model for database operations.
+ * @param {Object} options.User - User model for database operations.
+ * @param {string} [options.notificationSource] - Source of the notification.
+ * @returns {Promise<void>}
+ */
+export const sendBulkAgentsWithoutEvaluatorsEmails = async ({
+  agentsWithoutEvaluators,
+  evaluationHubUrl = 'https://dashboard.handit.ai/evaluation-hub',
+  Email,
+  User,
+  notificationSource = 'agents_without_evaluators_bulk'
+}) => {
+  console.log(`Starting bulk agents without evaluators email campaign for ${agentsWithoutEvaluators.length} users`);
+  
+  const results = {
+    sent: 0,
+    failed: 0,
+    errors: []
+  };
+
+  for (const user of agentsWithoutEvaluators) {
+    try {
+      await sendAgentsWithoutEvaluatorsEmail({
+        recipientEmail: user.email,
+        firstName: user.firstName,
+        daysSinceAgentCreation: user.daysSinceAgentCreation,
+        evaluationHubUrl,
+        Email,
+        User,
+        notificationSource,
+        sourceId: user.id
+      });
+      
+      results.sent++;
+      console.log(`✅ Agents without evaluators email sent to ${user.email}`);
+      
+      // Small delay between emails to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+    } catch (error) {
+      results.failed++;
+      results.errors.push({
+        email: user.email,
+        error: error.message
+      });
+      console.error(`❌ Failed to send agents without evaluators email to ${user.email}:`, error.message);
+    }
+  }
+
+  console.log(`🎯 Bulk agents without evaluators campaign completed: ${results.sent} sent, ${results.failed} failed`);
+  return results;
+};
+
+/**
+ * Sends an email when Handit automatically creates an improved prompt version.
+ * @param {Object} options - Email options.
+ * @param {string} options.recipientEmail - Email address of the recipient.
+ * @param {string} options.firstName - First name of the recipient.
+ * @param {string} options.agentName - Name of the agent.
+ * @param {string} options.modelName - Name of the model.
+ * @param {string} options.promptVersion - Version of the prompt.
+ * @param {number} options.agentId - ID of the agent.
+ * @param {number} options.modelId - ID of the model.
+ * @param {string} [options.promptVersionsUrl] - URL to the prompt versions page.
+ * @param {Object} options.Email - Email model for database operations.
+ * @param {Object} options.User - User model for database operations.
+ * @param {string} [options.notificationSource] - Source of the notification.
+ * @param {number} [options.sourceId] - ID of the source.
+ * @returns {Promise<void>}
+ */
+export const sendPromptVersionCreatedEmail = async ({
+  recipientEmail,
+  firstName,
+  agentName,
+  modelName,
+  promptVersion,
+  agentId,
+  modelId,
+  promptVersionsUrl = 'https://dashboard.handit.ai/prompt-versions',
+  Email,
+  User,
+  notificationSource = 'prompt_version_created',
+  sourceId = null
+}) => {
+  const subject = 'Handit Found an Improved Version of Your Prompt 🚀';
+  
+  const templateData = {
+    firstName: firstName,
+    agentName: agentName,
+    modelName: modelName,
+    promptVersion: promptVersion,
+    agentId: agentId,
+    modelId: modelId,
+    promptVersionsUrl: `${promptVersionsUrl}?agentId=${agentId}&modelId=${modelId}&promptVersion=${promptVersion}&autoDeploy=true`,
+    year: new Date().getFullYear()
+  };
+
+  await sendTemplatedEmail({
+    to: recipientEmail,
+    subject,
+    templateName: 'reEngagement/promptVersionCreatedTemplate',
+    templateData,
+    attachments: [
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/logo.png')).toString('base64'),
+        filename: 'logo.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'logo'
+      },
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/bg-real.png')).toString('base64'),
+        filename: 'bg-real.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'bg-real'
+      }
+    ],
+    Email,
+    User,
+    notificationSource,
+    sourceId
+  });
+};
+
+/**
+ * Sends bulk emails when Handit automatically creates improved prompt versions.
+ * @param {Object} options - Bulk email options.
+ * @param {Array} options.promptVersionNotifications - Array of notification objects with email, firstName, agentName, modelName, promptVersion, agentId, modelId.
+ * @param {string} [options.promptVersionsUrl] - URL to the prompt versions page.
+ * @param {Object} options.Email - Email model for database operations.
+ * @param {Object} options.User - User model for database operations.
+ * @param {string} [options.notificationSource] - Source of the notification.
+ * @returns {Promise<void>}
+ */
+export const sendBulkPromptVersionCreatedEmails = async ({
+  promptVersionNotifications,
+  promptVersionsUrl = 'https://dashboard.handit.ai/prompt-versions',
+  Email,
+  User,
+  notificationSource = 'prompt_version_created_bulk'
+}) => {
+  console.log(`Starting bulk prompt version created email campaign for ${promptVersionNotifications.length} users`);
+  
+  const results = {
+    sent: 0,
+    failed: 0,
+    errors: []
+  };
+
+  for (const notification of promptVersionNotifications) {
+    try {
+      await sendPromptVersionCreatedEmail({
+        recipientEmail: notification.email,
+        firstName: notification.firstName,
+        agentName: notification.agentName,
+        modelName: notification.modelName,
+        promptVersion: notification.promptVersion,
+        agentId: notification.agentId,
+        modelId: notification.modelId,
+        promptVersionsUrl,
+        Email,
+        User,
+        notificationSource,
+        sourceId: notification.id
+      });
+      
+      results.sent++;
+      console.log(`✅ Prompt version created email sent to ${notification.email}`);
+      
+      // Small delay between emails to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+    } catch (error) {
+      results.failed++;
+      results.errors.push({
+        email: notification.email,
+        error: error.message
+      });
+      console.error(`❌ Failed to send prompt version created email to ${notification.email}:`, error.message);
+    }
+  }
+
+  console.log(`🎯 Bulk prompt version created campaign completed: ${results.sent} sent, ${results.failed} failed`);
+  return results;
+};

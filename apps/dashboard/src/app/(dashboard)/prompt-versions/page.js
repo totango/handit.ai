@@ -58,6 +58,7 @@ export default function PromptVersionsPage() {
   const [newPromptText, setNewPromptText] = React.useState('');
   const [createAndDeploy, setCreateAndDeploy] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [defaultRightVersion, setDefaultRightVersion] = React.useState(null);
 
   // RTK Query mutations and queries
   const [createPrompt, { isLoading: isCreating }] = useCreatePromptMutation();
@@ -82,6 +83,9 @@ export default function PromptVersionsPage() {
   // URL parameter handling
   const searchParams = useSearchParams();
   const agentId = searchParams.get('agentId');
+  const modelId = searchParams.get('modelId');
+  const promptVersion = searchParams.get('promptVersion');
+  const autoDeploy = searchParams.get('autoDeploy');
   const { data: agent, isLoading: isLoadingAgent } = useGetAgentByIdAutonomQuery(agentId, { skip: !agentId });
   const { data: agentCorrectEntries, isLoading: isLoadingCorrectEntries } = useGetAgentCorrectEntriesQuery(agentId, { skip: !agentId });
   const { data: modelOptStatus, isLoading: isLoadingModelOptStatus } = useGetModelOptimizationStatusQuery(agentId, { skip: !agentId });
@@ -354,6 +358,46 @@ export default function PromptVersionsPage() {
       window.removeEventListener('onboarding:chat-closed', handleChatClosed);
     };
   }, [searchParams, agent]);
+
+  // Handle auto-deployment from email
+  React.useEffect(() => {
+    if (autoDeploy === 'true' && agentId && modelId && promptVersion) {
+      // Find the model and open the drawer
+
+      if (agent && agent.data.AgentNodes) {
+        const targetModel = agent.data.AgentNodes.find(m => m.Model.id.toString() == modelId);
+        if (targetModel) {
+          setSelectedModel(targetModel);
+          setDrawerOpen(true);
+          
+          // Auto-deploy the specific version after a short delay
+          setTimeout(() => {
+            // Find the prompt version and deploy it
+            console.log('promptVersions')
+            console.log(promptVersions)
+            if (promptVersions) {
+
+              const versionToDeploy = promptVersions.find(v => v.originalVersion == promptVersion);
+              console.log('versionToDeploy')
+              console.log(versionToDeploy)
+              if (versionToDeploy) {
+                setDefaultRightVersion(versionToDeploy.id);
+                setDeployTarget('right');
+                setDeployDialogOpen(true);
+              }
+            }
+            // Clean up URL parameters
+            const url = new URL(window.location.href);
+            url.searchParams.delete('autoDeploy');
+            url.searchParams.delete('promptVersion');
+            window.history.replaceState({}, '', url.toString());
+          }, 1000);
+        }
+      }
+      
+      
+    }
+  }, [autoDeploy, agentId, modelId, promptVersion, agent, promptVersions]);
 
   return (
     <Box
@@ -717,6 +761,7 @@ export default function PromptVersionsPage() {
                   onRightModelChange={setRightPromptVersion}
                   onLeftAccuracyChange={setLeftAccuracy}
                   onRightAccuracyChange={setRightAccuracy}
+                  defaultRightVersion={defaultRightVersion}
                 />
               </Box>
               <Box sx={{ flex: 0.8, minWidth: 0, pl: 2 }}>

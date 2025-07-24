@@ -29,9 +29,10 @@
 
 import db from '../../models/index.js';
 import { Op } from 'sequelize';
-import { sendBulkReEngagementEmails } from '../services/emailService.js';
+import { sendBulkReEngagementEmails, sendBulkAgentsWithoutEvaluatorsEmails } from '../services/emailService.js';
+import { sendPromptVersionCreatedEmail } from '../services/emailService.js';
 
-const { User, Company, Agent, sequelize, Email } = db;
+const { User, Company, Agent, sequelize, Email, Model, ModelGroup, AgentNode, ModelEvaluationPrompt, EvaluationPrompt } = db;
 
 /**
  * Get completely inactive users (users without any agents or logs) registered in the last N days
@@ -687,6 +688,601 @@ export const getInactiveUsersTest = async (req, res) => {
     return res.status(500).json({ 
       error: 'Internal server error',
       message: error.message 
+    });
+  }
+}; 
+
+/**
+ * Get users with agents that don't have evaluators connected, created exactly N days ago
+ * Uses GET with URL parameter
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getAgentsWithoutEvaluators = async (req, res) => {
+  try {
+    const { nDays } = req.params;
+    
+    // Validate nDays parameter
+    const days = parseInt(nDays);
+    if (isNaN(days) || days < 0) {
+      return res.status(400).json({ 
+        error: 'Invalid nDays parameter. Must be a positive number.' 
+      });
+    }
+
+    // Calculate date range for agents created exactly N days ago
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0); // Start of day N days ago
+
+    endDate.setDate(endDate.getDate() - days);
+    endDate.setHours(23, 59, 59, 999);
+
+    console.log('Finding agents without evaluators for date range:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      daysRange: days,
+      description: `Agents created exactly ${days} days ago`
+    });
+
+    // Get all agents created exactly N days ago
+    const agentsCreatedInRange = await Agent.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [startDate, endDate]
+        },
+        deletedAt: null // Only active agents
+      },
+      include: [
+        {
+          model: Company,
+          required: true,
+          where: {
+            deletedAt: null // Only active companies
+          },
+          attributes: ['id', 'name', 'testMode']
+        }
+      ],
+      attributes: [
+        'id', 
+        'name',
+        'createdAt', 
+        'companyId'
+      ]
+    });
+
+    if (agentsCreatedInRange.length === 0) {
+      return res.status(200).json({
+        message: `No agents found created exactly ${days} days ago`,
+        agentsWithoutEvaluators: [],
+        totalCount: 0,
+        dateRange: {
+          start: startDate.toISOString().split('T')[0],
+          end: endDate.toISOString().split('T')[0],
+          days: days,
+          description: `Agents created exactly ${days} days ago`
+        }
+      });
+    }
+
+    // Extract agent IDs
+    const agentIds = agentsCreatedInRange.map(agent => agent.id);
+
+    // Find models connected to these agents through AgentNode
+    const modelsConnectedToAgents = await sequelize.models.Model.findAll({
+      where: {
+        deletedAt: null
+      },
+      include: [
+        {
+          model: AgentNode,
+          required: true,
+          as: 'AgentNodes',
+          where: {
+            agentId: {
+              [Op.in]: agentIds
+            },
+            deletedAt: null
+          },
+          attributes: ['id', 'agentId', 'name', 'type']
+        }
+      ],
+      attributes: ['id', 'name', 'modelGroupId']
+    });
+
+    const modelIds = modelsConnectedToAgents.map(model => model.id);
+
+    // Find models that have evaluators (ModelEvaluationPrompt with isInformative = false)
+    const modelsWithEvaluators = await sequelize.models.Model.findAll({
+      where: {
+        id: {
+          [Op.in]: modelIds
+        },
+        deletedAt: null
+      },
+      include: [
+        {
+          model: ModelEvaluationPrompt,
+          required: true,
+          as: 'evaluationPrompts',
+          include: [
+            {
+              model: EvaluationPrompt,
+              required: true,
+              as: 'evaluationPrompt',
+              where: {
+                isInformative: false
+              },
+              attributes: ['id', 'name', 'type', 'isInformative']
+            }
+          ]
+        }
+      ],
+      attributes: ['id', 'name', 'modelGroupId']
+    });
+
+    const modelIdsWithEvaluators = new Set(
+      modelsWithEvaluators.map(model => model.id)
+    );
+
+    // Filter models without evaluators
+    const modelsWithoutEvaluators = modelsConnectedToAgents.filter(model => 
+      !modelIdsWithEvaluators.has(model.id)
+    );
+
+    // Get unique agent IDs that have models without evaluators
+    const agentIdsWithoutEvaluators = new Set();
+    modelsWithoutEvaluators.forEach(model => {
+      model.AgentNodes.forEach(node => {
+        agentIdsWithoutEvaluators.add(node.agentId);
+      });
+    });
+
+    // Filter agents that have models without evaluators
+    const agentsWithoutEvaluators = agentsCreatedInRange.filter(agent => 
+      agentIdsWithoutEvaluators.has(agent.id)
+    );
+
+    // Get users for these agents through the company relationship
+    const companyIds = [...new Set(agentsWithoutEvaluators.map(agent => agent.companyId))];
+    
+    const usersWithAgentsWithoutEvaluators = await User.findAll({
+      where: {
+        companyId: {
+          [Op.in]: companyIds
+        },
+        deletedAt: null
+      },
+      include: [
+        {
+          model: Company,
+          required: true,
+          where: {
+            deletedAt: null
+          },
+          attributes: ['id', 'name', 'testMode']
+        }
+      ],
+      attributes: [
+        'id', 
+        'firstName', 
+        'lastName', 
+        'email', 
+        'createdAt', 
+        'lastLoginAt',
+        'companyId'
+      ]
+    });
+
+    // Format the response
+    const formattedUsers = usersWithAgentsWithoutEvaluators.map(user => {
+      const userAgents = agentsWithoutEvaluators.filter(agent => agent.companyId === user.companyId);
+      const daysSinceAgentCreation = Math.floor(
+        (new Date() - new Date(userAgents[0].createdAt)) / (1000 * 60 * 60 * 24)
+      );
+      
+      return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        registeredAt: user.createdAt,
+        lastLoginAt: user.lastLoginAt,
+        company: {
+          id: user.Company.id,
+          name: user.Company.name,
+          testMode: user.Company.testMode
+        },
+        daysSinceAgentCreation: daysSinceAgentCreation,
+        agents: userAgents.map(agent => ({
+          id: agent.id,
+          name: agent.name,
+          createdAt: agent.createdAt
+        })),
+        activityStatus: 'agents_without_evaluators'
+      };
+    });
+
+    // Send re-engagement emails to all users with agents without evaluators
+    let emailResults = {
+      sent: 0,
+      failed: 0,
+      errors: []
+    };
+
+    if (formattedUsers.length > 0) {
+      try {
+        console.log(`📧 Sending agents without evaluators emails to ${formattedUsers.length} users`);
+        
+        // Prepare user data for email sending
+        const emailCandidates = formattedUsers.map(user => ({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          daysSinceAgentCreation: user.daysSinceAgentCreation
+        }));
+
+        // Send bulk emails
+        emailResults = await sendBulkAgentsWithoutEvaluatorsEmails({
+          agentsWithoutEvaluators: emailCandidates,
+          evaluationHubUrl: 'https://dashboard.handit.ai/evaluation-hub',
+          Email,
+          User,
+          notificationSource: 'agents_without_evaluators_notification'
+        });
+
+        console.log(`✅ Email campaign completed: ${emailResults.sent} sent, ${emailResults.failed} failed`);
+      } catch (emailError) {
+        console.error('❌ Error sending agents without evaluators emails:', emailError);
+        emailResults.failed = formattedUsers.length;
+        emailResults.errors.push({
+          message: 'Failed to send bulk emails',
+          error: emailError.message
+        });
+      }
+    }
+
+    return res.status(200).json({
+      message: `Found ${formattedUsers.length} users with agents created exactly ${days} days ago that don't have evaluators connected`,
+      description: 'These users have agents with models but no evaluation prompts connected to them',
+      usersWithAgentsWithoutEvaluators: formattedUsers,
+      totalCount: formattedUsers.length,
+      dateRange: {
+        start: startDate.toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0],
+        days: days,
+        description: `Agents created exactly ${days} days ago`
+      },
+      totalAgentsCreatedInRange: agentsCreatedInRange.length,
+      activityBreakdown: {
+        agentsWithEvaluators: agentIds.length - agentIdsWithoutEvaluators.size,
+        agentsWithoutEvaluators: agentIdsWithoutEvaluators.size,
+        totalAgents: agentsCreatedInRange.length
+      },
+      metrics: {
+        totalAgentsCreated: agentsCreatedInRange.length,
+        agentsWithoutEvaluators: agentIdsWithoutEvaluators.size,
+        agentsWithEvaluators: agentsCreatedInRange.length - agentIdsWithoutEvaluators.size,
+        noEvaluatorsRate: ((agentIdsWithoutEvaluators.size / agentsCreatedInRange.length) * 100).toFixed(2) + '%'
+      },
+      emailCampaign: {
+        sent: emailResults.sent,
+        failed: emailResults.failed,
+        errors: emailResults.errors,
+        campaignExecuted: true,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in getAgentsWithoutEvaluators:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message 
+    });
+  }
+}; 
+
+/**
+ * Test endpoint - Get agents without evaluators from the last N days (broader range)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getAgentsWithoutEvaluatorsTest = async (req, res) => {
+  try {
+    const { nDays } = req.params;
+    
+    // Validate nDays parameter
+    const days = parseInt(nDays);
+    if (isNaN(days) || days < 0) {
+      return res.status(400).json({ 
+        error: 'Invalid nDays parameter. Must be a positive number.' 
+      });
+    }
+
+    // Calculate date range for agents created in the last N days
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    console.log('Test - Date Range for agents without evaluators:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      daysRange: days
+    });
+
+    // Get all agents created in the last N days
+    const agentsInRange = await Agent.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [startDate, endDate]
+        },
+        deletedAt: null
+      },
+      include: [
+        {
+          model: Company,
+          required: true,
+          where: {
+            deletedAt: null
+          },
+          attributes: ['id', 'name', 'testMode']
+        }
+      ],
+      attributes: [
+        'id', 
+        'name',
+        'createdAt', 
+        'companyId'
+      ]
+    });
+
+    if (agentsInRange.length === 0) {
+      return res.status(200).json({
+        message: `No agents found created in the last ${days} days`,
+        agentsWithoutEvaluators: [],
+        totalCount: 0,
+        dateRange: {
+          start: startDate.toISOString().split('T')[0],
+          end: endDate.toISOString().split('T')[0]
+        }
+      });
+    }
+
+    // Extract agent IDs
+    const agentIds = agentsInRange.map(agent => agent.id);
+
+    // Find models connected to these agents through AgentNode
+    const modelsConnectedToAgents = await sequelize.models.Model.findAll({
+      where: {
+        deletedAt: null
+      },
+      include: [
+        {
+          model: AgentNode,
+          required: true,
+          as: 'AgentNodes',
+          where: {
+            agentId: {
+              [Op.in]: agentIds
+            },
+            deletedAt: null
+          },
+          attributes: ['id', 'agentId', 'name', 'type']
+        }
+      ],
+      attributes: ['id', 'name', 'modelGroupId']
+    });
+
+    const modelIds = modelsConnectedToAgents.map(model => model.id);
+
+    // Find models that have evaluators (ModelEvaluationPrompt with isInformative = false)
+    const modelsWithEvaluators = await sequelize.models.Model.findAll({
+      where: {
+        id: {
+          [Op.in]: modelIds
+        },
+        deletedAt: null
+      },
+      include: [
+        {
+          model: ModelEvaluationPrompt,
+          required: true,
+          as: 'evaluationPrompts',
+          include: [
+            {
+              model: EvaluationPrompt,
+              required: true,
+              as: 'evaluationPrompt',
+              where: {
+                isInformative: false
+              },
+              attributes: ['id', 'name', 'type', 'isInformative']
+            }
+          ]
+        }
+      ],
+      attributes: ['id', 'name', 'modelGroupId']
+    });
+
+    const modelIdsWithEvaluators = new Set(
+      modelsWithEvaluators.map(model => model.id)
+    );
+
+    // Filter models without evaluators
+    const modelsWithoutEvaluators = modelsConnectedToAgents.filter(model => 
+      !modelIdsWithEvaluators.has(model.id)
+    );
+
+    // Get unique agent IDs that have models without evaluators
+    const agentIdsWithoutEvaluators = new Set();
+    modelsWithoutEvaluators.forEach(model => {
+      model.AgentNodes.forEach(node => {
+        agentIdsWithoutEvaluators.add(node.agentId);
+      });
+    });
+
+    // Filter agents that have models without evaluators
+    const agentsWithoutEvaluators = agentsInRange.filter(agent => 
+      agentIdsWithoutEvaluators.has(agent.id)
+    );
+
+    // Get users for these agents through the company relationship
+    const companyIds = [...new Set(agentsWithoutEvaluators.map(agent => agent.companyId))];
+    
+    const usersWithAgentsWithoutEvaluators = await User.findAll({
+      where: {
+        companyId: {
+          [Op.in]: companyIds
+        },
+        deletedAt: null
+      },
+      include: [
+        {
+          model: Company,
+          required: true,
+          where: {
+            deletedAt: null
+          },
+          attributes: ['id', 'name', 'testMode']
+        }
+      ],
+      attributes: [
+        'id', 
+        'firstName', 
+        'lastName', 
+        'email', 
+        'createdAt', 
+        'lastLoginAt',
+        'companyId'
+      ]
+    });
+
+    // Format the response
+    const formattedUsers = usersWithAgentsWithoutEvaluators.map(user => {
+      const userAgents = agentsWithoutEvaluators.filter(agent => agent.companyId === user.companyId);
+      const daysSinceAgentCreation = Math.floor(
+        (new Date() - new Date(userAgents[0].createdAt)) / (1000 * 60 * 60 * 24)
+      );
+      
+      return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        registeredAt: user.createdAt,
+        lastLoginAt: user.lastLoginAt,
+        company: {
+          id: user.Company.id,
+          name: user.Company.name,
+          testMode: user.Company.testMode
+        },
+        daysSinceAgentCreation: daysSinceAgentCreation,
+        agents: userAgents.map(agent => ({
+          id: agent.id,
+          name: agent.name,
+          createdAt: agent.createdAt
+        })),
+        activityStatus: 'agents_without_evaluators'
+      };
+    });
+
+    return res.status(200).json({
+      message: `Found ${formattedUsers.length} users with agents created in the last ${days} days that don't have evaluators connected`,
+      usersWithAgentsWithoutEvaluators: formattedUsers,
+      totalCount: formattedUsers.length,
+      dateRange: {
+        start: startDate.toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0],
+        daysRange: days
+      },
+      totalAgentsInRange: agentsInRange.length,
+      metrics: {
+        totalAgentsCreated: agentsInRange.length,
+        agentsWithoutEvaluators: agentIdsWithoutEvaluators.size,
+        agentsWithEvaluators: agentsInRange.length - agentIdsWithoutEvaluators.size,
+        noEvaluatorsRate: ((agentIdsWithoutEvaluators.size / agentsInRange.length) * 100).toFixed(2) + '%'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in getAgentsWithoutEvaluatorsTest:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: error.message 
+    });
+  }
+}; 
+
+/**
+ * Test endpoint to simulate sending prompt version created email
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const testPromptVersionCreatedEmail = async (req, res) => {
+  try {
+    const { modelId, agentId, promptVersion, recipientEmail, firstName } = req.body;
+
+    if (!modelId || !agentId || !promptVersion || !recipientEmail || !firstName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required parameters: modelId, agentId, promptVersion, recipientEmail, firstName'
+      });
+    }
+
+    // Get model and agent information
+    const model = await Model.findByPk(modelId);
+    const agent = await Agent.findByPk(agentId);
+
+    if (!model) {
+      return res.status(404).json({
+        success: false,
+        message: 'Model not found'
+      });
+    }
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Agent not found'
+      });
+    }
+
+    // Send the email
+    await sendPromptVersionCreatedEmail({
+      recipientEmail,
+      firstName,
+      agentName: agent.name,
+      modelName: model.name,
+      promptVersion,
+      agentId,
+      modelId,
+      Email,
+      User,
+      notificationSource: 'test_prompt_version_created',
+      sourceId: model.id
+    });
+
+    res.json({
+      success: true,
+      message: 'Prompt version created email sent successfully',
+      data: {
+        recipientEmail,
+        agentName: agent.name,
+        modelName: model.name,
+        promptVersion,
+        agentId,
+        modelId
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in testPromptVersionCreatedEmail:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send test email',
+      error: error.message
     });
   }
 }; 
