@@ -46,6 +46,7 @@ import providersRoutes from './routes/providersRoutes.js';
 import reviewersTemplateRoutes from './routes/reviewersTemplateRoutes.js';
 import promptRoutes from './routes/promptRoutes.js';
 import emailRoutes from './routes/emailRoutes.js';
+import notificationSystemRoutes from './routes/notificationSystemRoutes.js';
 
 dotenv.config();
 
@@ -90,6 +91,7 @@ app.use('/api/agent-structure', validateApiToken, agentStructureRoutes);
 
 app.use('/api/email', emailRoutes);
 
+app.use('/api/notification-system', notificationSystemRoutes);
 
 
 // Apply JWT authentication middleware to all routes except auth routes
@@ -127,6 +129,7 @@ app.use('/api/integration-tokens', integrationTokenRoutes);
 app.use('/api/evaluator-metrics', evaluatorMetricRoutes);
 app.use('/api/providers', providersRoutes);
 app.use('/api/reviewers-template', reviewersTemplateRoutes);
+
 // Add sampling routes
 
 // Add setup routes

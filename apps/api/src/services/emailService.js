@@ -689,3 +689,121 @@ export const sendWelcomeHanditEmail = async ({
     sourceId
   });
 };
+
+/**
+ * Sends a re-engagement email to inactive users who haven't set up AI observability.
+ * @param {Object} options - Email options.
+ * @param {string} options.recipientEmail - Email address of the recipient.
+ * @param {string} options.firstName - First name of the recipient.
+ * @param {number} options.daysSinceRegistration - Number of days since user registration.
+ * @param {string} [options.quickstartUrl] - URL to the quickstart guide.
+ * @param {Object} options.Email - Email model for database operations.
+ * @param {Object} options.User - User model for database operations.
+ * @param {string} [options.notificationSource] - Source of the notification.
+ * @param {number} [options.sourceId] - ID of the source.
+ * @returns {Promise<void>}
+ */
+export const sendReEngagementEmail = async ({
+  recipientEmail,
+  firstName,
+  daysSinceRegistration,
+  quickstartUrl = 'https://docs.handit.ai/quickstart',
+  Email,
+  User,
+  notificationSource = 're_engagement',
+  sourceId = null
+}) => {
+  const subject = 'Complete Your Handit.AI Setup in 5 Minutes ⏱️';
+  
+  const templateData = {
+    firstName: firstName,
+    daysSinceRegistration: daysSinceRegistration,
+    quickstartUrl: quickstartUrl,
+    year: new Date().getFullYear()
+  };
+
+  await sendTemplatedEmail({
+    to: recipientEmail,
+    subject,
+    templateName: 'reEngagement/inactiveUserTemplate',
+    templateData,
+    attachments: [
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/logo.png')).toString('base64'),
+        filename: 'logo.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'logo'
+      },
+      {
+        content: fs.readFileSync(path.join(__dirname, 'src/services/templates/bg-real.png')).toString('base64'),
+        filename: 'bg-real.png',
+        type: 'image/png',
+        disposition: 'inline',
+        content_id: 'bg-real'
+      }
+    ],
+    Email,
+    User,
+    notificationSource,
+    sourceId
+  });
+};
+
+/**
+ * Sends bulk re-engagement emails to multiple inactive users.
+ * @param {Object} options - Bulk email options.
+ * @param {Array} options.inactiveUsers - Array of inactive user objects with email, firstName, and daysSinceRegistration.
+ * @param {string} [options.quickstartUrl] - URL to the quickstart guide.
+ * @param {Object} options.Email - Email model for database operations.
+ * @param {Object} options.User - User model for database operations.
+ * @param {string} [options.notificationSource] - Source of the notification.
+ * @returns {Promise<void>}
+ */
+export const sendBulkReEngagementEmails = async ({
+  inactiveUsers,
+  quickstartUrl = 'https://docs.handit.ai/quickstart',
+  Email,
+  User,
+  notificationSource = 're_engagement_bulk'
+}) => {
+  console.log(`Starting bulk re-engagement email campaign for ${inactiveUsers.length} users`);
+  
+  const results = {
+    sent: 0,
+    failed: 0,
+    errors: []
+  };
+
+  for (const user of inactiveUsers) {
+    try {
+      await sendReEngagementEmail({
+        recipientEmail: user.email,
+        firstName: user.firstName,
+        daysSinceRegistration: user.daysSinceRegistration,
+        quickstartUrl,
+        Email,
+        User,
+        notificationSource,
+        sourceId: user.id
+      });
+      
+      results.sent++;
+      console.log(`✅ Re-engagement email sent to ${user.email}`);
+      
+      // Small delay between emails to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+    } catch (error) {
+      results.failed++;
+      results.errors.push({
+        email: user.email,
+        error: error.message
+      });
+      console.error(`❌ Failed to send re-engagement email to ${user.email}:`, error.message);
+    }
+  }
+
+  console.log(`🎯 Bulk re-engagement campaign completed: ${results.sent} sent, ${results.failed} failed`);
+  return results;
+};
