@@ -3,86 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Complete Your Handit.AI Setup in 5 Minutes</title>
+    <title>Ship AI You Can Actually Trust - Complete Your Setup</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
     <style>
       body {
         margin: 0;
         padding: 0;
         font-family: 'Poppins', sans-serif;
-        background-color: #f8fafb;
       }
 
       .container {
         max-width: 600px;
         margin: 0 auto;
-        padding: 40px 30px;
-        background: #ffffff url('./bg-real.png') no-repeat top center;
+        padding: 60px 30px;
+        background: #ffffff url('cid:bg-real') no-repeat top center;
         background-size: cover;
-        border-radius: 16px;
         box-sizing: border-box;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        border-radius: 16px;
       }
 
       .logo {
         display: block;
-        margin: 0 auto 30px;
-        width: 160px;
+        margin-left: auto;
+        margin-bottom: 40px;
+        width: 180px;
         height: auto;
       }
 
-      .hero {
-        text-align: center;
-        margin-bottom: 40px;
-      }
-
       h1 {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 600;
         color: #00272f;
-        margin-bottom: 16px;
-        line-height: 1.3;
-      }
-
-      .subtitle {
-        font-size: 16px;
-        color: #666;
-        margin-bottom: 30px;
-        line-height: 1.5;
+        margin-bottom: 24px;
       }
 
       p {
         font-size: 15px;
         color: #00272f;
-        margin: 16px 0;
+        margin: 12px 0;
         line-height: 1.6;
       }
 
-      .cta-primary {
+      .label {
+        font-weight: 600;
+        color: #02f7aa;
+      }
+
+      .button {
         display: inline-block;
-        margin: 30px auto;
-        padding: 16px 32px;
+        margin-top: 30px;
+        padding: 12px 24px;
         background-color: #02f7aa;
         color: #00272f !important;
         text-decoration: none;
         font-weight: 600;
-        font-size: 16px;
         border-radius: 8px;
-        text-align: center;
       }
 
-      .cta-secondary {
+      .button-secondary {
         display: inline-block;
-        margin: 15px auto;
+        margin-top: 15px;
         padding: 12px 24px;
         background-color: transparent;
         color: #02f7aa !important;
         text-decoration: none;
         font-weight: 600;
-        font-size: 14px;
         border: 2px solid #02f7aa;
         border-radius: 8px;
-        text-align: center;
       }
 
       .stats {
@@ -116,86 +103,80 @@
       .footer {
         text-align: center;
         font-size: 13px;
-        color: #666;
+        color: #00272f;
         margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
       }
 
       .footer a {
-        color: #02f7aa;
+        color: #00272f;
         text-decoration: none;
       }
 
       @media screen and (max-width: 600px) {
         .container {
-          padding: 30px 20px;
+          padding: 40px 20px;
         }
+
         .logo {
-          width: 120px;
-        }
-        h1 {
-          font-size: 20px;
-        }
-        .stat-item {
-          display: block;
-          margin: 10px 0;
+          width: 100px;
+          margin-top: 10px;
         }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <img class="logo" src="./logo.png" alt="Handit.ai Logo" />
+      <img class="logo" src="cid:logo" alt="Handit.ai Logo" />
       
-      <div class="hero">
-        <h1>Your AI Observatory Awaits ⏱️</h1>
-        <p class="subtitle">Hi {{firstName}}, you're just 5 minutes away from full AI visibility</p>
-      </div>
+      <h1>Ship AI You Can Actually Trust 🚀</h1>
+      <p>Hi {{firstName}}, you're just 5 minutes away from AI that gets better over time.</p>
 
       <p>
-        You created your Handit.ai account {{daysSinceRegistration}} days ago, but haven't set up AI observability yet. 
-        Let's change that today!
+        You created your Handit.ai account {{daysSinceRegistration}} days ago, but haven't unlocked the full power yet. 
+        Handit is the open-source engine that catches broken AI behavior in real time, fixes it automatically, and learns from every failure.
+      </p>
+
+      <p>
+        <strong>What you'll gain:</strong> Real-time AI failure detection, automatic fixes, compliance-ready audit trails, and AI that gets smarter with every interaction.
       </p>
 
       <div class="stats">
         <div class="stat-item">
+          <span class="stat-number">Self-healing</span>
+          <span class="stat-label">AI Systems</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">Real-time</span>
+          <span class="stat-label">Optimization</span>
+        </div>
+        <div class="stat-item">
           <span class="stat-number">5 min</span>
           <span class="stat-label">Setup Time</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">100%</span>
-          <span class="stat-label">AI Visibility</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">Free</span>
-          <span class="stat-label">Personal Support</span>
         </div>
       </div>
 
       <p>
-        Our team has helped hundreds of developers get their first traces running. 
-        <strong>Book a free 30-minute session</strong> and we'll walk you through the setup personally.
+        Our team has helped hundreds of developers ship AI they can trust. 
+        <strong>Book a free 30-minute session</strong> and we'll show you how to unlock your AI's full potential.
       </p>
 
       <div style="text-align: center;">
-        <a href="https://calendly.com/cristhian-handit/30min" class="cta-primary">
-          Get Free Setup Help 🚀
+        <a href="https://calendly.com/cristhian-handit/30min" class="button">
+          Unlock AI Potential 🚀
         </a>
         <br>
-        <a href="{{quickstartUrl}}" class="cta-secondary">
+        <a href="{{quickstartUrl}}" class="button-secondary">
           Try Solo Setup Guide
         </a>
       </div>
 
       <p style="font-size: 14px; color: #666; margin-top: 30px;">
-        <strong>What you'll get:</strong> Complete AI observability, automatic quality evaluation, 
-        and self-improving AI that gets better over time.
+        <strong>What you'll get:</strong> AI that catches its own mistakes, fixes them automatically, and gets smarter with every interaction—so you can ship with confidence.
       </p>
 
       <div class="footer">
-        Questions? Reply to this email or visit our <a href="https://docs.handit.ai">documentation</a><br>
-        &copy; {{year}} Handit.ai — Making AI systems transparent and self-improving
+        &copy; {{year}} Handit.ai — The open-source engine that auto-fixes your AI.<br />
+        <a href="mailto:contact@handit.ai">contact@handit.ai</a>
       </div>
     </div>
   </body>

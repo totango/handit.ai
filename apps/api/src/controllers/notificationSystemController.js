@@ -57,6 +57,10 @@ export const getInactiveUsers = async (req, res) => {
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0); // Start of day N days ago
 
+    endDate.setDate(endDate.getDate() - days);
+    endDate.setHours(23, 59, 59, 999);
+    
+
     console.log('Finding inactive users for date range:', {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
