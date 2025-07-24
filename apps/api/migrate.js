@@ -5,8 +5,10 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const databaseUrl = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.TIMESERIES_DB_PORT}/${process.env.DB_NAME}`;
 // Initialize Sequelize instance
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+const sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
   logging: console.log,
 });

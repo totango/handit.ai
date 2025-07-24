@@ -13,7 +13,7 @@ terraform {
     bucket               = "catalyst-terraform-backend"
     key                  = "leviosa-handit/terraform.tfstate"
     region               = "us-east-1"
-    dynamodb_table       = "catalyst-terraform-backend"
+    dynamoTIMESERIES_DB_table       = "catalyst-terraform-backend"
     workspace_key_prefix = "leviosa-backend"
     
     assume_role = {
