@@ -52,6 +52,8 @@ affinity: {}
 
 env: []
 
+command: ["npm", "run", "metric-worker"]
+
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
