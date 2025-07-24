@@ -203,33 +203,21 @@ export const sendModelReviewFailureEmail = async ({
   outputPayload,
   reviewerSummary,
   agentId,
-  agentLogId,
+  modelLog,
   Email,
   User,
   notificationSource,
   sourceId,
-  AgentLog,
-  ModelLog
 }) => {
   const subject = '🚨 Handit Alert: Automatic Evaluation Issue Detected';
   const tracingUrl = `${process.env.DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
   
   // Get the modelId from the agentLog to create the optimize URL
-  const agentLog = await AgentLog.findByPk(agentLogId);
   let modelId = null;
   let modelLogId = null;
-  
-  if (agentLog) {
-    // Find the modelLog associated with this agentLog
-    const modelLog = await ModelLog.findOne({
-      where: { agentLogId: agentLogId },
-      order: [['createdAt', 'DESC']]
-    });
-    
-    if (modelLog) {
-      modelId = modelLog.modelId;
-      modelLogId = modelLog.id;
-    }
+  if (modelLog) {
+    modelId = modelLog.modelId || modelLog.dataValues?.modelId;
+    modelLogId = modelLog.id || modelLog.dataValues?.id;
   }
   
   const optimizeUrl = modelId && modelLogId 
@@ -303,13 +291,11 @@ export const sendModelReviewFailureEmailsToCompany = async ({
   outputPayload,
   reviewerSummary,
   agentId,
-  agentLogId,
+  modelLog,
   Email,
   User,
   notificationSource,
   sourceId,
-  AgentLog,
-  ModelLog
 }) => {
   // Get all users from the company
   const users = await User.findAll({
@@ -329,13 +315,11 @@ export const sendModelReviewFailureEmailsToCompany = async ({
       outputPayload,
       reviewerSummary,
       agentId,
-      agentLogId,
+      modelLog,
       Email,
       User,
       notificationSource,
       sourceId,
-      AgentLog,
-      ModelLog
     });
   }
 };
@@ -345,7 +329,7 @@ export const sendModelReviewFailureEmailsToCompany = async ({
  * @param {Object} modelLog - The model log that was updated.
  * @returns {Promise<void>}
  */
-export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Agent, AgentNode, Company, Email, User, ModelLog) => {
+export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Agent, AgentNode, Company, Email, User) => {
   try {
     // Get the model
     const model = await Model.findByPk(modelLog.modelId);
@@ -404,13 +388,11 @@ export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Ag
       outputPayload: JSON.stringify(modelLog.output),
       reviewerSummary,
       agentId: agent.id,
-      agentLogId: agentLog.id,
+      modelLog: modelLog,
       Email,
       User,
       notificationSource: 'model_log',
       sourceId: modelLog.id,
-      AgentLog,
-      ModelLog
     });
 
     console.log(`Model failure notification sent for modelLog ID: ${modelLog.id}`);

@@ -45,7 +45,6 @@ export const testModelFailureNotification = async (req, res) => {
       Company, 
       Email, 
       User,
-      ModelLog
     );
 
     res.status(200).json({ 

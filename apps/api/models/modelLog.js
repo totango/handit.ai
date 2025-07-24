@@ -553,7 +553,7 @@ export default (sequelize, DataTypes) => {
                 }
                 
                 // Send email notification for model failure
-                await sendModelFailureNotification(modelLog, sequelize.models.Model, sequelize.models.AgentLog, sequelize.models.Agent, sequelize.models.AgentNode, sequelize.models.Company, sequelize.models.Email, sequelize.models.User, sequelize.models.ModelLog);
+                await sendModelFailureNotification(modelLog, sequelize.models.Model, sequelize.models.AgentLog, sequelize.models.Agent, sequelize.models.AgentNode, sequelize.models.Company, sequelize.models.Email, sequelize.models.User);
               }
 
               if (
