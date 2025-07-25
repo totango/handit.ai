@@ -210,6 +210,7 @@ export const sendModelReviewFailureEmail = async ({
   sourceId,
 }) => {
   const subject = '🚨 Handit Alert: Automatic Evaluation Issue Detected';
+  const agentLogId = modelLog.agentLogId || modelLog.dataValues?.agentLogId;
   const tracingUrl = `${process.env.DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
   
   // Get the modelId from the agentLog to create the optimize URL
