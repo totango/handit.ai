@@ -333,21 +333,21 @@ export const sendModelReviewFailureEmailsToCompany = async ({
 export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Agent, AgentNode, Company, Email, User) => {
   try {
     // Get the model
-    const model = await Model.findByPk(modelLog.modelId);
+    const model = await Model.findByPk(modelLog.modelId ? modelLog.modelId : modelLog.dataValues?.modelId);
     if (!model) {
       console.error(`Model not found for modelLog ID: ${modelLog.id}`);
       return;
     }
 
     // Get the agent log
-    const agentLog = await AgentLog.findByPk(modelLog.agentLogId);
+    const agentLog = await AgentLog.findByPk(modelLog.agentLogId ? modelLog.agentLogId : modelLog.dataValues?.agentLogId);
     if (!agentLog) {
       console.error(`Agent log not found for modelLog ID: ${modelLog.id}`);
       return;
     }
 
     // Get the agent
-    const agent = await Agent.findByPk(agentLog.agentId);
+    const agent = await Agent.findByPk(agentLog.agentId ? agentLog.agentId : agentLog.dataValues?.agentId);
     if (!agent) {
       console.error(`Agent not found for agentLog ID: ${agentLog.id}`);
       return;
@@ -356,8 +356,8 @@ export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Ag
     // Get the agent node
     const agentNode = await AgentNode.findOne({
       where: {
-        agentId: agent.id,
-        modelId: model.id
+        agentId: agent.id ? agent.id : agent.dataValues?.id,
+        modelId: model.id ? model.id : model.dataValues?.id
       }
     });
     if (!agentNode) {
@@ -366,7 +366,7 @@ export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Ag
     }
 
     // Get the company
-    const company = await Company.findByPk(agent.companyId);
+    const company = await Company.findByPk(agent.companyId ? agent.companyId : agent.dataValues?.companyId);
     if (!company) {
       console.error(`Company not found for agent ID: ${agent.id}`);
       return;
