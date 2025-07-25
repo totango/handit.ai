@@ -322,23 +322,33 @@ export default function PromptVersionsPage() {
     const handleOptimizationCompleted = (event) => {
       const { flags } = event.detail;
       if (flags?.optimization_completed) {
-        // Open the model modal for the specific model
-        const urlModelId = searchParams.get('modelId');
-        if (urlModelId) {
-          const model = agent?.data?.AgentNodes?.find(n => 
-            n.Model?.id?.toString() == urlModelId
-          );
-          if (model) {
-            setSelectedModel(model);
-            setDrawerOpen(true);
+        // Add a small timeout before processing
+        setTimeout(async () => {
+          // Open the model modal for the specific model
+          const urlModelId = searchParams.get('modelId');
+          if (urlModelId) {
+            const model = agent?.data?.AgentNodes?.find(n => 
+              n.Model?.id?.toString() == urlModelId
+            );
+            if (model) {
+              // Refetch prompt versions to get the latest optimized prompts
+              try {
+                await refetch(); // This will refetch the prompt versions
+              } catch (error) {
+                console.error('Error refetching prompt versions:', error);
+              }
+              
+              setSelectedModel(model);
+              setDrawerOpen(true);
+            }
           }
-        }
-        
-        // Remove autoOptimize parameter from URL
-        const url = new URL(window.location.href);
-        url.searchParams.delete('autoOptimize');
-        url.searchParams.delete('modelLogId');
-        window.history.replaceState({}, '', url.toString());
+          
+          // Remove autoOptimize parameter from URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('autoOptimize');
+          url.searchParams.delete('modelLogId');
+          window.history.replaceState({}, '', url.toString());
+        }, 1000); // 1 second timeout
       }
     };
 
@@ -365,7 +375,7 @@ export default function PromptVersionsPage() {
       // Find the model and open the drawer
 
       if (agent && agent.data.AgentNodes) {
-        const targetModel = agent.data.AgentNodes.find(m => m.Model.id.toString() == modelId);
+        const targetModel = agent.data.AgentNodes.find(m => m.Model?.id.toString() == modelId);
         if (targetModel) {
           setSelectedModel(targetModel);
           setDrawerOpen(true);

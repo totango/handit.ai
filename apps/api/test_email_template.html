@@ -3,21 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Handit.ai Alert</title>
+    <title>Handit.ai Alert - Test</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       body {
         margin: 0;
         padding: 0;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #f0f0f0;
       }
 
       .container {
         max-width: 800px;
         margin: 0 auto;
         padding: 60px 40px;
-        background: #ffffff url('cid:bg-image') no-repeat top center;
-        background-size: cover;
+        background: #ffffff;
         box-sizing: border-box;
         border-radius: 16px;
       }
@@ -27,7 +27,12 @@
         margin-left: auto;
         margin-bottom: 40px;
         width: 180px;
-        height: auto;
+        height: 50px;
+        background-color: #02f7aa;
+        text-align: center;
+        line-height: 50px;
+        color: #00272f;
+        font-weight: bold;
       }
 
       .greeting {
@@ -74,21 +79,12 @@
         border-radius: 8px;
         margin-right: 10px;
         font-size: 16px;
-        transition: background-color 0.2s;
-      }
-
-      .button:hover {
-        background-color: #00d4aa;
       }
 
       .button-secondary {
         background-color: #ffffff;
         color: #02f7aa !important;
         border: 2px solid #02f7aa;
-      }
-
-      .button-secondary:hover {
-        background-color: rgba(2, 247, 170, 0.05);
       }
 
       .button-container {
@@ -120,29 +116,11 @@
         font-weight: 500;
         color: #02f7aa !important;
       }
-
-      @media screen and (max-width: 600px) {
-        .container {
-          padding: 40px 20px;
-        }
-
-        .logo {
-          width: 100px;
-          margin-top: 10px;
-        }
-        
-        .button {
-          display: block;
-          margin-bottom: 10px;
-          text-align: center;
-          margin-right: 0;
-        }
-      }
     </style>
   </head>
   <body>
     <div class="container">
-      <img class="logo" src="cid:logo-image" alt="Handit.ai Logo" />
+      <div class="logo">Handit.ai Logo</div>
       
       <div class="greeting">
         Hey there,
@@ -158,9 +136,9 @@
       </p>
 
       <div class="details-box">
-        <p><span class="label">Agent:</span> {{agent_name}}</p>
-        <p><span class="label">Node:</span> {{node_name}}</p>
-        <p><span class="label">Issue Summary:</span><br />{{{reviewer_summary}}}</p>
+        <p><span class="label">Agent:</span> Test Agent</p>
+        <p><span class="label">Node:</span> Test Node</p>
+        <p><span class="label">Issue Summary:</span><br />This is a test issue summary to verify the template is working correctly.</p>
       </div>
 
       <p class="main-text">
@@ -169,10 +147,8 @@
       </p>
 
       <div class="button-container">
-        {{#if optimize_url}}
-        <a href="{{optimize_url}}" class="button">🔧 Fix Issue Automatically</a>
-        {{/if}}
-        <a href="{{tracing_url}}" class="button button-secondary">📊 Review Details</a>
+        <a href="#" class="button">🔧 Fix Issue Automatically</a>
+        <a href="#" class="button button-secondary">📊 Review Details</a>
       </div>
 
       <p class="main-text">
@@ -187,4 +163,4 @@
       </div>
     </div>
   </body>
-</html>
+</html> 

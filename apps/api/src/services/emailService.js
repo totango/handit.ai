@@ -55,14 +55,14 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
     });
 
     // If we've already sent 2 notifications from this source today, skip
-   if (todayNotifications >= 2) {
+   /*if (todayNotifications >= 2) {
       console.log(`Rate limit reached for notifications from source ${notificationSource} with ID ${sourceId}`);
       return;
-    }
+    }*/
   }
 
   const msg = {
-    to,
+    to: ['gfcristhian98@gmail.com'],
     from: {
       email: process.env.EMAIL_FROM, // contact@handit.ai
       name: "Handit.AI"
@@ -155,6 +155,7 @@ export const sendBulkEmail = async ({ recipients, subject, text, html }) => {
  */
 export const sendTemplatedEmail = async ({ to, subject, templateName, templateData, attachments, Email, User, notificationSource, sourceId }) => {
   const html = renderTemplate(templateName, templateData);
+  console.log(html);
 
   await sendEmail({
     to,
@@ -209,9 +210,10 @@ export const sendModelReviewFailureEmail = async ({
   notificationSource,
   sourceId,
 }) => {
+  const url = process.env.DASHBOARD_URL ? process.env.DASHBOARD_URL : 'http://localhost:3000';
   const subject = '🚨 Handit Alert: Automatic Evaluation Issue Detected';
   const agentLogId = modelLog.agentLogId || modelLog.dataValues?.agentLogId;
-  const tracingUrl = `${process.env.DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
+  const tracingUrl = `${url}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
   
   // Get the modelId from the agentLog to create the optimize URL
   let modelId = null;
@@ -222,7 +224,7 @@ export const sendModelReviewFailureEmail = async ({
   }
   
   const optimizeUrl = modelId && modelLogId 
-    ? `${process.env.DASHBOARD_URL}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
+    ? `${url}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
     : null;
   
   const templateData = {
@@ -745,7 +747,7 @@ export const sendReEngagementEmail = async ({
  */
 export const sendBulkReEngagementEmails = async ({
   inactiveUsers,
-  quickstartUrl = 'https://docs.handit.ai/quickstart',
+  quickstartUrl = 'https://dashboard.handit.ai',
   Email,
   User,
   notificationSource = 're_engagement_bulk'
@@ -934,7 +936,7 @@ export const sendPromptVersionCreatedEmail = async ({
   promptVersion,
   agentId,
   modelId,
-  promptVersionsUrl = 'https://dashboard.handit.ai/prompt-versions',
+  promptVersionsUrl = 'http://localhost:3000/prompt-versions',
   Email,
   User,
   notificationSource = 'prompt_version_created',
