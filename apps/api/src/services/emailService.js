@@ -121,7 +121,7 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
  */
 export const sendBulkEmail = async ({ recipients, subject, text, html }) => {
   const msg = {
-    to: ['gfcristhian98@gmail.com'],
+    to: recipients,
     from: {
       email: process.env.EMAIL_FROM, // contact@handit.ai
       name: "Handit.AI"
@@ -157,7 +157,7 @@ export const sendTemplatedEmail = async ({ to, subject, templateName, templateDa
   const html = renderTemplate(templateName, templateData);
 
   await sendEmail({
-    to: 'gfcristhian98@gmail.com',
+    to,
     subject,
     text: 'This is a fallback text version of the email.',
     html,
@@ -242,7 +242,7 @@ export const sendModelReviewFailureEmail = async ({
   };
 
   await sendTemplatedEmail({
-    to: 'gfcristhian98@gmail.com',
+    to: recipientEmail,
     subject,
     templateName: 'modelReviewFailureTemplate',
     templateData,
@@ -434,7 +434,7 @@ export const sendToolErrorNotification = async (agentNodeLog, Agent, AgentNode, 
     // Send email to each user
     for (const user of users) {
       await sendTemplatedEmail({
-        to: 'gfcristhian98@gmail.com',
+        to: user.email,
         subject: `[Handit.AI] Tool Error Alert - ${agent.name}`,
         templateName: 'toolErrorTemplate',
         templateData: {
