@@ -12,10 +12,7 @@ import {
   Stack,
   TextField,
   Typography,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
-import { X, Copy } from '@phosphor-icons/react';
 
 import onboardingService from '../../services/onboarding/onboardingService';
 import { OnboardingAssistant, OnboardingMenu, useInvisibleMouse, useOnboardingBanners } from './index';
@@ -176,6 +173,7 @@ const OnboardingOrchestrator = ({
 
   // Start onboarding flow
   const startOnboarding = useCallback((tourId = onboardingService.getInitialTourId()) => {
+    console.log('startOnboarding', tourId);
     const step = onboardingService.startTour(tourId);
     if (step) {
       setCurrentStep(step);
@@ -494,7 +492,10 @@ const OnboardingOrchestrator = ({
     // Check if user is new (onboardingCurrentTour is null) and start onboarding immediately
     // Only start if we haven't already started onboarding for this new user
     // AND automatic start is enabled (passed from parent to determine business logic)
+    console.log('enableAutomaticStart', enableAutomaticStart);
+    console.log('isLoadingAutomaticStart', isLoadingAutomaticStart);
     if (userState.onboardingCurrentTour === null && !hasStartedNewUserOnboarding.current && enableAutomaticStart && !isLoadingAutomaticStart) {
+      console.log('starting onboarding');
       hasStartedNewUserOnboarding.current = true;
       startOnboarding(onboardingService.getInitialTourId());
       new CustomEvent('onboarding:start-tour', {

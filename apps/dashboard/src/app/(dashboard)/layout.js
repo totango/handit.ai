@@ -58,7 +58,7 @@ function LayoutInner({ children }) {
         console.log('Layout: User has no agents, enabling automatic start');
         setEnableAutomaticStart(true);
       }
-    }, 1000); // 1000ms delay
+    }, 3000); // 3000ms delay
 
     // Cleanup the timeout if dependencies change before it fires
     return () => clearTimeout(timeout);
