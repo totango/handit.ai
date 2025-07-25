@@ -62,7 +62,7 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
   }
 
   const msg = {
-    to: ['gfcristhian98@gmail.com'],
+    to,
     from: {
       email: process.env.EMAIL_FROM, // contact@handit.ai
       name: "Handit.AI"
