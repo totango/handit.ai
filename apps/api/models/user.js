@@ -29,6 +29,12 @@ export default (sequelize, DataTypes) => {
       defaultValue: false,
       field: 'test_mode'
     },
+    userType: {
+      type: DataTypes.ENUM('regular', 'testing', 'admin'),
+      allowNull: false,
+      defaultValue: 'regular',
+      field: 'user_type'
+    },
     lastName: {
       type: DataTypes.STRING,
       allowNull: false,
