@@ -1,5 +1,3 @@
-import OpenAI from 'openai';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { executeToolTrack, executeTrack } from '../../services/trackService.js';
 import db from '../../../models/index.js';
@@ -8,10 +6,6 @@ import { generateAIResponse } from '../../services/aiService.js';
 
 
 const { ModelLog } = db;
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 const EmailInfoSchema = z.object({
   recipient: z.string(),

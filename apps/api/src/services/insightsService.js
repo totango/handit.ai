@@ -1,13 +1,8 @@
-import OpenAI from 'openai';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { parseInput } from './parseInput.js';
-import { executeTrack } from './trackService.js';
 import { expected, predicted } from './entries/correctnessEvaluatorService.js';
 import { parseAttachments, parseContext, parseInputContent } from './parser.js';
 import { generateAIResponse } from './aiService.js';
-
-const openAi = new OpenAI(process.env.OPENAI_API_KEY);
 
 const Review = z.object({
   problem: z.string(),

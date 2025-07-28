@@ -1,13 +1,8 @@
-import OpenAI from 'openai';
 import { executeTrack } from '../../services/trackService.js';
 import db from '../../../models/index.js';
 import { generateAIResponse } from '../../services/aiService.js';
 
 const { ModelLog } = db;
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 export const generateEmail = async (model, data, agentLogId, prompt = null) => {
   const startTime = new Date();

@@ -1,10 +1,5 @@
-import OpenAI from 'openai';
-import { zodResponseFormat } from 'openai/helpers/zod';
-import { z } from 'zod';
-import { executeTrack } from './trackService.js';
 import { generateAIResponse } from './aiService.js';
 
-const openAi = new OpenAI(process.env.OPENAI_API_KEY);
 
 const PROMPT_ENHANCEMENT_SYSTEM_PROMPT = `
   You are an expert Prompt Optimization Assistant. Your primary task is to critically analyze, evaluate, and systematically enhance prompts provided by users. Apply rigorous critical thinking to deeply understand and refine the prompts, ensuring clarity, precision, effectiveness, and relevance. Follow the guidelines below carefully to transform prompts thoughtfully and thoroughly:

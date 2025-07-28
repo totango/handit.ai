@@ -24,7 +24,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: leviosa-express-sa
+      serviceAccountName: handit-sa
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -37,24 +37,22 @@ spec:
           command:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /api/health
-              port: http
+            exec:
+              command:
+                - pgrep
+                - node
             initialDelaySeconds: 30
-            periodSeconds: 10
+            periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
-            httpGet:
-              path: /api/health
-              port: http
+            exec:
+              command:
+                - pgrep
+                - node
             initialDelaySeconds: 10
-            periodSeconds: 5
+            periodSeconds: 30
             timeoutSeconds: 3
             failureThreshold: 3
           resources:

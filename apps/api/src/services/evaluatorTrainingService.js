@@ -20,7 +20,15 @@ import {
 } from './evaluationPrompts.js';
 
 const { Model, ModelLog, ModelGroup } = db;
-const openAi = new OpenAI(process.env.OPENAI_API_KEY);
+const openAi = new OpenAI({
+  baseURL: process?.env?.BEDROCK_URL,
+  apiKey: process?.env?.BEDROCK_API_KEY,
+  maxRetries: 10,
+  timeout: 3600000, // 1 hour timeout
+  defaultHeaders: {
+    Authorization: `Bearer ${process?.env?.BEDROCK_API_KEY}`,
+  },
+});
 
 const createTrainingFile = async (trainingData) => {
   // Create temp file path
