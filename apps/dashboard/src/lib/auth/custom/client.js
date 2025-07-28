@@ -146,6 +146,7 @@ class AuthClient {
   async signOut() {
     // Remove authentication token from local storage
     localStorage.removeItem('custom-auth-token');
+    localStorage.removeItem('onboardingState');
 
     // Dispatch logout action to clear auth state
     store.dispatch({ type: 'auth/logout' });

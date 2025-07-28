@@ -47,6 +47,7 @@ import reviewersTemplateRoutes from './routes/reviewersTemplateRoutes.js';
 import promptRoutes from './routes/promptRoutes.js';
 import emailRoutes from './routes/emailRoutes.js';
 import notificationSystemRoutes from './routes/notificationSystemRoutes.js';
+import emailAutonomRoutes from './routes/emailAutonomRoutes.js';
 
 dotenv.config();
 
@@ -88,6 +89,7 @@ app.use(session({
 }));
 
 app.use('/api/setup', setupRouter);
+app.use('/api/email-autonom', emailAutonomRoutes);
 
 
 // Health check endpoint (must be before auth middleware)

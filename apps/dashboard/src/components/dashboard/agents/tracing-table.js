@@ -326,10 +326,19 @@ export function TracingTable({ isLoading, agentId, agentDetails }) {
   const [entryFlow, setEntryFlow] = React.useState(entryFlow1);
 
   // Add the new query hook
-  const { data: singleEntryData, isLoading: isLoadingSingleEntry } = useGetAgentEntryDetailQuery(
+  const { data: singleEntryData, isLoading: isLoadingSingleEntry, refetch: refetchSingleEntry } = useGetAgentEntryDetailQuery(
     { agentId, entryId: entryLog },
     { skip: !entryLog || !agentId }
   );
+
+  React.useEffect(() => {
+    if (entryLog && agentId) {
+      console.log('refetching single entry');
+      console.log(entryLog);
+      console.log(agentId);
+      refetchSingleEntry();
+    }
+  }, [entryLog, agentId]);
 
   React.useEffect(() => {
     setEntryFlow(entryFlow1);
@@ -524,16 +533,23 @@ export function TracingTable({ isLoading, agentId, agentDetails }) {
 
   React.useEffect(() => {
     if (entryLog && filteredEntries.length > 0) {
-      setSelectedEntry(filteredEntries.find((entry) => entry.id == entryLog));
+      const entry = filteredEntries.find((entry) => entry.id == entryLog);
+      if (entry) {
+        setSelectedEntry(entry);
+      }
     }
   }, [entryLog, filteredEntries]);
 
   React.useEffect(() => {
+    console.log('singleEntryData', singleEntryData);
+    console.log('singleEntryData.entries[0].id', singleEntryData?.entries?.[0]?.id);
+    console.log('entryLog', entryLog);
     // If not and we have the single entry data, use that
     if (singleEntryData && singleEntryData.entries.length > 0 && singleEntryData.entries[0].id == entryLog) {
+      console.log('setting selected entry');
       setSelectedEntry(singleEntryData.entries[0]);
     }
-  }, [singleEntryData]);
+  }, [singleEntryData, entryLog]);
 
   // Helper function to calculate duration from steps
   const calculateDuration = (entry) => {
@@ -922,7 +938,7 @@ export function TracingTable({ isLoading, agentId, agentDetails }) {
         entryFlow={entryFlow}
         nodes={nodes}
         edges={edges}
-        open={Boolean(selectedEntry)}
+        open={selectedEntry ? true : false}
         onClose={handleClose}
         isLoading={isEntryFlowLoading || isLoadingSingleEntry}
         onNodeUpdate={handleNodeUpdate}

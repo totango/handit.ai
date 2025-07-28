@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>Welcome to handit.ai</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Welcome to Handit.ai 🎉</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       body {
         margin: 0;
         padding: 0;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
 
       .container {
@@ -30,153 +30,134 @@
         height: auto;
       }
 
-      h1 {
-        font-size: 22px;
-        font-weight: 600;
-        color: #00272f;
+      .greeting {
+        font-size: 16px;
         margin-bottom: 24px;
-      }
-
-      h2 {
-        font-size: 18px;
-        font-weight: 600;
         color: #00272f;
-        margin-top: 36px;
-        margin-bottom: 12px;
       }
 
-      p {
+      .main-text {
         font-size: 15px;
+        margin-bottom: 20px;
         color: #00272f;
-        margin: 12px 0;
         line-height: 1.6;
       }
 
-      .label {
-        font-weight: 600;
-        color: #02f7aa;
+      .highlight-box {
+        background: rgba(2, 247, 170, 0.05);
+        border-left: 4px solid #02f7aa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 24px 0;
       }
 
-      .button {
+      .highlight-box p {
+        margin: 0;
+        font-size: 15px;
+        color: #00272f;
+        line-height: 1.6;
+      }
+
+      .cta-section {
+        text-align: center;
+        margin: 32px 0;
+        padding: 24px;
+        background: rgba(2, 247, 170, 0.05);
+        border-radius: 8px;
+        border: 2px solid #02f7aa;
+      }
+
+      .cta-button {
         display: inline-block;
-        margin-top: 12px;
-        margin-bottom: 12px;
-        padding: 12px 24px;
-        background-color: #02f7aa;
+        background: #02f7aa;
         color: #00272f !important;
         text-decoration: none;
         font-weight: 600;
+        font-size: 16px;
+        padding: 14px 28px;
         border-radius: 8px;
+        transition: background-color 0.2s;
+        margin-bottom: 12px;
       }
 
-      .credentials-box {
-        background-color: rgba(2, 247, 170, 0.1);
-        border-radius: 8px;
-        padding: 20px;
-        margin: 20px 0;
-        border: 1px solid rgba(2, 247, 170, 0.2);
+      .cta-button:hover {
+        background: #00d4aa;
       }
 
-      .credentials-box p {
-        margin: 8px 0;
-      }
-
-      .credentials-label {
-        font-weight: 600;
+      .cta-text {
+        font-size: 14px;
         color: #00272f;
-        display: inline-block;
-        width: 100px;
+        margin-top: 8px;
       }
 
-      .hero-section {
-        background-color: rgba(2, 247, 170, 0.05);
-        border-radius: 8px;
-        padding: 20px;
-        margin: 20px 0;
-        border-left: 4px solid #02f7aa;
-      }
-
-      .hero-section h3 {
-        color: #00272f;
-        font-size: 18px;
-        margin: 0 0 12px 0;
-        font-weight: 600;
-      }
-
-      .hero-section p {
-        color: #00272f;
-        font-size: 15px;
-        margin: 0;
-        line-height: 1.6;
+      .resource-section {
+        margin: 32px 0;
       }
 
       .resource-card {
-        background-color: rgba(2, 247, 170, 0.05);
+        background: rgba(2, 247, 170, 0.05);
         border-left: 3px solid #02f7aa;
         border-radius: 8px;
-        padding: 20px;
+        padding: 16px;
         margin: 12px 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
       }
 
       .resource-card:hover {
-        background-color: rgba(2, 247, 170, 0.1);
-        transform: translateX(5px);
+        background: rgba(2, 247, 170, 0.1);
+        transform: translateX(2px);
       }
 
-      .resource-content {
-        flex: 1;
+      .resource-card a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
       }
 
       .resource-card h3 {
-        font-size: 16px;
+        font-size: 14px;
         color: #00272f;
         margin: 0 0 4px 0;
         font-weight: 600;
       }
 
       .resource-card p {
-        font-size: 14px;
+        font-size: 13px;
         margin: 0;
-        color: #666;
+        color: #00272f;
         line-height: 1.4;
       }
 
-      .resource-arrow {
+      .signature {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(0, 39, 47, 0.2);
+        font-size: 15px;
+        color: #00272f;
+      }
+
+      .signature-name {
+        font-weight: 600;
+        color: #00272f;
+        margin-bottom: 4px;
+      }
+
+      .signature-title {
+        font-size: 14px;
+        color: #00272f;
+        margin-bottom: 4px;
+      }
+
+      .signature-company {
+        font-weight: 500;
         color: #02f7aa;
-        font-size: 20px;
-        font-weight: bold;
-        margin-left: 15px;
-      }
-
-      .footer {
-        text-align: center;
-        font-size: 13px;
-        color: #00272f;
-        margin-top: 40px;
-      }
-
-      .footer a {
-        color: #00272f;
-        text-decoration: none;
-      }
-
-      .cta-section {
-        text-align: center;
-        margin: 30px 0;
-      }
-
-      .cta-section .button {
-        margin: 8px;
       }
 
       @media screen and (max-width: 600px) {
         .container {
           padding: 40px 20px;
         }
+        
         .logo {
           width: 100px;
           margin-top: 10px;
@@ -186,81 +167,78 @@
   </head>
   <body>
     <div class="container">
-      <img class="logo" src="cid:logo-image" alt="handit.ai Logo" />
-
-      <h1>Welcome to handit.ai!</h1>
-      <p>Hey {{first_name}},</p>
-
-      <p>Welcome to handit.ai! We're excited to have you on board. You're now part of a community of developers and teams who are building AI systems that actually work reliably in production.</p>
-
-      <div class="hero-section">
-        <h3>🚀 What is handit.ai?</h3>
-        <p>handit.ai is the open-source engine that catches broken AI behavior in real time, fixes it automatically, and learns from every failure—so your team can ship AI you can actually trust.</p>
-      </div>
-
-
-
-      <div class="cta-section">
-        <a href="https://dashboard.handit.ai" class="button">🚀 Get Started</a>
-      </div>
-
-      <h2>🔄 How handit.ai Works</h2>
-      <p>handit.ai traces every AI interaction, evaluates performance automatically, fixes issues, and provides audit-ready proof.</p>
-
-      <h2>📚 Getting Started</h2>
+      <img class="logo" src="cid:logo-image" alt="Handit.ai" />
       
-      <a href="https://docs.handit.ai" style="text-decoration: none;">
-        <div class="resource-card">
-          <div class="resource-content">
-            <h3>📖 Documentation</h3>
-            <p>Everything you need to know about setting up handit.ai, creating evaluators, and optimizing your AI systems.</p>
-          </div>
-          <div class="resource-arrow">→</div>
-        </div>
-      </a>
-
-      <a href="https://dashboard.handit.ai" style="text-decoration: none;">
-        <div class="resource-card">
-          <div class="resource-content">
-            <h3>🤖 AI Onboarding Assistant</h3>
-            <p>Our AI agent will guide you through the setup process and help you create your first evaluators in minutes.</p>
-          </div>
-          <div class="resource-arrow">→</div>
-        </div>
-      </a>
-
-      <a href="https://discord.com/invite/2WwD7PYfh2" style="text-decoration: none;">
-        <div class="resource-card">
-          <div class="resource-content">
-            <h3>💬 Discord Community</h3>
-            <p>Join our Discord community for support, discussions, and to connect with other developers using handit.ai.</p>
-          </div>
-          <div class="resource-arrow">→</div>
-        </div>
-      </a>
-
-      <a href="https://calendly.com/cristhian-handit/30min" style="text-decoration: none;">
-        <div class="resource-card">
-          <div class="resource-content">
-            <h3>📅 Need Help?</h3>
-            <p>Have questions or need help setting up? We're here to help you get up and running quickly.</p>
-          </div>
-          <div class="resource-arrow">→</div>
-        </div>
-      </a>
-
-      <div class="cta-section">
-        <a href="https://dashboard.handit.ai" class="button">🚀 Start Building Reliable AI</a>
+      <div class="greeting">
+        Hey {{first_name}},
       </div>
 
-      <p>We can't wait to see what you build with handit.ai!</p>
+      <p class="main-text">
+        I'm Cristhian, CTO at Handit.ai.
+      </p>
 
-      <p>Best,<br>
-      <strong>The handit.ai Team</strong></p>
+      <p class="main-text">
+        Welcome to Handit.ai! 🎉 I'm personally excited to have you on board. You're now part of a community of developers 
+        who are building AI systems that actually work reliably in production.
+      </p>
 
-      <div class="footer">
-        &copy; {{year}} handit.ai — The open-source engine that auto-fixes your AI.<br />
-        <a href="mailto:cristhian@handit.ai">cristhian@handit.ai</a> | <a href="https://discord.com/invite/2WwD7PYfh2">Discord Community</a>
+      <div class="highlight-box">
+        <p><strong>What Handit.ai does:</strong> We're the open-source engine that catches broken AI behavior in real time, 
+        fixes it automatically, and learns from every failure—so you can ship AI you actually trust.</p>
+      </div>
+
+      <p class="main-text">
+        I'd love to personally hop on a quick call with you to show you around, help you get your first agent set up, 
+        and answer any questions you might have. Most teams get up and running in under 15 minutes.
+      </p>
+
+      <div class="cta-section">
+        <a href="https://calendly.com/cristhian-handit/30min" class="cta-button">
+          📅 Book a 15-min Setup Call with Me
+        </a>
+        <div class="cta-text">I'll personally walk you through everything and get you set up</div>
+      </div>
+
+      <p class="main-text">
+        Or if you prefer to dive in on your own, here are some quick resources to get you started:
+      </p>
+
+      <div class="resource-section">
+        <div class="resource-card">
+          <a href="https://dashboard.handit.ai">
+            <h3>🚀 Dashboard - Start Here</h3>
+            <p>Jump right in and create your first agent with our AI onboarding assistant</p>
+          </a>
+        </div>
+
+        <div class="resource-card">
+          <a href="https://docs.handit.ai">
+            <h3>📖 Quick Start Guide</h3>
+            <p>Step-by-step setup instructions and examples</p>
+          </a>
+        </div>
+
+        <div class="resource-card">
+          <a href="https://discord.com/invite/2WwD7PYfh2">
+            <h3>💬 Discord Community</h3>
+            <p>Join other developers and get help from the community</p>
+          </a>
+        </div>
+      </div>
+
+      <p class="main-text">
+        But honestly, the fastest way to get value from Handit.ai is to just grab 15 minutes with me. 
+        I can show you exactly how to set everything up for your specific use case.
+      </p>
+
+      <p class="main-text">
+        Looking forward to helping you build AI you can trust!
+      </p>
+
+      <div class="signature">
+        <div class="signature-name">— Cristhian</div>
+        <div class="signature-title">CTO & Co‑Founder</div>
+        <div class="signature-company">Handit.ai</div>
       </div>
     </div>
   </body>

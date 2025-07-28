@@ -55,10 +55,10 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
     });
 
     // If we've already sent 2 notifications from this source today, skip
-   if (todayNotifications >= 2) {
+   /*if (todayNotifications >= 2) {
       console.log(`Rate limit reached for notifications from source ${notificationSource} with ID ${sourceId}`);
       return;
-    }
+    }*/
   }
 
   const msg = {
@@ -121,7 +121,7 @@ export const sendEmail = async ({ to, subject, text, html, attachments, Email, U
  */
 export const sendBulkEmail = async ({ recipients, subject, text, html }) => {
   const msg = {
-    to: ['gfcristhian98@gmail.com'],
+    to: recipients,
     from: {
       email: process.env.EMAIL_FROM, // contact@handit.ai
       name: "Handit.AI"
@@ -155,9 +155,10 @@ export const sendBulkEmail = async ({ recipients, subject, text, html }) => {
  */
 export const sendTemplatedEmail = async ({ to, subject, templateName, templateData, attachments, Email, User, notificationSource, sourceId }) => {
   const html = renderTemplate(templateName, templateData);
+  console.log(html);
 
   await sendEmail({
-    to: 'gfcristhian98@gmail.com',
+    to,
     subject,
     text: 'This is a fallback text version of the email.',
     html,
@@ -209,8 +210,10 @@ export const sendModelReviewFailureEmail = async ({
   notificationSource,
   sourceId,
 }) => {
+  const url = process.env.DASHBOARD_URL ? process.env.DASHBOARD_URL : 'http://localhost:3000';
   const subject = '🚨 Handit Alert: Automatic Evaluation Issue Detected';
-  const tracingUrl = `${process.env.DASHBOARD_URL}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
+  const agentLogId = modelLog.agentLogId || modelLog.dataValues?.agentLogId;
+  const tracingUrl = `${url}/ag-tracing?agentId=${agentId}&entryLog=${agentLogId}`;
   
   // Get the modelId from the agentLog to create the optimize URL
   let modelId = null;
@@ -221,7 +224,7 @@ export const sendModelReviewFailureEmail = async ({
   }
   
   const optimizeUrl = modelId && modelLogId 
-    ? `${process.env.DASHBOARD_URL}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
+    ? `${url}/prompt-versions?agentId=${agentId}&modelId=${modelId}&autoOptimize=true&modelLogId=${modelLogId}`
     : null;
   
   const templateData = {
@@ -241,7 +244,7 @@ export const sendModelReviewFailureEmail = async ({
   };
 
   await sendTemplatedEmail({
-    to: 'gfcristhian98@gmail.com',
+    to: recipientEmail,
     subject,
     templateName: 'modelReviewFailureTemplate',
     templateData,
@@ -332,21 +335,21 @@ export const sendModelReviewFailureEmailsToCompany = async ({
 export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Agent, AgentNode, Company, Email, User) => {
   try {
     // Get the model
-    const model = await Model.findByPk(modelLog.modelId);
+    const model = await Model.findByPk(modelLog.modelId ? modelLog.modelId : modelLog.dataValues?.modelId);
     if (!model) {
       console.error(`Model not found for modelLog ID: ${modelLog.id}`);
       return;
     }
 
     // Get the agent log
-    const agentLog = await AgentLog.findByPk(modelLog.agentLogId);
+    const agentLog = await AgentLog.findByPk(modelLog.agentLogId ? modelLog.agentLogId : modelLog.dataValues?.agentLogId);
     if (!agentLog) {
       console.error(`Agent log not found for modelLog ID: ${modelLog.id}`);
       return;
     }
 
     // Get the agent
-    const agent = await Agent.findByPk(agentLog.agentId);
+    const agent = await Agent.findByPk(agentLog.agentId ? agentLog.agentId : agentLog.dataValues?.agentId);
     if (!agent) {
       console.error(`Agent not found for agentLog ID: ${agentLog.id}`);
       return;
@@ -355,8 +358,8 @@ export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Ag
     // Get the agent node
     const agentNode = await AgentNode.findOne({
       where: {
-        agentId: agent.id,
-        modelId: model.id
+        agentId: agent.id ? agent.id : agent.dataValues?.id,
+        modelId: model.id ? model.id : model.dataValues?.id
       }
     });
     if (!agentNode) {
@@ -365,7 +368,7 @@ export const sendModelFailureNotification = async (modelLog, Model, AgentLog, Ag
     }
 
     // Get the company
-    const company = await Company.findByPk(agent.companyId);
+    const company = await Company.findByPk(agent.companyId ? agent.companyId : agent.dataValues?.companyId);
     if (!company) {
       console.error(`Company not found for agent ID: ${agent.id}`);
       return;
@@ -433,7 +436,7 @@ export const sendToolErrorNotification = async (agentNodeLog, Agent, AgentNode, 
     // Send email to each user
     for (const user of users) {
       await sendTemplatedEmail({
-        to: 'gfcristhian98@gmail.com',
+        to: user.email,
         subject: `[Handit.AI] Tool Error Alert - ${agent.name}`,
         templateName: 'toolErrorTemplate',
         templateData: {
@@ -744,7 +747,7 @@ export const sendReEngagementEmail = async ({
  */
 export const sendBulkReEngagementEmails = async ({
   inactiveUsers,
-  quickstartUrl = 'https://docs.handit.ai/quickstart',
+  quickstartUrl = 'https://dashboard.handit.ai',
   Email,
   User,
   notificationSource = 're_engagement_bulk'
@@ -933,7 +936,7 @@ export const sendPromptVersionCreatedEmail = async ({
   promptVersion,
   agentId,
   modelId,
-  promptVersionsUrl = 'https://dashboard.handit.ai/prompt-versions',
+  promptVersionsUrl = 'http://localhost:3000/prompt-versions',
   Email,
   User,
   notificationSource = 'prompt_version_created',

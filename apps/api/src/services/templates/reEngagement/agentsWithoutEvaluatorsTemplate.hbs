@@ -3,23 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Connect Evaluators to Your AI - Complete Your Setup</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Your AI Could Be Catching Its Own Mistakes 🎯</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       body {
         margin: 0;
         padding: 0;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
 
       .container {
-        max-width: 600px;
+        max-width: 800px;
         margin: 0 auto;
-        padding: 60px 30px;
+        padding: 60px 40px;
         background: #ffffff url('cid:bg-real') no-repeat top center;
         background-size: cover;
-        box-sizing: border-box;
         border-radius: 16px;
+        box-sizing: border-box;
       }
 
       .logo {
@@ -30,93 +30,105 @@
         height: auto;
       }
 
-      h1 {
-        font-size: 22px;
-        font-weight: 600;
-        color: #00272f;
+      .greeting {
+        font-size: 16px;
         margin-bottom: 24px;
+        color: #00272f;
       }
 
-      p {
+      .main-text {
         font-size: 15px;
+        margin-bottom: 20px;
         color: #00272f;
-        margin: 12px 0;
         line-height: 1.6;
       }
 
-      .label {
-        font-weight: 600;
-        color: #02f7aa;
+      .highlight-box {
+        background: rgba(2, 247, 170, 0.05);
+        border-left: 4px solid #02f7aa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 24px 0;
       }
 
-      .button {
+      .highlight-box p {
+        margin: 0;
+        font-size: 15px;
+        color: #00272f;
+        line-height: 1.6;
+      }
+
+      .cta-section {
+        text-align: center;
+        margin: 32px 0;
+        padding: 24px;
+        background: rgba(2, 247, 170, 0.05);
+        border-radius: 8px;
+        border: 2px solid #02f7aa;
+      }
+
+      .cta-button {
         display: inline-block;
-        margin-top: 30px;
-        padding: 12px 24px;
-        background-color: #02f7aa;
+        background: #02f7aa;
         color: #00272f !important;
         text-decoration: none;
         font-weight: 600;
+        font-size: 16px;
+        padding: 14px 28px;
         border-radius: 8px;
+        transition: background-color 0.2s;
+        margin-bottom: 12px;
       }
 
-      .button-secondary {
-        display: inline-block;
-        margin-top: 15px;
-        padding: 12px 24px;
-        background-color: transparent;
+      .cta-button:hover {
+        background: #00d4aa;
+      }
+
+      .cta-text {
+        font-size: 14px;
+        color: #00272f;
+        margin: 8px 0 16px 0;
+        font-style: italic;
+      }
+
+      .secondary-cta {
+        display: block;
+        margin-top: 16px;
         color: #02f7aa !important;
         text-decoration: none;
+        font-size: 14px;
+      }
+
+      .signature {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(0, 39, 47, 0.2);
+        font-size: 15px;
+        color: #00272f;
+      }
+
+      .signature-name {
         font-weight: 600;
-        border: 2px solid #02f7aa;
-        border-radius: 8px;
+        color: #00272f;
+        margin-bottom: 4px;
       }
 
-      .stats {
-        background-color: #f8fafb;
-        padding: 20px;
-        border-radius: 8px;
-        margin: 30px 0;
-        text-align: center;
+      .signature-title {
+        font-size: 14px;
+        color: #00272f;
+        margin-bottom: 4px;
       }
 
-      .stat-item {
-        display: inline-block;
-        margin: 0 20px;
-        text-align: center;
-      }
-
-      .stat-number {
-        font-size: 24px;
-        font-weight: 600;
+      .signature-company {
+        font-weight: 500;
         color: #02f7aa;
-        display: block;
-      }
-
-      .stat-label {
-        font-size: 12px;
-        color: #666;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .footer {
-        text-align: center;
-        font-size: 13px;
-        color: #00272f;
-        margin-top: 40px;
-      }
-
-      .footer a {
-        color: #00272f;
-        text-decoration: none;
       }
 
       @media screen and (max-width: 600px) {
         .container {
           padding: 40px 20px;
         }
-
+        
         .logo {
           width: 100px;
           margin-top: 10px;
@@ -126,57 +138,54 @@
   </head>
   <body>
     <div class="container">
-      <img class="logo" src="cid:logo" alt="Handit.ai Logo" />
+      <img class="logo" src="cid:logo" alt="Handit.ai" />
       
-      <h1>Connect Evaluators to Your AI 🎯</h1>
-      <p>Hi {{firstName}}, you're just one step away from AI that evaluates itself.</p>
-
-      <p>
-        You created your agent {{daysSinceAgentCreation}} days ago, but haven't connected evaluators yet. 
-        Evaluators are the key to AI that catches its own mistakes and gets better automatically.
-      </p>
-
-      <p>
-        <strong>What you'll gain:</strong> Real-time quality evaluation, automatic error detection, performance insights, and AI that learns from every interaction.
-      </p>
-
-      <div class="stats">
-        <div class="stat-item">
-          <span class="stat-number">Auto-evaluate</span>
-          <span class="stat-label">AI Quality</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">Real-time</span>
-          <span class="stat-label">Error Detection</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">2 min</span>
-          <span class="stat-label">Setup Time</span>
-        </div>
+      <div class="greeting">
+        Hey {{firstName}},
       </div>
 
-      <p>
-        Our team has helped hundreds of developers connect evaluators. 
-        <strong>Book a free 30-minute session</strong> and we'll show you how to set up automatic evaluation.
+      <p class="main-text">
+        I'm Cristhian, CTO at Handit.ai.
       </p>
 
-      <div style="text-align: center;">
-        <a href="{{evaluationHubUrl}}?openChat=true&message=I want to connect evaluators" class="button">
-          Connect Evaluators 🚀
+      <p class="main-text">
+        I saw you created your agent {{daysSinceAgentCreation}} days ago 🎉 but haven't connected evaluators yet—and until you do, 
+        your AI can't start catching its own mistakes and automatically improving its responses.
+      </p>
+
+      <p class="main-text">
+        If you'd like, I'd be happy to personally hop on a quick call with you, screenshare, 
+        and get your evaluators running. We can walk through everything and tackle any questions on the spot.
+      </p>
+
+      <div class="cta-section">
+        <a href="https://calendly.com/cristhian-handit/30min" class="cta-button">
+          📅 Book a 15-min Setup Call with Me
         </a>
-        <br>
-        <a href="https://calendly.com/cristhian-handit/30min" class="button-secondary">
-          Book a Free Session
+        <div class="cta-text">I'll personally walk you through everything and get evaluators connected</div>
+        <a href="{{evaluationHubUrl}}?openChat=true&message=I want to connect evaluators" class="secondary-cta">
+          Or try connecting evaluators yourself
         </a>
       </div>
 
-      <p style="font-size: 14px; color: #666; margin-top: 30px;">
-        <strong>What you'll get:</strong> AI that automatically evaluates its own performance, detects errors in real-time, and continuously improves—so you can trust your AI completely.
+      <div class="highlight-box">
+        <p><strong>Quick setup:</strong> Most teams get evaluators running in under 2 minutes. Once connected, you'll see real-time quality scores and automatic error detection.</p>
+      </div>
+
+      <p class="main-text">
+        Teams that connect evaluators see their AI accuracy jump by 60%+ within the first week. 
+        Your AI starts learning what good vs. bad responses look like and gets better automatically.
       </p>
 
-      <div class="footer">
-        &copy; {{year}} Handit.ai — The open-source engine that auto-fixes your AI.<br />
-        <a href="mailto:contact@handit.ai">contact@handit.ai</a>
+      <p class="main-text">
+        But honestly, the fastest way to get value from Handit is to just grab 15 minutes with me. 
+        I can show you exactly how to set up evaluators for your specific use case.
+      </p>
+
+      <div class="signature">
+        <div class="signature-name">— Cristhian</div>
+        <div class="signature-title">CTO & Co‑Founder</div>
+        <div class="signature-company">Handit.ai</div>
       </div>
     </div>
   </body>

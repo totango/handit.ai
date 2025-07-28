@@ -271,8 +271,6 @@ const OnboardingChat = ({
     const hasEvaluatorsFlag = response.evaluators_added === true;
     const customEvaluatorsFlag = response.custom_evaluator_management === true;
     const optimizationCompletedFlag = response.flags?.optimization_completed === true;
-    console.log('response', response.flags);
-    console.log('optimizationCompletedFlag', optimizationCompletedFlag);
     
     // Emit event when evaluators are detected - let OnboardingOrchestrator handle the logic
     if (hasEvaluatorsFlag) {

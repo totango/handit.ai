@@ -1787,7 +1787,7 @@ export function TracingModal({
       setProcessedEdges([...updatedEdges]);
     }
   }, [regularEdges, highlightedPath]);
-
+  console.log('open', open);
   return (
     <Dialog
       maxWidth="xl"

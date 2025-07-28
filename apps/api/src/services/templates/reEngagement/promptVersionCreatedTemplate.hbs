@@ -3,23 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Handit Found an Improved Version of Your Prompt</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <title>Your AI Just Got Smarter 🎯</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       body {
         margin: 0;
         padding: 0;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       }
 
       .container {
-        max-width: 600px;
+        max-width: 800px;
         margin: 0 auto;
-        padding: 60px 30px;
+        padding: 60px 40px;
         background: #ffffff url('cid:bg-real') no-repeat top center;
         background-size: cover;
-        box-sizing: border-box;
         border-radius: 16px;
+        box-sizing: border-box;
       }
 
       .logo {
@@ -30,93 +30,133 @@
         height: auto;
       }
 
-      h1 {
-        font-size: 22px;
-        font-weight: 600;
-        color: #00272f;
+      .greeting {
+        font-size: 16px;
         margin-bottom: 24px;
+        color: #00272f;
       }
 
-      p {
+      .main-text {
         font-size: 15px;
+        margin-bottom: 20px;
         color: #00272f;
-        margin: 12px 0;
         line-height: 1.6;
       }
 
-      .label {
-        font-weight: 600;
-        color: #02f7aa;
+      .highlight-box {
+        background: rgba(2, 247, 170, 0.05);
+        border-left: 4px solid #02f7aa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 24px 0;
       }
 
-      .button {
+      .highlight-box p {
+        margin: 0;
+        font-size: 15px;
+        color: #00272f;
+        line-height: 1.6;
+      }
+
+      .benefits {
+        margin: 24px 0;
+        background: rgba(2, 247, 170, 0.03);
+        border-radius: 8px;
+        padding: 20px;
+        border-left: 3px solid #02f7aa;
+      }
+
+      .benefit-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #00272f;
+        line-height: 1.5;
+      }
+
+      .benefit-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .benefit-item::before {
+        content: "✅";
+        margin-right: 12px;
+        flex-shrink: 0;
+        font-size: 16px;
+      }
+
+      .cta-section {
+        text-align: center;
+        margin: 32px 0;
+        padding: 24px;
+        background: rgba(2, 247, 170, 0.05);
+        border-radius: 8px;
+        border: 2px solid #02f7aa;
+      }
+
+      .cta-button {
         display: inline-block;
-        margin-top: 30px;
-        padding: 12px 24px;
-        background-color: #02f7aa;
+        background: #02f7aa;
         color: #00272f !important;
         text-decoration: none;
         font-weight: 600;
+        font-size: 16px;
+        padding: 14px 28px;
         border-radius: 8px;
+        transition: background-color 0.2s;
+        margin-bottom: 12px;
       }
 
-      .button-secondary {
-        display: inline-block;
-        margin-top: 15px;
-        padding: 12px 24px;
-        background-color: transparent;
+      .cta-button:hover {
+        background: #00d4aa;
+      }
+
+      .cta-text {
+        font-size: 14px;
+        color: #00272f;
+        margin: 8px 0 16px 0;
+        font-style: italic;
+      }
+
+      .secondary-cta {
+        display: block;
+        margin-top: 16px;
         color: #02f7aa !important;
         text-decoration: none;
+        font-size: 14px;
+      }
+
+      .signature {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid rgba(0, 39, 47, 0.2);
+        font-size: 15px;
+        color: #00272f;
+      }
+
+      .signature-name {
         font-weight: 600;
-        border: 2px solid #02f7aa;
-        border-radius: 8px;
+        color: #00272f;
+        margin-bottom: 4px;
       }
 
-      .stats {
-        background-color: #f8fafb;
-        padding: 20px;
-        border-radius: 8px;
-        margin: 30px 0;
-        text-align: center;
+      .signature-title {
+        font-size: 14px;
+        color: #00272f;
+        margin-bottom: 4px;
       }
 
-      .stat-item {
-        display: inline-block;
-        margin: 0 20px;
-        text-align: center;
-      }
-
-      .stat-number {
-        font-size: 24px;
-        font-weight: 600;
+      .signature-company {
+        font-weight: 500;
         color: #02f7aa;
-        display: block;
-      }
-
-      .stat-label {
-        font-size: 12px;
-        color: #666;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .footer {
-        text-align: center;
-        font-size: 13px;
-        color: #00272f;
-        margin-top: 40px;
-      }
-
-      .footer a {
-        color: #00272f;
-        text-decoration: none;
       }
 
       @media screen and (max-width: 600px) {
         .container {
           padding: 40px 20px;
         }
-
+        
         .logo {
           width: 100px;
           margin-top: 10px;
@@ -126,58 +166,64 @@
   </head>
   <body>
     <div class="container">
-      <img class="logo" src="cid:logo" alt="Handit.ai Logo" />
+      <img class="logo" src="cid:logo" alt="Handit.ai" />
       
-      <h1>Handit Found an Improved Version of Your Prompt 🚀</h1>
-      <p>Hi {{firstName}}, Handit has automatically analyzed your AI model and created an improved prompt version.</p>
-
-      <p>
-        <strong>What Handit found:</strong> Multiple issues in your current prompt that were causing accuracy problems, 
-        and has generated an optimized version that should significantly improve your AI's performance.
-      </p>
-
-      <div class="stats">
-        <div class="stat-item">
-          <span class="stat-number">Auto-fixed</span>
-          <span class="stat-label">Issues</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">Improved</span>
-          <span class="stat-label">Accuracy</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">Ready to</span>
-          <span class="stat-label">Deploy</span>
-        </div>
+      <div class="greeting">
+        Hey {{firstName}},
       </div>
 
-      <p>
-        <strong>What's improved:</strong> The new version addresses clarity issues, reduces hallucinations, 
-        and improves response consistency. Handit's analysis shows this should boost your AI's accuracy significantly.
+      <p class="main-text">
+        I'm Cristhian, CTO at Handit.ai.
       </p>
 
-      <p>
-        <strong>Next step:</strong> Review and deploy the improved version with one click. 
-        You can always rollback if needed.
+      <p class="main-text">
+        I wanted to personally let you know that Handit just analyzed your <strong>{{modelName}}</strong> model 
+        and saw some issues that were hurting its performance—so we automatically created an improved version for you.
       </p>
 
-      <div style="text-align: center;">
-        <a href="{{promptVersionsUrl}}" class="button">
-          Deploy Improved Version 🚀
+      <div class="highlight-box">
+        <p><strong>What we saw and fixed:</strong> Multiple clarity issues, potential hallucinations, and inconsistent responses that were causing your AI to underperform.</p>
+      </div>
+
+      <p class="main-text">
+        The new version is ready to deploy and should give you noticeably better results. 
+        You can deploy it with one click and see the improvements immediately.
+      </p>
+
+      <div class="cta-section">
+        <a href="{{promptVersionsUrl}}" class="cta-button">
+          🚀 Deploy Improved Version Now
         </a>
-        <br>
-        <a href="https://calendly.com/cristhian-handit/30min" class="button-secondary">
-          Book a Review Session
+        <div class="cta-text">One-click deployment with instant rollback if needed</div>
+        <a href="https://calendly.com/cristhian-handit/30min" class="secondary-cta">
+          Or book a call if you want me to walk you through it
         </a>
       </div>
 
-      <p style="font-size: 14px; color: #666; margin-top: 30px;">
-        <strong>What you'll get:</strong> An AI that's more accurate, reliable, and consistent—automatically improved by Handit's analysis of your model's performance.
+      <p class="main-text">
+        Here's what you'll get with the improved version:
       </p>
 
-      <div class="footer">
-        &copy; {{year}} Handit.ai — The open-source engine that auto-fixes your AI.<br />
-        <a href="mailto:contact@handit.ai">contact@handit.ai</a>
+      <div class="benefits">
+        <div class="benefit-item">More accurate and consistent responses</div>
+        <div class="benefit-item">Reduced hallucinations and off-topic answers</div>
+        <div class="benefit-item">Better handling of edge cases and complex queries</div>
+      </div>
+
+      <p class="main-text">
+        You can always roll back instantly if for any reason you don't like it, 
+        but I'm confident you'll see immediate improvements in your AI's performance.
+      </p>
+
+      <p class="main-text">
+        This is exactly the kind of automatic improvement that makes Handit powerful—your AI getting better 
+        without you having to manually tune prompts or debug issues.
+      </p>
+
+      <div class="signature">
+        <div class="signature-name">— Cristhian</div>
+        <div class="signature-title">CTO & Co‑Founder</div>
+        <div class="signature-company">Handit.ai</div>
       </div>
     </div>
   </body>
