@@ -9,9 +9,12 @@ terraform {
   }
   
   backend "s3" {
-    bucket = "leviosa-terraform-state"
-    key    = "handit/setup/terraform.tfstate"
-    region = "eu-west-1"
+    bucket               = "catalyst-terraform-backend"
+    key                  = "handitai/terraform.tfstate"
+    region               = "us-east-1"
+    dynamodb_table       = "catalyst-terraform-backend"
+    role_arn             = "arn:aws:iam::185586169836:role/Devops"
+    workspace_key_prefix = "handitai"
   }
 }
 
