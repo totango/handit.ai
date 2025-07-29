@@ -58,8 +58,16 @@ const app = express();
 app.use(compression());
 
 // Enable CORS for all routes
+const corsOrigins = ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://localhost:3002', 'https://handit-dashboard.vercel.app', 'https://dashboard.handit.ai', 'https://sandbox.handit.ai','https://try.handit.ai', 'https://handit.ai', 'https://www.handit.ai', 'https://beta.handit.ai', 'https://www.beta.handit.ai'];
+
+// Add CORS_ORIGIN from environment if set
+if (process.env.CORS_ORIGIN) {
+  corsOrigins.push(process.env.CORS_ORIGIN);
+}
+
 app.use(cors({
-  origin: ['http://127.0.0.1:3000', 'http://localhost:3000', 'http://localhost:3002', '*', 'https://handit-dashboard.vercel.app', 'https://dashboard.handit.ai', 'https://sandbox.handit.ai','https://try.handit.ai', 'https://handit.ai', 'https://www.handit.ai', 'https://beta.handit.ai', 'https://www.beta.handit.ai'],
+  origin: corsOrigins,
+  credentials: true
 }));
 
 // Remove global chunked transfer encoding middleware
@@ -83,6 +91,11 @@ app.use(session({
 app.use('/api/setup', setupRouter);
 app.use('/api/email-autonom', emailAutonomRoutes);
 
+
+// Health check endpoint (must be before auth middleware)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // Public routes
 app.use('/api/auth', authRoutes);
@@ -131,7 +144,6 @@ app.use('/api/integration-tokens', integrationTokenRoutes);
 app.use('/api/evaluator-metrics', evaluatorMetricRoutes);
 app.use('/api/providers', providersRoutes);
 app.use('/api/reviewers-template', reviewersTemplateRoutes);
-
 // Add sampling routes
 
 // Add setup routes

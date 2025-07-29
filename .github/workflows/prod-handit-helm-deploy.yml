@@ -1,0 +1,75 @@
+name: Deploy PROD Handit.ai to Amazon EKS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: codebuild-prod-handit-${{ github.run_id }}-${{ github.run_attempt }}
+    environment: prod
+
+    steps:
+      - name: Checkout Github Repo
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to AWS ECR
+        run: |
+          aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${{ secrets.PROD_AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+
+      - name: Set Image Tag
+        run: |
+          echo "IMAGE_TAG=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+
+      - name: Build Docker Images
+        run: |
+          # Build API
+          docker buildx build \
+            --platform linux/arm64 \
+            --load \
+            -t handit-api \
+            ./apps/api
+          
+          # Build Dashboard
+          docker buildx build \
+            --platform linux/arm64 \
+            --load \
+            -t handit-dashboard \
+            ./apps/dashboard
+
+      - name: Tag Docker Images
+        run: |
+          docker tag handit-api:latest ${{ secrets.PROD_AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/handit-api:${{ env.IMAGE_TAG }}
+          docker tag handit-dashboard:latest ${{ secrets.PROD_AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/handit-dashboard:${{ env.IMAGE_TAG }}
+
+      - name: Push Docker Images
+        run: |
+          docker push ${{ secrets.PROD_AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/handit-api:${{ env.IMAGE_TAG }}
+          docker push ${{ secrets.PROD_AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/handit-dashboard:${{ env.IMAGE_TAG }}
+
+      - name: Deploy Helm
+        uses: bitovi/github-actions-deploy-eks-helm@v1.2.10
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+          cluster-name: leviosa-prod-eks
+          config-files: helm/handit-ai/values-prod.yaml
+          chart-path: helm/handit-ai
+          namespace: handit
+          create-namespace: true
+          name: handit-ai
+          timeout: 1200s
+          update-deps: true
+          atomic: true
+          values: |
+            handit-api.image.tag=${{ env.IMAGE_TAG }}
+            handit-dashboard.image.tag=${{ env.IMAGE_TAG }}

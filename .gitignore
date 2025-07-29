@@ -222,3 +222,26 @@ temp/
 # Optional: eslint / prettier cache
 .eslintcache
 .prettiercache
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfplan
+terraform/*.tfvars
+terraform/.terraform.tfstate*
+terraform/crash.log
+terraform/crash.*.log
+terraform/override.tf
+terraform/override.tf.json
+terraform/*_override.tf
+terraform/*_override.tf.json
+terraform/.terraformrc
+terraform/terraform.rc
+terraform/errored.tfstate*
+
+# Helm
+helm/**/charts/*.tgz
+helm/**/Chart.lock
+helm/**/requirements.lock

@@ -21,7 +21,7 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgres://${DB_USERNAME}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - DATABASE_URL=postgres://${TIMESERIES_DB_USER}:${TIMESERIES_DB_PASSWORD}@db:5432/${HANDIT_DB_NAME}
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./apps/api:/usr/src/app
@@ -33,9 +33,9 @@ services:
   db:
     image: postgres:13
     environment:
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${TIMESERIES_DB_USER}
+      - POSTGRES_PASSWORD=${TIMESERIES_DB_PASSWORD}
+      - POSTGRES_DB=${HANDIT_DB_NAME}
     ports:
       - "5432:5432"
     volumes:

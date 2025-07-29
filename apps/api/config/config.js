@@ -5,24 +5,24 @@ dotenv.config();
 
 const config = {
   development: {
-    username: process.env.DB_USERNAME || 'handit',
-    password: process.env.DB_PASSWORD || 'handit',
-    database: process.env.DB_NAME || 'handit_api',
-    host: process.env.DB_HOST || 'localhost',
+    username: process.env.TIMESERIES_DB_USER || 'handit',
+    password: process.env.TIMESERIES_DB_PASSWORD || 'handit',
+    database: process.env.HANDIT_DB_NAME || 'handit_api',
+    host: process.env.TIMESERIES_DB_HOST || 'localhost',
     dialect: 'postgres',
   },
   test: {
-    username: process.env.DB_USERNAME || 'handit',
-    password: process.env.DB_PASSWORD || 'handit',
-    database: process.env.DB_NAME_TEST || 'handit_api_test',
-    host: process.env.DB_HOST || 'localhost',
+    username: process.env.TIMESERIES_DB_USER || 'handit',
+    password: process.env.TIMESERIES_DB_PASSWORD || 'handit',
+    database: process.env.HANDIT_DB_NAME_TEST || 'handit_api_test',
+    host: process.env.TIMESERIES_DB_HOST || 'localhost',
     dialect: 'postgres',
   },
   production: {
-    username: process.env.DB_USERNAME || 'handit',
-    password: process.env.DB_PASSWORD || 'handit',
-    database: process.env.DB_NAME || 'handit_api',
-    host: process.env.DB_HOST || 'localhost',
+    username: process.env.TIMESERIES_DB_USER || 'handit',
+    password: process.env.TIMESERIES_DB_PASSWORD || 'handit',
+    database: process.env.HANDIT_DB_NAME || 'handit_api',
+    host: process.env.TIMESERIES_DB_HOST || 'localhost',
     dialect: 'postgres',
   }
 };

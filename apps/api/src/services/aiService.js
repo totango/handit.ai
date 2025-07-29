@@ -87,7 +87,13 @@ const DEFAULT_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8";
  */
 const generateOpenAIResponse = async ({ messages, responseFormat, token, model }) => {
   const openai = new OpenAI({
-    apiKey: token,
+    baseURL: process?.env?.BEDROCK_URL,
+    apiKey: process?.env?.BEDROCK_API_KEY,
+    maxRetries: 10,
+    timeout: 3600000, // 1 hour timeout
+    defaultHeaders: {
+      Authorization: `Bearer ${process?.env?.BEDROCK_API_KEY}`,
+    },
   });
   
   const completion = await openai.chat.completions.create({

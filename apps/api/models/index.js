@@ -16,7 +16,8 @@ const config = configFile[env];
 const db = {};
 
 //let sequelize;
-let sequelize = new Sequelize(process.env.DATABASE_URL, {
+const databaseUrl = `postgresql://${process.env.TIMESERIES_DB_USER}:${process.env.TIMESERIES_DB_PASSWORD}@${process.env.TIMESERIES_DB_HOST}:${process.env.TIMESERIES_DB_PORT}/${process.env.HANDIT_DB_NAME}`;
+let sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
 });
 /*if (config.use_env_variable) {
