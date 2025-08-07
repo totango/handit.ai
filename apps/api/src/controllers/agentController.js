@@ -34,6 +34,7 @@ export const getAllAgents = async (req, res) => {
     const { companyId } = userObject;
     const tourAgent = req.query.tourAgent === 'true';
     const agents = await getAllAgentsFunction(companyId, tourAgent);
+
     res.status(200).json(agents);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -102,7 +103,13 @@ export const getAllAgentsFunction = async (companyId, tourAgent = false) => {
     const agents = await Agent.findAll({ where: { tourAgent: true } });
     return agents;
   }
-  const agents = await Agent.findAll({ where: { companyId, tourAgent } });
+  const agents = await Agent.findAll({ where: { companyId, tourAgent }, include: [{
+    model: AgentNode,
+    include: [{
+      model: Model,
+      as: 'Model',
+    }],
+  }] });
   return agents;
 };
 
@@ -581,10 +588,10 @@ export const getAgentMetrics = async (req, res) => {
       where: { id: req.params.id },
     });
     
-    console.log(`Company test mode: ${company?.testMode}, Agent tour: ${agent?.tourAgent}`);
+    console.log(`Company test mode: ${company?.testMode}, Agent tour: ${agent?.tourAgent}, Agent demo: ${agent?.demoAgent}`);
     
-    if (company.testMode || agent.tourAgent) {
-      console.log('Returning mock data for test mode/tour agent');
+    if (company.testMode || agent.tourAgent || agent.demoAgent) {
+      console.log('Returning mock data for test mode/tour/demo agent');
       const data = await generateMockDetailedMetrics(req.params.id);
       return res.status(200).json(data);
     }
@@ -766,7 +773,7 @@ export const getAgentComparisonMetricsLastMonthAgent = async (req, res) => {
     const agent = await db.Agent.findOne({
       where: { id: req.params.id },
     });
-    if (company.testMode || agent.tourAgent) {
+    if (company.testMode || agent.tourAgent || agent.demoAgent) {
       return res.status(200).json(generateMockToolComparisonMetrics());
     }
 
@@ -939,7 +946,7 @@ export const getAgentToolComparisonMetricsLastMonthAgent = async (req, res) => {
     const agent = await db.Agent.findOne({
       where: { id: req.params.id },
     });
-    if (company.testMode || agent.tourAgent) {
+    if (company.testMode || agent.tourAgent || agent.demoAgent) {
       return res.status(200).json(generateMockToolComparisonMetrics());
     }
     // Get agent and verify access
