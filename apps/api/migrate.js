@@ -2,11 +2,20 @@ import { Sequelize } from 'sequelize';
 import { readdir } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const databaseUrl = `postgresql://${process.env.TIMESERIES_DB_USER}:${process.env.TIMESERIES_DB_PASSWORD}@${process.env.TIMESERIES_DB_HOST}:${process.env.TIMESERIES_DB_PORT}/${process.env.HANDIT_DB_NAME}`;
+// Use DATABASE_URL if available, otherwise construct from individual parts
+const databaseUrl = process.env.DATABASE_URL || 
+  `postgresql://${process.env.TIMESERIES_DB_USER}:${process.env.TIMESERIES_DB_PASSWORD}@${process.env.TIMESERIES_DB_HOST}:${process.env.TIMESERIES_DB_PORT}/${process.env.HANDIT_DB_NAME}`;
+
+console.log('Database URL:', databaseUrl.replace(/:[^:@]+@/, ':****@')); // Log URL with masked password
+
 // Initialize Sequelize instance
 const sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',

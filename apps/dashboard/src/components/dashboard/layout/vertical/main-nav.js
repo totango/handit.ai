@@ -54,12 +54,17 @@ export function MainNav({ items, title, onNewEvaluator }) {
   const [agents, setAgents] = React.useState([]);
   // Use demo agents when in walkthrough, regular agents otherwise
   React.useEffect(() => {
-    if ((isInWalkthrough && demoAgents.length > 0) || (regularAgents.length === 0 && !isLoadingRegularAgents)) {
+    if (isInWalkthrough && demoAgents.length > 0) {
       setAgents(demoAgents);
-    } else if (!isInWalkthrough) {
-      setAgents(regularAgents);
+    } else if (!isInWalkthrough && !isLoadingRegularAgents) {
+      // Only update if agents are actually different
+      if (regularAgents.length === 0 && demoAgents.length > 0) {
+        setAgents(demoAgents);
+      } else if (regularAgents.length > 0) {
+        setAgents(regularAgents);
+      }
     }
-  }, [isInWalkthrough, demoAgents, regularAgents]);
+  }, [isInWalkthrough, demoAgents, regularAgents, isLoadingRegularAgents]);
   
   const [connectDialogOpen, setConnectDialogOpen] = React.useState(false);
   const { data: userData, error, isLoading } = useGetUserQuery();

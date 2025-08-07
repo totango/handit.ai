@@ -584,9 +584,23 @@ export const getAgentMetrics = async (req, res) => {
     const company = await db.Company.findOne({
       where: { id: userObject.companyId },
     });
+    
+    // Check if agent exists and user has access
     const agent = await db.Agent.findOne({
-      where: { id: req.params.id },
+      where: { 
+        id: req.params.id,
+        [db.Sequelize.Op.or]: [
+          { companyId: userObject.companyId },
+          { tourAgent: true },
+          { demoAgent: true }
+        ]
+      },
     });
+    
+    if (!agent) {
+      console.log(`Agent ${req.params.id} not found or access denied for company ${userObject.companyId}`);
+      return res.status(404).json({ error: 'Agent not found or access denied' });
+    }
     
     console.log(`Company test mode: ${company?.testMode}, Agent tour: ${agent?.tourAgent}, Agent demo: ${agent?.demoAgent}`);
     
@@ -639,9 +653,9 @@ export const getAgentMetrics = async (req, res) => {
       };
     };
     
-    // Set a 5-second timeout for metric computation to fail very fast
+    // Set a 25-second timeout for metric computation (less than DB timeout)
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Metric computation timeout')), 5000)
+      setTimeout(() => reject(new Error('Metric computation timeout')), 25000)
     );
     
     try {

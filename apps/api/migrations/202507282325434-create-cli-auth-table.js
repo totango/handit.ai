@@ -60,7 +60,7 @@ export const up = async (queryInterface, Sequelize) => {
   // Add indexes for performance
   await queryInterface.addIndex('CLIAuthCodes', ['code']);
   await queryInterface.addIndex('CLIAuthCodes', ['status']);
-  await queryInterface.addIndex('CLIAuthCodes', ['expiresAt']);
+  await queryInterface.addIndex('CLIAuthCodes', ['expires_at']);
 };
 
 export const down = async (queryInterface) => {

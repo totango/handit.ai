@@ -19,6 +19,18 @@ const db = {};
 const databaseUrl = `postgresql://${process.env.TIMESERIES_DB_USER}:${process.env.TIMESERIES_DB_PASSWORD}@${process.env.TIMESERIES_DB_HOST}:${process.env.TIMESERIES_DB_PORT}/${process.env.HANDIT_DB_NAME}`;
 let sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
+  dialectOptions: {
+    statement_timeout: 30000, // 30 seconds
+    idle_in_transaction_session_timeout: 30000,
+    connectTimeout: 30000
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    acquire: 30000, // 30 seconds
+    idle: 10000
+  },
+  logging: console.log
 });
 /*if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
