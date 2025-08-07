@@ -13,10 +13,10 @@ export const redisService = {
     }
   },
 
-  async set(key, value) {
+  async set(key, value, ttl = 86400) {
     try {
-      // set expiration time to 1 day
-      await redisClient.setex(key, 86400, JSON.stringify(value));
+      // set expiration time (default 1 day)
+      await redisClient.setex(key, ttl, JSON.stringify(value));
       return true;
     } catch (error) {
       console.error('Redis set error:', error);

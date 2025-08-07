@@ -14,7 +14,7 @@ global:
 handit-api:
   replicaCount: 2
   image:
-    tag: "fix-cors-1753738392"  # Fixed version with CORS, migration and health endpoint
+    tag: "fix-timeout-caching"  # Fixed timeouts with Redis caching
   
   env:
     - name: LOG_LEVEL
@@ -41,7 +41,7 @@ handit-api:
 handit-dashboard:
   replicaCount: 2
   image:
-    tag: "fix-api-url"
+    tag: "fix-static-assets"
   
   env:
     - name: NEXT_PUBLIC_API_URL
@@ -81,6 +81,7 @@ ingress:
     alb.ingress.kubernetes.io/group.order: "200"
     alb.ingress.kubernetes.io/load-balancer-name: "leviosa-prod-alb"
     alb.ingress.kubernetes.io/tags: "Environment=prod,Team=handit"
+    alb.ingress.kubernetes.io/target-group-attributes: "deregistration_delay.timeout_seconds=30,idle_timeout.timeout_seconds=300"
   hosts:
     - host: handit-api.unison.totango.com
       paths:

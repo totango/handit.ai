@@ -246,6 +246,9 @@ export const deleteAgentFunction = async (req, res) => {
 const getEnvironment = (req) => req.query.environment || 'production';
 
 const getToolMetrics = async (agentId) => {
+  console.time(`SQL Query - getToolMetrics for agent ${agentId}`);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  
   const nodes = await db.sequelize.query(
     `
     SELECT 
@@ -257,14 +260,20 @@ const getToolMetrics = async (agentId) => {
       COUNT(DISTINCT CASE WHEN anl.status <> 'success' THEN anl.id END) as error_count
     FROM "AgentNodes" an
     INNER JOIN "AgentNodeLogs" anl ON anl.agent_node_id = an.id
-    WHERE an.agent_id = ${agentId} AND type = 'tool'
-    AND anl.created_at > '${new Date(
-      new Date() - 30 * 24 * 60 * 60 * 1000
-    ).toLocaleString()}'
+    WHERE an.agent_id = :agentId AND an.type = 'tool'
+    AND anl.created_at > :startDate
     GROUP BY an.id, day, month, year
+    ORDER BY anl.created_at DESC
+    LIMIT 200
     `,
-    { type: db.sequelize.QueryTypes.SELECT }
+    { 
+      replacements: { agentId, startDate: thirtyDaysAgo },
+      type: db.sequelize.QueryTypes.SELECT 
+    }
   );
+  console.timeEnd(`SQL Query - getToolMetrics for agent ${agentId}`);
+  
+  console.time(`Data processing - getToolMetrics for agent ${agentId}`);
 
   const createDailyTemplate = () => {
     const template = {};
@@ -330,13 +339,17 @@ const getToolMetrics = async (agentId) => {
     aggregatedMetrics.error_count += parseInt(node.error_count);
   });
 
+  console.timeEnd(`Data processing - getToolMetrics for agent ${agentId}`);
   return { metricsByTool, aggregatedMetrics };
 };
 
 const getModelMetrics = async (agentId) => {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  
+  console.time(`SQL Query - getModelMetrics for agent ${agentId}`);
+  // Simplified query for testing - remove complex CTE
   const nodes = await db.sequelize.query(
     `
-    WITH principal_model_metrics AS (
       SELECT 
         m.id as model_id,
         m.id as optimized_model_id,
@@ -349,48 +362,24 @@ const getModelMetrics = async (agentId) => {
         AVG(mml.value) as value
       FROM "AgentNodes" n
         INNER JOIN "Models" m ON m.id = n.model_id
-        LEFT JOIN "ModelMetrics" mm ON mm.model_id = m.id
-        LEFT JOIN "ModelMetricLogs" mml ON mml.model_metric_id = mm.id
-      WHERE n.agent_id = ${agentId}
-      AND n.type = 'model'
-      AND n.deleted_at IS NULL
-      AND mml.created_at > '${new Date(
-        new Date() - 30 * 24 * 60 * 60 * 1000
-      ).toLocaleString()}'
-      AND n.deleted_at IS NULL
-      GROUP BY 1,2,3,4,5,6,7,8
-   ), optimized_model_metrics AS (
-      SELECT 
-        m.id as model_id,
-        m2.id as optimized_model_id,
-        mm.name as model_metric_name,
-        mm.id as model_metric_id,
-        EXTRACT(DAY FROM mml.created_at) as day,
-        EXTRACT(MONTH FROM mml.created_at) as month,
-        EXTRACT(YEAR FROM mml.created_at) as year,
-        'optimized' as type,
-        AVG(mml.value) as value
-      FROM "AgentNodes" n
-        INNER JOIN "Models" m ON m.id = n.model_id
-        INNER JOIN "ABTestModels" abtm ON abtm.model_id = m.id
-        INNER JOIN "Models" m2 ON m2.id = abtm.optimized_model_id
-        LEFT JOIN "ModelMetrics" mm ON mm.model_id = m2.id
-        LEFT JOIN "ModelMetricLogs" mml ON mml.model_metric_id = mm.id
-      WHERE n.agent_id = ${agentId}
-      AND n.type = 'model'
-      AND n.deleted_at IS NULL
-      AND mml.created_at > '${new Date(
-        new Date() - 30 * 24 * 60 * 60 * 1000
-      ).toLocaleString()}'
-            AND n.deleted_at IS NULL
-
-      GROUP BY 1,2,3,4,5,6,7,8
-    )
-
-    SELECT * FROM principal_model_metrics UNION ALL SELECT * FROM optimized_model_metrics
+        INNER JOIN "ModelMetrics" mm ON mm.model_id = m.id
+        INNER JOIN "ModelMetricLogs" mml ON mml.model_metric_id = mm.id
+      WHERE n.agent_id = :agentId
+        AND n.type = 'model'
+        AND n.deleted_at IS NULL
+        AND mml.created_at > :startDate
+      GROUP BY m.id, mm.name, mm.id, day, month, year
+      ORDER BY mml.created_at DESC
+      LIMIT 500
   `,
-    { type: db.sequelize.QueryTypes.SELECT }
+    { 
+      replacements: { agentId, startDate: thirtyDaysAgo },
+      type: db.sequelize.QueryTypes.SELECT 
+    }
   );
+  console.timeEnd(`SQL Query - getModelMetrics for agent ${agentId}`);
+  
+  console.time(`Data processing - getModelMetrics for agent ${agentId}`);
   const createDailyTemplate = () => {
     const template = {};
     for (let i = 0; i <= 30; i++) {
@@ -576,42 +565,91 @@ const getModelMetrics = async (agentId) => {
     // fix irregular peaks in optimized daily 
   }
 
+  console.timeEnd(`Data processing - getModelMetrics for agent ${agentId}`);
   return { metricsByModel, aggregatedMetrics };
 };
 
 export const getAgentMetrics = async (req, res) => {
   try {
     const { userObject } = req;
+    console.log(`=== Agent Metrics Request for Agent ${req.params.id} ===`);
+    
     const company = await db.Company.findOne({
       where: { id: userObject.companyId },
     });
     const agent = await db.Agent.findOne({
       where: { id: req.params.id },
     });
+    
+    console.log(`Company test mode: ${company?.testMode}, Agent tour: ${agent?.tourAgent}`);
+    
     if (company.testMode || agent.tourAgent) {
+      console.log('Returning mock data for test mode/tour agent');
       const data = await generateMockDetailedMetrics(req.params.id);
       return res.status(200).json(data);
     }
+    
+    // Check if agent exists and has nodes
+    const nodeCount = await db.AgentNode.count({
+      where: { agent_id: req.params.id, deleted_at: null }
+    });
+    console.log(`Agent has ${nodeCount} nodes`);
+    
+    if (nodeCount === 0) {
+      console.log('No nodes found, returning empty metrics');
+      return res.status(200).json({
+        modelMetrics: { metricsByModel: {}, aggregatedMetrics: {} },
+        toolMetrics: { metricsByTool: {}, aggregatedMetrics: { daily: {}, success_count: 0, error_count: 0 } }
+      });
+    }
+    
     const environment = getEnvironment(req);
-    const data = await getModelMetrics(req.params.id);
-    const toolData = await getToolMetrics(req.params.id);
+    
     // Check cache first
     const cacheKey = `agent-metrics:${req.params.id}:${environment}`;
-    //const cachedMetrics = await redisService.get(cacheKey);
+    console.log('Checking cache for key:', cacheKey);
+    const cachedMetrics = await redisService.get(cacheKey);
 
-    /*if (cachedMetrics) {
-      //return res.status(200).json(cachedMetrics);
-    }*/
+    if (cachedMetrics) {
+      console.log('Cache HIT for agent', req.params.id);
+      return res.status(200).json(cachedMetrics);
+    }
+    console.log('Cache MISS for agent', req.params.id);
 
-    // If not in cache, get metrics and cache them
-    await redisService.set(cacheKey, {
-      modelMetrics: data,
-      toolMetrics: toolData,
-    });
+    // If not in cache, compute metrics with timeout
+    const computeMetrics = async () => {
+      console.time('getModelMetrics');
+      const data = await getModelMetrics(req.params.id);
+      console.timeEnd('getModelMetrics');
+      
+      console.time('getToolMetrics');
+      const toolData = await getToolMetrics(req.params.id);
+      console.timeEnd('getToolMetrics');
+      
+      return {
+        modelMetrics: data,
+        toolMetrics: toolData,
+      };
+    };
+    
+    // Set a 5-second timeout for metric computation to fail very fast
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Metric computation timeout')), 5000)
+    );
+    
+    try {
+      const metrics = await Promise.race([computeMetrics(), timeoutPromise]);
+      
+      // Cache for 5 minutes
+      await redisService.set(cacheKey, metrics, 300);
 
-    res.status(200).json({ modelMetrics: data, toolMetrics: toolData });
+      res.status(200).json(metrics);
+    } catch (timeoutError) {
+      console.error('Agent metrics timeout for agent:', req.params.id, timeoutError.message);
+      res.status(504).json({ error: 'Request timeout - metrics computation taking too long' });
+    }
   } catch (error) {
-    console.log(error);
+    console.error('Agent metrics error:', error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -710,6 +748,18 @@ export const getAgentComparisonMetricsLastMonthAgent = async (req, res) => {
   try {
     const { userObject } = req;
     const { companyId } = userObject;
+    
+    // Check cache first
+    const cacheKey = `agent-comparison-metrics:${req.params.id}`;
+    console.log('Checking cache for comparison metrics key:', cacheKey);
+    const cachedMetrics = await redisService.get(cacheKey);
+    
+    if (cachedMetrics) {
+      console.log('Cache HIT for comparison metrics');
+      return res.status(200).json(cachedMetrics);
+    }
+    console.log('Cache MISS for comparison metrics');
+    
     const company = await db.Company.findOne({
       where: { id: companyId },
     });
@@ -733,10 +783,8 @@ export const getAgentComparisonMetricsLastMonthAgent = async (req, res) => {
         INNER JOIN "Models" m ON m.id = an.model_id
         INNER JOIN "ModelMetrics" mm ON mm.model_id = m.id
         INNER JOIN "ModelMetricLogs" mml ON mml.model_metric_id = mm.id
-        WHERE an.agent_id = ${req.params.id} AND an.type = 'model'
-        AND mml.created_at > '${new Date(
-          new Date() - 90 * 24 * 60 * 60 * 1000
-        ).toLocaleString()}'
+        WHERE an.agent_id = :agentId AND an.type = 'model'
+        AND mml.created_at > :startDate
         AND mm.name IN ('accuracy', 'f1')
         GROUP BY 1,2,3
       ), 
@@ -751,17 +799,21 @@ export const getAgentComparisonMetricsLastMonthAgent = async (req, res) => {
         INNER JOIN "AgentLogs" al ON al.agent_id = a.id
         INNER JOIN "AgentNodeLogs" anl ON anl.parent_log_id = al.id
         INNER JOIN "AgentNodes" an ON an.id = anl.agent_node_id
-        WHERE a.id = ${req.params.id}
-        AND anl.created_at > '${new Date(
-          new Date() - 90 * 24 * 60 * 60 * 1000
-        ).toLocaleString()}'
+        WHERE a.id = :agentId
+        AND anl.created_at > :startDate
         AND (an.deleted_at IS NULL
         OR an.deleted_at <= anl.created_at)
         GROUP BY 1,2,3
       )
       SELECT * FROM model_metrics UNION ALL SELECT * FROM tool_metrics
       `,
-      { type: db.sequelize.QueryTypes.SELECT }
+      { 
+        replacements: { 
+          agentId: req.params.id, 
+          startDate: new Date(new Date() - 90 * 24 * 60 * 60 * 1000).toISOString() 
+        },
+        type: db.sequelize.QueryTypes.SELECT 
+      }
     );
 
     const groupedData = {};
@@ -861,16 +913,8 @@ export const getAgentComparisonMetricsLastMonthAgent = async (req, res) => {
       error_rate: groupedData['error_rate'] || 0,
     };
 
-    // Check cache first
-    const cacheKey = `agent-comparison-metrics:${req.params.id}`;
-    //const cachedMetrics = await redisService.get(cacheKey);
-    /*
-    if (cachedMetrics) {
-      //return res.status(200).json(cachedMetrics);
-    }*/
-
-    // If not in cache, get metrics and cache them
-    await redisService.set(cacheKey, sortedGroupedData);
+    // Cache the result
+    await redisService.set(cacheKey, sortedGroupedData, 300);
 
     res.status(200).json(sortedGroupedData);
   } catch (error) {
