@@ -12,4 +12,11 @@ const metricQueue = new Bull('metricQueue', {
   },
 });
 
-export { metricQueue };
+const cacheWarmingQueue = new Bull('cacheWarmingQueue', {
+  redis: {
+    host: process.env.REDIS_HOST || 'redis',
+    port: process.env.REDIS_PORT || 6379,
+  },
+});
+
+export { metricQueue, cacheWarmingQueue };

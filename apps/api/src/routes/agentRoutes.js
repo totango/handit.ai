@@ -20,6 +20,10 @@ import {
   uploadAgent,
   getAgentCorrectEntriesByDay,
 } from '../controllers/agentController.js';
+import {
+  getAgentEntriesOptimized,
+  getAgentEntriesJobStatus,
+} from '../controllers/optimizedAgentController.js';
 import multer from 'multer';
 
 
@@ -40,7 +44,9 @@ router.delete('/connections/:id', deleteConnection);
 router.get('/:id/metrics', getAgentMetrics);
 router.get('/:id/comparison-metrics-last-month', getAgentComparisonMetricsLastMonthAgent);
 router.get('/:id/tool-comparison-metrics-last-month', getAgentToolComparisonMetricsLastMonthAgent);
-router.get('/:id/entries', getAgentEntries);
+router.get('/:id/entries', getAgentEntriesOptimized); // Use optimized version
+router.get('/:id/entries/legacy', getAgentEntries); // Keep legacy as fallback
+router.get('/:id/entries/status', getAgentEntriesJobStatus); // Job status endpoint
 router.get('/:agentId/entries/:entryId', getAgentEntry);
 router.get('/:agentId/entries/:entryId/flow', getAgentEntryFlow);
 router.post('/:id/clone', cloneAgent);

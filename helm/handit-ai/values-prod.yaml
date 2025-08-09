@@ -14,7 +14,7 @@ global:
 handit-api:
   replicaCount: 2
   image:
-    tag: "fix-timeout-caching"  # Fixed timeouts with Redis caching
+    tag: "fix-timeout-caching"  # Stable working build
   
   env:
     - name: LOG_LEVEL
@@ -25,6 +25,8 @@ handit-api:
       value: "dummy-key-using-bedrock"
     - name: PORT
       value: "8080"
+    - name: REQUEST_TIMEOUT_MS
+      value: "300000"
   
   resources:
     requests:
@@ -41,7 +43,7 @@ handit-api:
 handit-dashboard:
   replicaCount: 2
   image:
-    tag: "fix-static-assets"
+    tag: "fix-static-assets"  # Using confirmed working build
   
   env:
     - name: NEXT_PUBLIC_API_URL
@@ -64,7 +66,7 @@ handit-dashboard:
 handit-worker:
   replicaCount: 1
   image:
-    tag: "latest"
+    tag: "fix-timeout-caching"  # Stable working build
   
   env:
     - name: OPENAI_API_KEY
@@ -81,7 +83,8 @@ ingress:
     alb.ingress.kubernetes.io/group.order: "200"
     alb.ingress.kubernetes.io/load-balancer-name: "leviosa-prod-alb"
     alb.ingress.kubernetes.io/tags: "Environment=prod,Team=handit"
-    alb.ingress.kubernetes.io/target-group-attributes: "deregistration_delay.timeout_seconds=30,idle_timeout.timeout_seconds=300"
+    alb.ingress.kubernetes.io/target-group-attributes: "deregistration_delay.timeout_seconds=30,idle_timeout.timeout_seconds=600"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "30"
   hosts:
     - host: handit-api.unison.totango.com
       paths:

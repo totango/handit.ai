@@ -1,6 +1,7 @@
 // workers/metricWorker.js
 
-import { metricQueue } from '../services/queue.js';
+import { metricQueue, cacheWarmingQueue } from '../services/queue.js';
+import { processCacheWarmingJob } from '../jobs/cacheWarmingJob.js';
 import db from '../../models/index.js';
 import multiClassCalculator from '../calculators/metrics/multiClassCalculator.js';
 import binaryClassCalculator from '../calculators/metrics/binaryClassCalculator.js';
@@ -74,4 +75,17 @@ metricQueue.on('completed', (job, result) => {
 
 metricQueue.on('failed', (job, err) => {
   console.log(`Metric job failed with error ${err}`);
+});
+
+// Add cache warming queue processor
+cacheWarmingQueue.process('cache-warming', async (job) => {
+  return await processCacheWarmingJob(job);
+});
+
+cacheWarmingQueue.on('completed', (job, result) => {
+  console.log(`Cache warming job ${job.id} completed for agent ${job.data.agentId}`);
+});
+
+cacheWarmingQueue.on('failed', (job, err) => {
+  console.log(`Cache warming job ${job.id} failed: ${err.message}`);
 });
