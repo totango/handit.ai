@@ -43,7 +43,7 @@ handit-api:
 handit-dashboard:
   replicaCount: 2
   image:
-    tag: "fix-static-assets"  # Using confirmed working build
+    tag: "custom-provider-arm64-20250814-143000"  # CustomProvider UI support
   
   env:
     - name: NEXT_PUBLIC_API_URL
