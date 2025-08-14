@@ -69,7 +69,7 @@ handit-api:
 handit-dashboard:
   replicaCount: 2
   image:
-    tag: "custom-provider-arm64-20250814-143000"  # CustomProvider UI support
+    tag: "fix-api-url-arm64-20250814-161212"  # Fixed API URL configuration
   
   env:
     - name: NEXT_PUBLIC_API_URL
