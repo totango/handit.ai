@@ -1,7 +1,7 @@
 // jobs/cacheWarmingJob.js
 
 import { updateAgentEntriesCache } from '../services/agentService.js';
-import redisService from '../services/redisService.js';
+import { redisService } from '../services/redisService.js';
 
 export const processCacheWarmingJob = async (job) => {
   const { 

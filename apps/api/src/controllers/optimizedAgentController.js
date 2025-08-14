@@ -1,9 +1,11 @@
 // controllers/optimizedAgentController.js
-import db from '../config/database.js';
-import { getEnvironment } from '../utils/environment.js';
-import redisService from '../services/redisService.js';
+import db from '../../models/index.js';
+import { redisService } from '../services/redisService.js';
 import { cacheWarmingQueue } from '../services/queue.js';
 import { scheduleAgentCacheWarming } from '../jobs/cacheWarmingJob.js';
+
+// Helper function to get environment from request
+const getEnvironment = (req) => req.query.environment || 'production';
 
 // Maximum entries to process synchronously before switching to background jobs
 const MAX_SYNC_ENTRIES = 1000;
