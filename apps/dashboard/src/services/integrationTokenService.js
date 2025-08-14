@@ -43,6 +43,12 @@ export const integrationTokenApi = createApi({
       }),
       invalidatesTags: [{ type: 'IntegrationToken', id: 'LIST' }],
     }),
+    testIntegrationToken: builder.mutation({
+      query: ({ id }) => ({
+        url: `/integration-tokens/${id}/test`,
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -51,4 +57,5 @@ export const {
   useCreateIntegrationTokenMutation,
   useUpdateIntegrationTokenMutation,
   useSetOptimizationTokenMutation,
+  useTestIntegrationTokenMutation,
 } = integrationTokenApi; 

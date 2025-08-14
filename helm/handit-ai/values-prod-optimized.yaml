@@ -1,0 +1,173 @@
+# Optimized Production Values for handit-ai
+# Addresses API worker throttling and scaling issues
+
+global:
+  environment: "prod"
+  domain: "unison.totango.com"
+  imageRegistry: "904233102192.dkr.ecr.eu-west-1.amazonaws.com"
+  
+  postgresql:
+    host: "handit-postgres-prod.cluster-xyz789.eu-west-1.rds.amazonaws.com"
+  
+  redis:
+    host: "handit-redis-prod.xyz789.euw1.cache.amazonaws.com"
+
+handit-api:
+  replicaCount: 3  # Increased base replicas
+  image:
+    tag: "custom-provider-arm64-20250814-141500"  # ARM64 CustomProvider support
+  
+  env:
+    - name: LOG_LEVEL
+      value: "info"
+    - name: CORS_ORIGIN
+      value: "https://handit.unison.totango.com"
+    - name: OPENAI_API_KEY
+      value: "dummy-key-using-bedrock"
+    - name: PORT
+      value: "8080"
+    - name: REQUEST_TIMEOUT_MS
+      value: "300000"
+    # Add worker configuration
+    - name: WEB_CONCURRENCY
+      value: "4"  # Optimize for 4 worker processes per pod
+    - name: MAX_CONNECTIONS
+      value: "1000"
+  
+  resources:
+    requests:
+      cpu: 400m      # Increased from 250m to handle actual load
+      memory: 768Mi  # Increased from 512Mi for better performance
+    limits:
+      cpu: 1500m     # Increased from 1000m for burst capacity
+      memory: 3Gi    # Increased from 2Gi for heavy workloads
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 3        # Increased minimum for baseline capacity
+    maxReplicas: 12       # Significantly increased for high load
+    targetCPUUtilization: 65%     # More conservative threshold
+    targetMemoryUtilization: 70%  # More conservative threshold
+    # Add custom metrics for better scaling decisions
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 60   # Faster scale-up
+        policies:
+        - type: Percent
+          value: 100    # Double pods when scaling up
+          periodSeconds: 60
+        - type: Pods
+          value: 2      # Or add 2 pods minimum
+          periodSeconds: 60
+      scaleDown:
+        stabilizationWindowSeconds: 300  # Slower scale-down to avoid thrashing
+        policies:
+        - type: Percent
+          value: 10     # Scale down by 10% max
+          periodSeconds: 60
+
+handit-dashboard:
+  replicaCount: 2
+  image:
+    tag: "fix-static-assets"
+  
+  env:
+    - name: NEXT_PUBLIC_API_URL
+      value: "https://handit-api.unison.totango.com/api"
+    - name: NEXT_PUBLIC_ENVIRONMENT
+      value: "production"
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  
+  autoscaling:
+    minReplicas: 2
+    maxReplicas: 6       # Increased for peak traffic
+    targetCPUUtilization: 70%
+    targetMemoryUtilization: 75%
+
+handit-worker:
+  replicaCount: 2        # Increased base workers
+  image:
+    tag: "custom-provider-arm64-20250814-141500"  # ARM64 CustomProvider support
+  
+  env:
+    - name: OPENAI_API_KEY
+      value: "dummy-key-using-bedrock"
+    # Add worker-specific configuration
+    - name: WORKER_CONCURRENCY
+      value: "8"         # Higher concurrency for background jobs
+    - name: REDIS_MAX_CONNECTIONS
+      value: "20"
+  
+  resources:
+    requests:
+      cpu: 200m          # Increased from none specified
+      memory: 256Mi      # Added memory requests
+    limits:
+      cpu: 1000m         # Added CPU limits
+      memory: 1Gi        # Added memory limits
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 2       # Increased minimum workers
+    maxReplicas: 8       # Significantly increased for job processing
+    targetCPUUtilization: 60%  # Conservative for background jobs
+    targetMemoryUtilization: 75%
+    behavior:
+      scaleUp:
+        stabilizationWindowSeconds: 30   # Fast scale-up for job queues
+        policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      scaleDown:
+        stabilizationWindowSeconds: 180  # Slower scale-down for job completion
+
+# Enhanced ingress configuration
+ingress:
+  annotations:
+    alb.ingress.kubernetes.io/group.name: "leviosa-prod"
+    alb.ingress.kubernetes.io/group.order: "200"
+    alb.ingress.kubernetes.io/load-balancer-name: "leviosa-prod-alb"
+    alb.ingress.kubernetes.io/tags: "Environment=prod,Team=handit"
+    alb.ingress.kubernetes.io/target-group-attributes: "deregistration_delay.timeout_seconds=30,idle_timeout.timeout_seconds=600"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "30"
+    # Add connection limits and performance optimizations
+    alb.ingress.kubernetes.io/target-group-attributes: "deregistration_delay.timeout_seconds=30,idle_timeout.timeout_seconds=600,connection_draining.timeout_seconds=300"
+    
+  hosts:
+    - host: handit-api.unison.totango.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: handit-api
+            port: 8080
+    - host: handit.unison.totango.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: handit-dashboard
+            port: 3000
+
+# Enhanced monitoring
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  path: /metrics
+  
+# Add pod disruption budgets for high availability
+podDisruptionBudget:
+  api:
+    enabled: true
+    minAvailable: 2      # Always keep 2 API pods during updates
+  worker:
+    enabled: true
+    minAvailable: 1      # Always keep 1 worker during updates

@@ -455,6 +455,9 @@ const evaluate = async (entry, prompts = [], isN8N = false) => {
           defaultModel = 'gemini-2.0-flash';
         } else if (provider === 'AWSBedrock') {
           defaultModel = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
+        } else if (provider === 'CustomProvider') {
+          // For CustomProvider, use the model specified in the token data
+          defaultModel = evaluator.evaluationPrompt?.defaultIntegrationToken?.data?.model || 'gpt-3.5-turbo';
         }
       }
 

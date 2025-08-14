@@ -14,7 +14,7 @@ global:
 handit-api:
   replicaCount: 2
   image:
-    tag: "metrics-optimized-20250814-111516"  # Optimized metrics queries
+    tag: "generic-openai-20250814-132607"  # GenericOpenAI provider support
   
   env:
     - name: LOG_LEVEL
@@ -66,7 +66,7 @@ handit-dashboard:
 handit-worker:
   replicaCount: 1
   image:
-    tag: "metrics-optimized-20250814-111516"  # Optimized metrics queries
+    tag: "generic-openai-20250814-132607"  # GenericOpenAI provider support
   
   env:
     - name: OPENAI_API_KEY

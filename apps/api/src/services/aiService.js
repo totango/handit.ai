@@ -210,6 +210,61 @@ const generateTogetherAIResponse = async ({ messages, responseFormat, token, mod
 };
 
 /**
+ * Generate response using Generic OpenAI-compatible API
+ */
+const generateGenericOpenAIResponse = async ({ messages, responseFormat, tokenData, model, temperature }) => {
+  // Extract configuration from tokenData
+  const { baseURL, model: customModel, apiKey, timeout = 30000, maxRetries = 3, headers = {} } = tokenData || {};
+  
+  if (!baseURL) {
+    throw new Error('CustomProvider provider requires baseURL in token configuration');
+  }
+  
+  if (!customModel) {
+    throw new Error('CustomProvider provider requires model name in token configuration');
+  }
+
+  // Create OpenAI client with custom configuration
+  const openai = new OpenAI({
+    baseURL: baseURL,
+    apiKey: apiKey || 'not-needed', // Some local APIs don't require keys
+    maxRetries: maxRetries,
+    timeout: timeout,
+    defaultHeaders: {
+      ...headers,
+      ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
+    },
+  });
+  
+  let format = null;
+
+  // Handle response format if provided
+  if (responseFormat) {
+    try {
+      format = zodResponseFormat(responseFormat, 'responseFormat');
+    } catch (error) {
+      // Fallback for providers that don't support zodResponseFormat
+      console.warn('CustomProvider provider may not support structured output:', error.message);
+      format = null;
+    }
+  }
+  
+  try {
+    const completion = await openai.chat.completions.create({
+      model: customModel,
+      messages,
+      response_format: format ? format : undefined,
+      temperature: temperature || 0.7
+    });
+    
+    return completion;
+  } catch (error) {
+    console.error('CustomProvider API call failed:', error.message);
+    throw new Error(`CustomProvider API call failed: ${error.message}`);
+  }
+};
+
+/**
  * Generate response using AWS Bedrock
  */
 const generateAWSBedrockResponse = async ({ messages, responseFormat, tokenData, model, token = null }) => {
@@ -404,6 +459,13 @@ export const generateAIResponse = async ({
           throw new Error('AWS Bedrock requires tokenData with AWS credentials or token');
         }
         completion = await generateAWSBedrockResponse({ messages, responseFormat, tokenData: tokenData || {}, model, token });
+        break;
+        
+      case 'CustomProvider':
+        if (!tokenData) {
+          throw new Error('CustomProvider provider requires tokenData with baseURL and model configuration');
+        }
+        completion = await generateGenericOpenAIResponse({ messages, responseFormat, tokenData, model, temperature });
         break;
         
       default:
