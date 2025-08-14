@@ -15,7 +15,6 @@ const env = process.env.NODE_ENV || 'development';
 const config = configFile[env];
 const db = {};
 
-//let sequelize;
 const databaseUrl = `postgresql://${process.env.TIMESERIES_DB_USER}:${process.env.TIMESERIES_DB_PASSWORD}@${process.env.TIMESERIES_DB_HOST}:${process.env.TIMESERIES_DB_PORT}/${process.env.HANDIT_DB_NAME}`;
 let sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
@@ -32,11 +31,6 @@ let sequelize = new Sequelize(databaseUrl, {
   },
   logging: console.log
 });
-/*if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}*/
 
 const initializeModels = async () => {
   const modelFiles = fs
