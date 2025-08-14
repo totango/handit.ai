@@ -24,6 +24,9 @@ import {
   getAgentEntriesOptimized,
   getAgentEntriesJobStatus,
 } from '../controllers/optimizedAgentController.js';
+import {
+  getAgentMetricsOptimized,
+} from '../controllers/optimizedMetricsController.js';
 import multer from 'multer';
 
 
@@ -41,7 +44,8 @@ router.delete('/nodes/:id', deleteNode);
 router.post('/connections', createConnection);
 router.put('/connections/:id', updateConnection);
 router.delete('/connections/:id', deleteConnection);
-router.get('/:id/metrics', getAgentMetrics);
+router.get('/:id/metrics', getAgentMetricsOptimized); // Use optimized version
+router.get('/:id/metrics/legacy', getAgentMetrics); // Keep legacy as fallback
 router.get('/:id/comparison-metrics-last-month', getAgentComparisonMetricsLastMonthAgent);
 router.get('/:id/tool-comparison-metrics-last-month', getAgentToolComparisonMetricsLastMonthAgent);
 router.get('/:id/entries', getAgentEntriesOptimized); // Use optimized version
