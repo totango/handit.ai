@@ -69,7 +69,7 @@ handit-api:
 handit-dashboard:
   replicaCount: 2
   image:
-    tag: "fix-api-url-arm64-20250814-161212"  # Fixed API URL configuration
+    tag: "custom-provider-evaluator-fix-20250814-072923"  # Fixed CustomProvider in evaluators
   
   env:
     - name: NEXT_PUBLIC_API_URL

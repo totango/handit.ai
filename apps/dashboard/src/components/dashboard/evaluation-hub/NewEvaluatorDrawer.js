@@ -335,27 +335,48 @@ export default function NewEvaluatorDrawer({ open, onClose, onCreate, associateS
               ))}
             </TextField>
             <TextField
-              select
+              select={providers?.data?.find(p => p.id === defaultProviderId)?.name !== 'CustomProvider'}
               label="Provider Model"
               value={defaultProviderModel}
               onChange={e => setDefaultProviderModel(e.target.value)}
               fullWidth
               disabled={!defaultProviderId}
+              placeholder={providers?.data?.find(p => p.id === defaultProviderId)?.name === 'CustomProvider' ? "Model defined in token" : ""}
             >
-              {(providers?.data?.find(p => p.id === defaultProviderId)?.config?.models || []).map(pm => (
-                <MenuItem key={pm} value={pm}>{pm}</MenuItem>
-              ))}
+              {providers?.data?.find(p => p.id === defaultProviderId)?.name === 'CustomProvider' ? (
+                <MenuItem value="custom" disabled>
+                  <em>Model is defined in the token configuration</em>
+                </MenuItem>
+              ) : (
+                (providers?.data?.find(p => p.id === defaultProviderId)?.config?.models || []).map(pm => (
+                  <MenuItem key={pm} value={pm}>{pm}</MenuItem>
+                ))
+              )}
             </TextField>
             <TextField
               select
               label="Token"
               value={defaultTokenId}
-              onChange={e => setDefaultTokenId(e.target.value)}
+              onChange={e => {
+                setDefaultTokenId(e.target.value);
+                // For CustomProvider, set the model from the token data
+                const selectedToken = tokens.find(t => t.id === e.target.value);
+                if (providers?.data?.find(p => p.id === defaultProviderId)?.name === 'CustomProvider' && selectedToken?.data?.model) {
+                  setDefaultProviderModel(selectedToken.data.model);
+                }
+              }}
               fullWidth
               disabled={!defaultProviderId}
             >
               {tokens.filter(t => t.providerId === defaultProviderId).map(token => (
-                <MenuItem key={token.id} value={token.id}>{token.name}</MenuItem>
+                <MenuItem key={token.id} value={token.id}>
+                  {token.name}
+                  {providers?.data?.find(p => p.id === defaultProviderId)?.name === 'CustomProvider' && token.data?.model && (
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                      ({token.data.model})
+                    </Typography>
+                  )}
+                </MenuItem>
               ))}
             </TextField>
           </Stack>
@@ -435,28 +456,49 @@ export default function NewEvaluatorDrawer({ open, onClose, onCreate, associateS
                           ))}
                         </TextField>
                         <TextField
-                          select
+                          select={providers?.data?.find(p => p.id === editProviderId)?.name !== 'CustomProvider'}
                           label="Provider Model"
                           value={editProviderModel}
                           onChange={e => setEditProviderModel(e.target.value)}
                           fullWidth
                           disabled={!editProviderId}
+                          placeholder={providers?.data?.find(p => p.id === editProviderId)?.name === 'CustomProvider' ? "Model defined in token" : ""}
                         >
-                          {(providers?.data?.find(p => p.id === editProviderId)?.config?.models || []).map(pm => (
-                            <MenuItem key={pm} value={pm}>{pm}</MenuItem>
-                          ))}
+                          {providers?.data?.find(p => p.id === editProviderId)?.name === 'CustomProvider' ? (
+                            <MenuItem value="custom" disabled>
+                              <em>Model is defined in the token configuration</em>
+                            </MenuItem>
+                          ) : (
+                            (providers?.data?.find(p => p.id === editProviderId)?.config?.models || []).map(pm => (
+                              <MenuItem key={pm} value={pm}>{pm}</MenuItem>
+                            ))
+                          )}
                         </TextField>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <TextField
                             select
                             label="Token"
                             value={editTokenId}
-                            onChange={e => setEditTokenId(e.target.value)}
+                            onChange={e => {
+                              setEditTokenId(e.target.value);
+                              // For CustomProvider, set the model from the token data
+                              const selectedToken = tokens.find(t => t.id === e.target.value);
+                              if (providers?.data?.find(p => p.id === editProviderId)?.name === 'CustomProvider' && selectedToken?.data?.model) {
+                                setEditProviderModel(selectedToken.data.model);
+                              }
+                            }}
                             fullWidth
                             disabled={!editProviderId}
                           >
                             {tokens.filter(t => t.providerId === editProviderId).map(token => (
-                              <MenuItem key={token.id} value={token.id}>{token.name}</MenuItem>
+                              <MenuItem key={token.id} value={token.id}>
+                                {token.name}
+                                {providers?.data?.find(p => p.id === editProviderId)?.name === 'CustomProvider' && token.data?.model && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                    ({token.data.model})
+                                  </Typography>
+                                )}
+                              </MenuItem>
                             ))}
                           </TextField>
                           <Button
